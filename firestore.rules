@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Public & System metadata (Roles, Permissions, Legal Statutory Parameters)
+    match /roles/{roleId} {
+      allow read, write: if true;
+    }
+
+    match /rolePermissions/{permId} {
+      allow read, write: if true;
+    }
+
+    match /statutoryParams/{version} {
+      allow read, write: if true;
+    }
+
+    // Security logs - allow read & write (including unauthenticated login failure logs)
+    match /securityLogs/{logId} {
+      allow read, write: if true;
+    }
+
+    // Users & RBAC Profiles
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    // Employee & Contract records
+    match /employees/{employeeId} {
+      allow read, write: if true;
+
+      match /contracts/{contractId} {
+        allow read, write: if true;
+      }
+    }
+
+    match /contracts/{contractId} {
+      allow read, write: if true;
+    }
+
+    // Operational HR & Payroll collections
+    match /attendance/{attendanceId} {
+      allow read, write: if true;
+    }
+
+    match /leave/{leaveId} {
+      allow read, write: if true;
+    }
+
+    match /loans/{loanId} {
+      allow read, write: if true;
+    }
+
+    match /payrollRuns/{runId} {
+      allow read, write: if true;
+    }
+
+    match /payslips/{payslipId} {
+      allow read, write: if true;
+    }
+
+    match /declarations/{declarationId} {
+      allow read, write: if true;
+    }
+
+    // Fallback catch-all for any other collections
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

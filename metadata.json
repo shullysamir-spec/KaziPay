@@ -1,0 +1,6 @@
+{
+  "name": "KaziPay - ERP RH et Paie RDC",
+  "description": "Système ERP RH & Paie conforme au Code du travail de RDC : calculs déterministes, IRPP, CNSS, INPP, ONEM, double devise (CDF/USD), contrats, absences, congés, prêts, bulletins et déclarations légales.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

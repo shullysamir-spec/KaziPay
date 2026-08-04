@@ -1,0 +1,188 @@
+{
+  "entities": {
+    "users": {
+      "title": "Utilisateurs",
+      "description": "Comptes utilisateurs KaziPay avec rôles et statut de sécurité",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "roles": { "type": "array", "items": { "type": "string" } },
+        "maxRoleLevel": { "type": "number" },
+        "isActivated": { "type": "boolean" },
+        "isLocked": { "type": "boolean" },
+        "failedLoginAttempts": { "type": "number" },
+        "mustChangePassword": { "type": "boolean" },
+        "isDeleted": { "type": "boolean" },
+        "lastLogin": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "roles", "isActivated", "isLocked"]
+    },
+    "roles": {
+      "title": "Rôles",
+      "description": "Définition des 10 rôles RBAC avec leurs niveaux de privilège",
+      "properties": {
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "level": { "type": "number" },
+        "description": { "type": "string" }
+      },
+      "required": ["code", "name", "level"]
+    },
+    "rolePermissions": {
+      "title": "Permissions de rôle",
+      "description": "Matrice des permissions attribuées à chaque rôle",
+      "properties": {
+        "roleCode": { "type": "string" },
+        "permissionKey": { "type": "string" },
+        "allowed": { "type": "boolean" }
+      },
+      "required": ["roleCode", "permissionKey", "allowed"]
+    },
+    "statutoryParams": {
+      "title": "Paramètres légaux RDC",
+      "description": "Barèmes IRPP, taux CNSS, INPP, ONEM, SMIG versionnés par date d'effet",
+      "properties": {
+        "version": { "type": "string" },
+        "effectiveDate": { "type": "string" },
+        "smigDailyCDF": { "type": "number" },
+        "familyAllowanceDailyCDF": { "type": "number" },
+        "cnssEmployeeRate": { "type": "number" },
+        "cnssEmployerRate": { "type": "number" },
+        "inppSmallRate": { "type": "number" },
+        "inppMediumRate": { "type": "number" },
+        "inppLargeRate": { "type": "number" },
+        "onemRate": { "type": "number" },
+        "irppMaxPercentage": { "type": "number" },
+        "irppBrackets": { "type": "array" }
+      },
+      "required": ["version", "effectiveDate", "smigDailyCDF"]
+    },
+    "employees": {
+      "title": "Employés",
+      "description": "Fiches employés avec données personnelles et personnes à charge",
+      "properties": {
+        "matricule": { "type": "string" },
+        "lastName": { "type": "string" },
+        "firstName": { "type": "string" },
+        "gender": { "type": "string" },
+        "birthDate": { "type": "string" },
+        "nif": { "type": "string" },
+        "cnss": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "bankName": { "type": "string" },
+        "bankAccount": { "type": "string" },
+        "site": { "type": "string" },
+        "department": { "type": "string" },
+        "position": { "type": "string" },
+        "hireDate": { "type": "string" },
+        "dependents": { "type": "array" },
+        "isDeleted": { "type": "boolean" }
+      },
+      "required": ["matricule", "lastName", "firstName", "hireDate", "department"]
+    },
+    "contracts": {
+      "title": "Contrats",
+      "description": "Contrats de travail associés aux employés",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "type": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "baseSalary": { "type": "number" },
+        "currency": { "type": "string" },
+        "isCurrent": { "type": "boolean" },
+        "isDeleted": { "type": "boolean" }
+      },
+      "required": ["employeeId", "type", "startDate", "baseSalary", "currency"]
+    },
+    "attendance": {
+      "title": "Présences",
+      "description": "Grilles mensuelles de présence et d'heures supplémentaires",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "period": { "type": "string" },
+        "daysWorked": { "type": "number" },
+        "absences": { "type": "number" },
+        "overtime130": { "type": "number" },
+        "overtime160": { "type": "number" },
+        "overtime200": { "type": "number" },
+        "isLocked": { "type": "boolean" }
+      },
+      "required": ["employeeId", "period"]
+    },
+    "leave": {
+      "title": "Congés",
+      "description": "Demandes et soldes de congés",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "type": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "daysCount": { "type": "number" },
+        "status": { "type": "string" },
+        "reason": { "type": "string" }
+      },
+      "required": ["employeeId", "type", "startDate", "endDate"]
+    },
+    "loans": {
+      "title": "Prêts et Avances",
+      "description": "Prêts accordés aux employés et échéanciers d'amortissement",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "currency": { "type": "string" },
+        "monthlyDeduction": { "type": "number" },
+        "remainingBalance": { "type": "number" },
+        "status": { "type": "string" }
+      },
+      "required": ["employeeId", "totalAmount", "monthlyDeduction", "currency"]
+    },
+    "payrollRuns": {
+      "title": "Traitements de paie",
+      "description": "Sessions mensuelles de paie (Brouillon, Calculé, Validé, Clos)",
+      "properties": {
+        "period": { "type": "string" },
+        "label": { "type": "string" },
+        "exchangeRate": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "closedAt": { "type": "string" },
+        "statutoryVersion": { "type": "string" }
+      },
+      "required": ["period", "exchangeRate", "status"]
+    },
+    "payslips": {
+      "title": "Bulletins de paie",
+      "description": "Fiches de paie figées rattachées aux traitements clos ou validés",
+      "properties": {
+        "runId": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "period": { "type": "string" },
+        "grossSalaryCDF": { "type": "number" },
+        "netSalaryCDF": { "type": "number" },
+        "netSalaryUSD": { "type": "number" },
+        "irppTaxCDF": { "type": "number" },
+        "cnssEmployeeCDF": { "type": "number" },
+        "lines": { "type": "array" }
+      },
+      "required": ["runId", "employeeId", "period", "netSalaryCDF"]
+    },
+    "securityLogs": {
+      "title": "Journal de sécurité",
+      "description": "Audit trail des actions de sécurité et de connexion",
+      "properties": {
+        "timestamp": { "type": "string" },
+        "action": { "type": "string" },
+        "actorUid": { "type": "string" },
+        "actorEmail": { "type": "string" },
+        "targetUid": { "type": "string" },
+        "details": { "type": "string" }
+      },
+      "required": ["timestamp", "action", "actorEmail"]
+    }
+  }
+}
