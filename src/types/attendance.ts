@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 export interface AttendanceRecord {
@@ -12,6 +12,11 @@ export interface AttendanceRecord {
   overtime130: number; // Heures supp à 130%
   overtime160: number; // Heures supp à 160%
   overtime200: number; // Heures supp à 200%
+  clockIn?: string; // Heure d'arrivée de l'employé (ex: "07:50")
+  clockOut?: string; // Heure de départ de l'employé (ex: "17:15")
+  latenessMinutes?: number; // Retard accumulé en minutes (calculé automatique)
+  timeclockStatus?: 'Pointeurs Synchronisés' | 'Saisie Manuelle' | 'Retard Constaté' | 'À l\'heure';
+  deviceId?: string; // Identifiant de la machine de pointage externe (ex: "ZK-BIO-01")
   isLocked: boolean;
   updatedBy?: string;
   updatedAt?: string;

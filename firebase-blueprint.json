@@ -2,7 +2,7 @@
   "entities": {
     "users": {
       "title": "Utilisateurs",
-      "description": "Comptes utilisateurs KaziPay avec rôles et statut de sécurité",
+      "description": "Comptes utilisateurs NovarisPay avec rôles et statut de sécurité",
       "properties": {
         "uid": { "type": "string" },
         "email": { "type": "string" },

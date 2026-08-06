@@ -1,12 +1,12 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - HR & Payroll Management System
  */
 
 import React from 'react';
 import { UserProfile } from '../../types/auth';
 import { Language, i18n } from '../../lib/i18n';
-import { Globe, LogOut, ShieldCheck, HelpCircle, Sun, Moon } from 'lucide-react';
+import { Globe, LogOut, ShieldCheck, HelpCircle, Sun, Moon, Keyboard } from 'lucide-react';
 import { NotificationCenter } from '../common/NotificationCenter';
 
 interface HeaderProps {
@@ -15,6 +15,7 @@ interface HeaderProps {
   onLanguageChange: (lang: Language) => void;
   onLogout: () => void;
   onOpenAdminInfo: () => void;
+  onOpenShortcuts?: () => void;
   title?: string;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
@@ -27,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLanguageChange,
   onLogout,
   onOpenAdminInfo,
+  onOpenShortcuts,
   title = "Tableau de Bord RH & Paie",
   theme = 'light',
   onToggleTheme,
@@ -40,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-3">
         <h1 className="text-lg font-bold text-[#1F3864] dark:text-blue-300 tracking-tight">{title}</h1>
         <span className="text-xs bg-[#BF9000]/15 dark:bg-[#BF9000]/30 text-[#856404] dark:text-amber-200 border border-[#BF9000]/30 font-bold px-2 py-0.5 rounded-full">
-          RDC Conforme 2026
+          {t.header.compliantBadge}
         </span>
       </div>
 
@@ -58,29 +60,40 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-slate-700'
                 : 'bg-slate-50 hover:bg-slate-100 text-[#1F3864] border-slate-200'
             }`}
-            title={theme === 'dark' ? "Passer en mode clair" : "Passer en mode sombre (repos visuel)"}
+            title={theme === 'dark' ? t.header.lightModeTitle : t.header.darkModeTitle}
           >
             {theme === 'dark' ? (
               <>
                 <Sun className="w-4 h-4 text-amber-400" />
-                <span className="hidden sm:inline">Mode Clair</span>
+                <span className="hidden sm:inline">{t.header.lightMode}</span>
               </>
             ) : (
               <>
                 <Moon className="w-4 h-4 text-[#1F3864]" />
-                <span className="hidden sm:inline">Mode Sombre</span>
+                <span className="hidden sm:inline">{t.header.darkMode}</span>
               </>
             )}
+          </button>
+        )}
+
+        {onOpenShortcuts && (
+          <button
+            onClick={onOpenShortcuts}
+            className="flex items-center gap-1.5 text-xs bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-[#1F3864] dark:text-slate-200 font-semibold px-3 py-1.5 rounded-lg transition shadow-xs"
+            title={t.header.shortcuts}
+          >
+            <Keyboard className="w-4 h-4 text-[#BF9000]" />
+            <span className="hidden sm:inline">{t.header.shortcuts}</span>
           </button>
         )}
 
         <button
           onClick={onOpenAdminInfo}
           className="flex items-center gap-1.5 text-xs bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-[#1F3864] dark:text-slate-200 font-semibold px-3 py-1.5 rounded-lg transition shadow-xs"
-          title="Guide Super Admin"
+          title={t.header.superAdminGuide}
         >
           <HelpCircle className="w-4 h-4 text-[#BF9000]" />
-          <span className="hidden sm:inline">Guide Super Admin</span>
+          <span className="hidden sm:inline">{t.header.superAdminGuide}</span>
         </button>
 
         {/* FR / EN Language Switcher */}

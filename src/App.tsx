@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - HR & Payroll Management System
  */
 
 import React, { useEffect, useState } from 'react';
@@ -10,13 +10,15 @@ import { auth, db } from './lib/firebase';
 import { bootstrapSystemData } from './services/seedService';
 import { ensureSuperAdminExists, getUserProfile, logoutUser } from './services/authService';
 import { UserProfile, RolePermissionMapping } from './types/auth';
-import { Language } from './lib/i18n';
+import { Language, i18n } from './lib/i18n';
 import { Header } from './components/layout/Header';
 import { Sidebar, ModuleKey } from './components/layout/Sidebar';
 import { LoginForm } from './components/auth/LoginForm';
 import { FirstLoginModal } from './components/auth/FirstLoginModal';
 import { SuperAdminInstructionsModal } from './components/auth/SuperAdminInstructionsModal';
 import { TestModeBanner } from './components/common/TestModeBanner';
+import { ToastProvider } from './context/ToastContext';
+import { KeyboardShortcutsModal } from './components/common/KeyboardShortcutsModal';
 
 // Modules
 import { DashboardModule } from './components/modules/DashboardModule';
@@ -44,13 +46,78 @@ export function App() {
   const [selectedPayslipRunId, setSelectedPayslipRunId] = useState<string | undefined>(undefined);
   const [lang, setLang] = useState<Language>('fr');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('kazipay_theme') as 'light' | 'dark') || 'light';
+    return (localStorage.getItem('novarispay_theme') as 'light' | 'dark') || (localStorage.getItem('novarispay_theme') as 'light' | 'dark') || 'light';
   });
   const [isSuperAdminModalOpen, setIsSuperAdminModalOpen] = useState<boolean>(false);
+  const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    localStorage.setItem('kazipay_theme', theme);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Avoid firing shortcuts when typing in inputs or textareas
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      
+      const isCmdOrCtrl = e.ctrlKey || e.metaKey;
+
+      if (isCmdOrCtrl) {
+        switch (e.key.toLowerCase()) {
+          case 'd':
+            e.preventDefault();
+            setActiveModule('dashboard');
+            break;
+          case 'p':
+            e.preventDefault();
+            setActiveModule('payroll');
+            break;
+          case 'e':
+            e.preventDefault();
+            setActiveModule('employees');
+            break;
+          case 'a':
+            e.preventDefault();
+            setActiveModule('attendance');
+            break;
+          case 'r':
+            e.preventDefault();
+            setActiveModule('reports');
+            break;
+          case 's':
+            e.preventDefault();
+            setActiveModule('settings');
+            break;
+          case 'l':
+            e.preventDefault();
+            setActiveModule('leave');
+            break;
+          case 'm':
+            e.preventDefault();
+            setActiveModule('medical');
+            break;
+          case 'g':
+            e.preventDefault();
+            setActiveModule('documents');
+            break;
+          case 'k':
+            e.preventDefault();
+            setIsKeyboardShortcutsOpen((prev) => !prev);
+            break;
+        }
+      } else if (e.key === '?') {
+        e.preventDefault();
+        setIsKeyboardShortcutsOpen(true);
+      } else if (e.key === 'Escape') {
+        setIsKeyboardShortcutsOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('novarispay_theme', theme);
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -117,57 +184,23 @@ export function App() {
     return (
       <div className="min-h-screen bg-[#1F3864] flex flex-col items-center justify-center text-white p-4">
         <div className="w-16 h-16 bg-[#BF9000] text-[#1F3864] font-black text-3xl rounded-2xl flex items-center justify-center shadow-2xl animate-pulse mb-4">
-          KP
+          NP
         </div>
-        <div className="text-xl font-bold tracking-tight">KaziPay - ERP RH et Paie RDC</div>
+        <div className="text-xl font-bold tracking-tight">NovarisPay - HR & Payroll Management System</div>
         <div className="text-xs text-blue-200 mt-2">Initialisation du système et des paramètres légaux 2026...</div>
       </div>
     );
   }
 
   const getModuleTitle = (mod: ModuleKey): string => {
-    switch (mod) {
-      case 'dashboard':
-        return 'Tableau de Bord RH & Paie';
-      case 'employees':
-        return 'Gestion des Employés & Contrats';
-      case 'attendance':
-        return 'Gestion des Présences & Pointages';
-      case 'leave':
-        return 'Congés Payés & Absences Légales';
-      case 'loans':
-        return 'Avances sur Salaire & Prêts Entreprise';
-      case 'payroll':
-        return 'Moteur de Calcul de Paie RDC';
-      case 'payslips':
-        return 'Bulletins de Paie & Archivage';
-      case 'declarations':
-        return 'Déclarations Sociales (CNSS, INPP, ONEM, IPR)';
-      case 'reports':
-        return 'Rapports Financiers & Masse Salariale';
-      case 'recruitment':
-        return 'Recrutement & Procédure d\'Interview par Poste';
-      case 'performance':
-        return 'Performance, Évaluations & Formations';
-      case 'discipline':
-        return 'Procédures RH, Discipline & Sanctions (RDC Art. 72)';
-      case 'medical':
-        return 'Suivi Médical & Bons de Soins (RDC Art. 177)';
-      case 'automation':
-        return 'Automatisation, Workflows & Alertes RH';
-      case 'security':
-        return 'Sécurité & Contrôle d\'Accès (RBAC)';
-      case 'settings':
-        return 'Paramètres Légaux & Barèmes Statutaires';
-      default:
-        return 'KaziPay ERP';
-    }
+    return i18n[lang]?.moduleTitles?.[mod] || 'NovarisPay ERP';
   };
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans antialiased transition-colors ${
-      theme === 'dark' ? 'dark bg-slate-950 text-slate-100' : 'bg-[#F3F4F6] text-slate-900'
-    }`}>
+    <ToastProvider>
+      <div className={`min-h-screen flex flex-col font-sans antialiased transition-colors ${
+        theme === 'dark' ? 'dark bg-slate-950 text-slate-100' : 'bg-[#F3F4F6] text-slate-900'
+      }`}>
       {!currentUser ? (
         <LoginForm
           onLoginSuccess={(user) => setCurrentUser(user)}
@@ -196,6 +229,7 @@ export function App() {
               onLanguageChange={setLang}
               onLogout={handleLogout}
               onOpenAdminInfo={() => setIsSuperAdminModalOpen(true)}
+              onOpenShortcuts={() => setIsKeyboardShortcutsOpen(true)}
               title={getModuleTitle(activeModule)}
               theme={theme}
               onToggleTheme={handleToggleTheme}
@@ -276,7 +310,15 @@ export function App() {
           onPasswordChanged={(updated) => setCurrentUser(updated)}
         />
       )}
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={isKeyboardShortcutsOpen}
+        onClose={() => setIsKeyboardShortcutsOpen(false)}
+        lang={lang}
+      />
     </div>
+    </ToastProvider>
   );
 }
 

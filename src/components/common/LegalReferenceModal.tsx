@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * Composant Modal/Tiroir de Consultation Légale Code du Travail RDC
  */
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - HR & Payroll Management System
  * 
  * SERVICE D'AUTHENTIFICATION ET DE GESTION DES UTILISATEURS
  */
@@ -78,7 +78,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
  * Inscription / Création du compte Super Admin de démonstration au premier chargement
  */
 export async function ensureSuperAdminExists(): Promise<void> {
-  const superAdminEmail = 'admin@kazipay.cd';
+  const superAdminEmail = 'admin@novarispay.cd';
   const superAdminPass = 'Admin@2026!';
 
   try {
@@ -100,7 +100,7 @@ export async function ensureSuperAdminExists(): Promise<void> {
         const profile: UserProfile = {
           uid: userCred.user.uid,
           email: superAdminEmail,
-          displayName: 'Super Administrateur KaziPay',
+          displayName: 'Super Administrateur NovarisPay',
           roles: [RoleCode.SUPERADMIN],
           maxRoleLevel: 100,
           isActivated: true,
@@ -149,8 +149,8 @@ export async function loginUser(email: string, password: string): Promise<UserPr
       }
     } else {
       // Pour les autres erreurs (ex: mauvais mot de passe en mode auth strict), si c'est le compte admin de démo, autoriser la connexion directe
-      if (cleanEmail === 'admin@kazipay.cd' && (password === 'Admin@2026!' || password.length >= 4)) {
-        uid = 'usr_superadmin_kazipay_2026';
+      if ((cleanEmail === 'admin@novarispay.cd' || cleanEmail === 'admin@novarispay.cd') && (password === 'Admin@2026!' || password.length >= 4)) {
+        uid = 'usr_superadmin_novarispay_2026';
       } else {
         throw new Error('Identifiants invalides (Email ou mot de passe incorrect).');
       }
@@ -170,7 +170,7 @@ export async function loginUser(email: string, password: string): Promise<UserPr
     console.warn('Lecture Firestore userRef error, creation en mémoire:', dbErr);
   }
 
-  const isSuperAdminEmail = cleanEmail === 'admin@kazipay.cd';
+  const isSuperAdminEmail = cleanEmail === 'admin@novarispay.cd' || cleanEmail === 'admin@novarispay.cd';
   const isRHEmail = cleanEmail.includes('rh');
   const isPayrollEmail = cleanEmail.includes('paie') || cleanEmail.includes('comptable');
 
@@ -184,7 +184,7 @@ export async function loginUser(email: string, password: string): Promise<UserPr
       uid,
       email: cleanEmail,
       displayName: isSuperAdminEmail
-        ? 'Super Administrateur KaziPay'
+        ? 'Super Administrateur NovarisPay'
         : isRHEmail
         ? 'Directrice des Ressources Humaines'
         : isPayrollEmail

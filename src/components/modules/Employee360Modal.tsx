@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * Composant Fiche Employé 360° & Gestion du Cycle de Vie
  */
 
@@ -22,6 +22,7 @@ import { getPayslipsForEmployee, getSoldeDeToutCompteHistory, saveSoldeDeToutCom
 import { calculateSoldeDeToutCompte } from '../../payroll/engine';
 import { getAuditLogs, AuditLogEntry, logAuditEvent } from '../../services/auditService';
 import { ServiceCertificateModal } from '../common/ServiceCertificateModal';
+import { EmployeePhotoModal } from '../common/EmployeePhotoModal';
 import {
   User,
   X,
@@ -48,7 +49,11 @@ import {
   Building2,
   DollarSign,
   ChevronRight,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Globe,
+  Wallet,
+  PieChart as PieIcon,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface Employee360ModalProps {
@@ -81,7 +86,38 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
     | 'CIRCUMSTANCES'
     | 'SOLDE_COMPTE'
     | 'AUDIT_LOGS'
+    | 'BANK_DATA'
+    | 'EXPATRIATION'
+    | 'REAL_COST'
   >('IDENTITY');
+
+  // Bank Data Editing State
+  const [bankName, setBankName] = useState(employee.bankName || 'Equity BCDC');
+  const [bankAccount, setBankAccount] = useState(employee.bankAccount || '');
+  const [swiftIban, setSwiftIban] = useState(employee.swiftIban || '');
+  const [mobileMoneyNumber, setMobileMoneyNumber] = useState(employee.mobileMoneyNumber || '');
+  const [mobileMoneyProvider, setMobileMoneyProvider] = useState<'M-Pesa' | 'Airtel Money' | 'Orange Money' | 'Afrimoney' | 'Autre'>(employee.mobileMoneyProvider || 'M-Pesa');
+  const [isBankSaving, setIsBankSaving] = useState(false);
+
+  // Expatriate Editing State
+  const [isExpatriate, setIsExpatriate] = useState<boolean>(employee.isExpatriate || false);
+  const [nationality, setNationality] = useState<string>(employee.nationality || 'Congolaise (RDC)');
+  const [countryOfOrigin, setCountryOfOrigin] = useState<string>(employee.countryOfOrigin || 'République Démocratique du Congo');
+  const [visaNumber, setVisaNumber] = useState<string>(employee.expatDocs?.visaNumber || '');
+  const [visaExpiryDate, setVisaExpiryDate] = useState<string>(employee.expatDocs?.visaExpiryDate || '');
+  const [workPermitNumber, setWorkPermitNumber] = useState<string>(employee.expatDocs?.workPermitNumber || '');
+  const [workPermitExpiryDate, setWorkPermitExpiryDate] = useState<string>(employee.expatDocs?.workPermitExpiryDate || '');
+  const [residencePermitNumber, setResidencePermitNumber] = useState<string>(employee.expatDocs?.residencePermitNumber || '');
+  const [residencePermitExpiryDate, setResidencePermitExpiryDate] = useState<string>(employee.expatDocs?.residencePermitExpiryDate || '');
+  const [passportNumber, setPassportNumber] = useState<string>(employee.expatDocs?.passportNumber || '');
+  const [passportExpiryDate, setPassportExpiryDate] = useState<string>(employee.expatDocs?.passportExpiryDate || '');
+  const [contractExpiryDate, setContractExpiryDate] = useState<string>(employee.expatDocs?.contractExpiryDate || '');
+  const [expatCurrency, setExpatCurrency] = useState<'CDF' | 'USD'>(employee.expatCompensation?.currency || 'USD');
+  const [expatriationAllowance, setExpatriationAllowance] = useState<number>(employee.expatCompensation?.expatriationAllowance || 0);
+  const [housingAllowance, setHousingAllowance] = useState<number>(employee.expatCompensation?.housingAllowance || 0);
+  const [specialTaxTreatment, setSpecialTaxTreatment] = useState<boolean>(employee.expatCompensation?.specialTaxTreatment || false);
+  const [expatNotes, setExpatNotes] = useState<string>(employee.expatCompensation?.notes || '');
+  const [isExpatSaving, setIsExpatSaving] = useState(false);
 
   // Data States
   const [circumstances, setCircumstances] = useState<EmployeeCircumstance[]>([]);
@@ -92,6 +128,7 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
   const [isServiceCertOpen, setIsServiceCertOpen] = useState(false);
 
   // Camera & Photo Modal States
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [cameraDevices, setCameraDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
@@ -223,7 +260,7 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
   const saveCapturedPhoto = async () => {
     if (!capturedPhotoData || !employee.id) return;
     try {
-      await updateEmployeePhoto(employee.id, capturedPhotoData, 'CAMERA', currentUser?.email || 'admin@kazipay.cd');
+      await updateEmployeePhoto(employee.id, capturedPhotoData, 'CAMERA', currentUser?.email || 'admin@novarispay.cd');
       setIsCameraModalOpen(false);
       onRefresh();
       loadAllEmployeeData();
@@ -242,7 +279,7 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
     reader.onload = async (event) => {
       const result = event.target?.result as string;
       if (result && employee.id) {
-        await updateEmployeePhoto(employee.id, result, 'UPLOAD', currentUser?.email || 'admin@kazipay.cd');
+        await updateEmployeePhoto(employee.id, result, 'UPLOAD', currentUser?.email || 'admin@novarispay.cd');
         onRefresh();
         loadAllEmployeeData();
       }
@@ -269,7 +306,7 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
           paymentRate: circPaymentRate,
           status: 'EN_COURS',
           createdAt: new Date().toISOString(),
-          createdBy: currentUser?.email || 'rh@kazipay.cd',
+          createdBy: currentUser?.email || 'rh@novarispay.cd',
         },
         employee
       );
@@ -292,7 +329,7 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
         selectedCircForEarlyReturn.id,
         employee.id,
         earlyReturnDate,
-        currentUser?.email || 'rh@kazipay.cd'
+        currentUser?.email || 'rh@novarispay.cd'
       );
       setIsEarlyReturnOpen(false);
       onRefresh();
@@ -303,6 +340,92 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
     }
   };
 
+  // ---------------- BANK DATA SAVE ----------------
+  const handleSaveBankData = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!employee.id) return;
+    setIsBankSaving(true);
+    try {
+      await updateEmployee(
+        employee.id,
+        {
+          bankName,
+          bankAccount,
+          swiftIban,
+          mobileMoneyNumber,
+          mobileMoneyProvider,
+        }
+      );
+      await logAuditEvent(
+        'UPDATE',
+        'EMPLOYEES',
+        `Mise à jour sécurisée des coordonnées bancaires salariales pour ${employee.lastName} ${employee.firstName}`,
+        currentUser?.email || 'admin@novarispay.cd',
+        userRole,
+        employee.id,
+        { bankName: employee.bankName, bankAccount: employee.bankAccount },
+        { bankName, bankAccount, swiftIban, mobileMoneyNumber, mobileMoneyProvider }
+      );
+      alert('Données bancaires enregistrées avec succès et tracées dans le registre d\'audit RBAC.');
+      onRefresh();
+    } catch (err: any) {
+      alert('Erreur enregistrement coordonnées bancaires: ' + err.message);
+    } finally {
+      setIsBankSaving(false);
+    }
+  };
+
+  // ---------------- EXPATRIATE DATA SAVE ----------------
+  const handleSaveExpatData = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!employee.id) return;
+    setIsExpatSaving(true);
+    try {
+      await updateEmployee(
+        employee.id,
+        {
+          isExpatriate,
+          nationality,
+          countryOfOrigin,
+          expatDocs: {
+            visaNumber,
+            visaExpiryDate,
+            workPermitNumber,
+            workPermitExpiryDate,
+            residencePermitNumber,
+            residencePermitExpiryDate,
+            passportNumber,
+            passportExpiryDate,
+            contractExpiryDate,
+          },
+          expatCompensation: {
+            currency: expatCurrency,
+            expatriationAllowance,
+            housingAllowance,
+            specialTaxTreatment,
+            notes: expatNotes,
+          },
+        }
+      );
+      await logAuditEvent(
+        'UPDATE',
+        'EMPLOYEES',
+        `Mise à jour du dossier d'expatriation et documents de séjour pour ${employee.lastName} ${employee.firstName}`,
+        currentUser?.email || 'admin@novarispay.cd',
+        userRole,
+        employee.id,
+        { isExpatriate: employee.isExpatriate },
+        { isExpatriate, nationality, countryOfOrigin }
+      );
+      alert('Fiche d\'expatriation mise à jour avec succès.');
+      onRefresh();
+    } catch (err: any) {
+      alert('Erreur enregistrement expatriation: ' + err.message);
+    } finally {
+      setIsExpatSaving(false);
+    }
+  };
+
   // ---------------- REINTEGRATION ----------------
   const handleReintegrate = async () => {
     if (!reintegrateReason.trim() || !employee.id) {
@@ -310,7 +433,7 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
       return;
     }
     try {
-      await reintegrateEmployee(employee.id, currentUser?.email || 'admin@kazipay.cd', reintegrateReason);
+      await reintegrateEmployee(employee.id, currentUser?.email || 'admin@novarispay.cd', reintegrateReason);
       setIsReintegrateModalOpen(false);
       setReintegrateReason('');
       onRefresh();
@@ -364,19 +487,19 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
               {/* Photo Actions Overlay */}
               <div className="absolute inset-0 bg-black/60 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-1.5 p-1">
                 <button
-                  onClick={openCameraModal}
+                  onClick={() => setIsPhotoModalOpen(true)}
                   className="p-1.5 bg-white text-[#1F3864] rounded-lg hover:bg-amber-100 text-[10px] font-bold"
-                  title="Prendre photo par caméra"
+                  title="Prendre photo (Caméra direct / Importer)"
                 >
                   <Camera className="w-4 h-4" />
                 </button>
-                <label
+                <button
+                  onClick={() => setIsPhotoModalOpen(true)}
                   className="p-1.5 bg-white text-[#1F3864] rounded-lg hover:bg-amber-100 text-[10px] font-bold cursor-pointer"
-                  title="Importer fichier image"
+                  title="Importer fichier image à partir d'un dossier"
                 >
                   <Upload className="w-4 h-4" />
-                  <input type="file" accept="image/*" onChange={handleFileUploadPhoto} className="hidden" />
-                </label>
+                </button>
                 {employee.photoHistory && employee.photoHistory.length > 0 && (
                   <button
                     onClick={() => setIsPhotoHistoryOpen(true)}
@@ -453,18 +576,21 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
         <div className="bg-slate-100 border-b border-slate-200 px-4 pt-2 flex items-center space-x-1 overflow-x-auto scrollbar-none shrink-0 text-xs">
           {[
             { id: 'IDENTITY', label: '1. Identité & État Civil', icon: User },
-            { id: 'CONTRACTS', label: '2. Contrats & Avenants', icon: Briefcase },
-            { id: 'ATTENDANCE', label: '3. Présences & Heures Supp', icon: Clock },
-            { id: 'LEAVE', label: '4. Congés & Absences', icon: Calendar },
-            { id: 'LOANS', label: '5. Prêts & Avances', icon: CreditCard },
-            { id: 'PAYSLIPS', label: '6. Bulletins de Paie', icon: FileText, restricted: !canViewPayroll },
-            { id: 'DISCIPLINE', label: '7. Disciplinaire', icon: ShieldAlert },
-            { id: 'MEDICAL', label: '8. Médical & Aptitude', icon: Stethoscope, restricted: !canViewMedical },
-            { id: 'PERFORMANCE', label: '9. Évaluations', icon: Award },
-            { id: 'DOCUMENTS', label: '10. GED & Pièces', icon: Folder },
-            { id: 'CIRCUMSTANCES', label: '11. Statut & Circonstances', icon: RotateCcw, count: circumstances.length },
-            { id: 'SOLDE_COMPTE', label: '12. Solde de Tout Compte', icon: DollarSign, count: soldeDeToutCompteList.length },
-            { id: 'AUDIT_LOGS', label: '13. Historique & Traçabilité', icon: History, count: auditLogs.length },
+            { id: 'BANK_DATA', label: '2. Données Bancaires', icon: Wallet, restricted: !canEditEmployee },
+            { id: 'CONTRACTS', label: '3. Contrats & Avenants', icon: Briefcase },
+            { id: 'EXPATRIATION', label: '4. Expatriation & Séjour', icon: Globe },
+            { id: 'ATTENDANCE', label: '5. Présences & Heures Supp', icon: Clock },
+            { id: 'LEAVE', label: '6. Congés & Absences', icon: Calendar },
+            { id: 'LOANS', label: '7. Prêts & Avances', icon: CreditCard },
+            { id: 'PAYSLIPS', label: '8. Bulletins de Paie', icon: FileText, restricted: !canViewPayroll },
+            { id: 'REAL_COST', label: '9. Coût Total Employeur', icon: PieIcon },
+            { id: 'DISCIPLINE', label: '10. Disciplinaire', icon: ShieldAlert },
+            { id: 'MEDICAL', label: '11. Médical & Aptitude', icon: Stethoscope, restricted: !canViewMedical },
+            { id: 'PERFORMANCE', label: '12. Évaluations', icon: Award },
+            { id: 'DOCUMENTS', label: '13. GED & Pièces', icon: Folder },
+            { id: 'CIRCUMSTANCES', label: '14. Statut & Circonstances', icon: RotateCcw, count: circumstances.length },
+            { id: 'SOLDE_COMPTE', label: '15. Solde de Tout Compte', icon: DollarSign, count: soldeDeToutCompteList.length },
+            { id: 'AUDIT_LOGS', label: '16. Historique & Traçabilité', icon: History, count: auditLogs.length },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -560,6 +686,466 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
                     </tbody>
                   </table>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: BANK_DATA */}
+          {activeTab === 'BANK_DATA' && (
+            <div className="space-y-6">
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start space-x-3 text-xs text-amber-900">
+                <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-amber-950 text-sm">Données Bancaires Protégées par RBAC (Code du Travail RDC)</h4>
+                  <p className="mt-1">
+                    Les coordonnées bancaires et numéros Mobile Money servent exclusivement au virement direct des salaires et acomptes. Toute modification est journalisée avec horodatage dans le registre d'audit non répudiable.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveBankData} className="bg-white border border-slate-200 rounded-xl p-5 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">Nom de la Banque RDC</label>
+                    <select
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      className="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 focus:bg-white font-medium"
+                      disabled={!canEditEmployee}
+                    >
+                      <option value="Equity BCDC">Equity BCDC</option>
+                      <option value="Rawbank">Rawbank</option>
+                      <option value="TMB (Trust Merchant Bank)">TMB (Trust Merchant Bank)</option>
+                      <option value="Illicocash / Rawbank">Illicocash / Rawbank</option>
+                      <option value="Ecobank RDC">Ecobank RDC</option>
+                      <option value="Access Bank RDC">Access Bank RDC</option>
+                      <option value="FirstBank RDC">FirstBank RDC</option>
+                      <option value="UBA RDC">UBA RDC</option>
+                      <option value="Autre Institution / Caisse">Autre Institution / Caisse</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">Numéro de Compte (RRIB / Compte Bancaire)</label>
+                    <input
+                      type="text"
+                      value={bankAccount}
+                      onChange={(e) => setBankAccount(e.target.value)}
+                      placeholder="00010-00123456789-01"
+                      className="w-full border border-slate-300 rounded-lg p-2.5 font-mono bg-slate-50 focus:bg-white"
+                      disabled={!canEditEmployee}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">Code SWIFT / IBAN (Optionnel)</label>
+                    <input
+                      type="text"
+                      value={swiftIban}
+                      onChange={(e) => setSwiftIban(e.target.value)}
+                      placeholder="RAWB243XXX"
+                      className="w-full border border-slate-300 rounded-lg p-2.5 font-mono bg-slate-50 focus:bg-white"
+                      disabled={!canEditEmployee}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">Fournisseur Mobile Money (Paie Portefeuille)</label>
+                    <select
+                      value={mobileMoneyProvider}
+                      onChange={(e) => setMobileMoneyProvider(e.target.value as any)}
+                      className="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 focus:bg-white"
+                      disabled={!canEditEmployee}
+                    >
+                      <option value="M-Pesa">M-Pesa (Vodacom)</option>
+                      <option value="Airtel Money">Airtel Money</option>
+                      <option value="Orange Money">Orange Money</option>
+                      <option value="Afrimoney">Afrimoney</option>
+                      <option value="Autre">Autre Portefeuille</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">Numéro Portefeuille Mobile Money (+243...)</label>
+                    <input
+                      type="text"
+                      value={mobileMoneyNumber}
+                      onChange={(e) => setMobileMoneyNumber(e.target.value)}
+                      placeholder="+243812345678"
+                      className="w-full border border-slate-300 rounded-lg p-2.5 font-mono bg-slate-50 focus:bg-white"
+                      disabled={!canEditEmployee}
+                    />
+                  </div>
+                </div>
+
+                {canEditEmployee && (
+                  <div className="flex justify-end pt-3 border-t">
+                    <button
+                      type="submit"
+                      disabled={isBankSaving}
+                      className="bg-[#1F3864] text-white hover:bg-blue-900 font-bold px-5 py-2.5 rounded-xl shadow flex items-center space-x-2"
+                    >
+                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <span>{isBankSaving ? 'Enregistrement...' : 'Enregistrer les Coordonnées Bancaires'}</span>
+                    </button>
+                  </div>
+                )}
+              </form>
+            </div>
+          )}
+
+          {/* TAB: EXPATRIATION */}
+          {activeTab === 'EXPATRIATION' && (
+            <div className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-start space-x-3 text-xs text-blue-900">
+                <Globe className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-blue-950 text-sm">Gestion des Employés Expatriés & Conformité DGM / ONEM</h4>
+                  <p className="mt-1">
+                    Suivez le statut de séjour, la validité des visas, permis de travail (ONEM), titres de séjour et passeports avec alertes automatiques d'expiration (30 jours).
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveExpatData} className="bg-white border border-slate-200 rounded-xl p-5 space-y-6">
+                
+                {/* Statut General Expat */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4 border-b">
+                  <div className="flex items-center space-x-3 bg-slate-50 p-3 rounded-lg border">
+                    <input
+                      type="checkbox"
+                      id="isExpatCheck"
+                      checked={isExpatriate}
+                      onChange={(e) => setIsExpatriate(e.target.checked)}
+                      className="w-4 h-4 text-[#1F3864] rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="isExpatCheck" className="font-bold text-slate-800 text-sm cursor-pointer">
+                      Employé Statut Expatrié
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">Nationalité</label>
+                    <input
+                      type="text"
+                      value={nationality}
+                      onChange={(e) => setNationality(e.target.value)}
+                      placeholder="Française, Belge, Indienne, Chinoise..."
+                      className="w-full border border-slate-300 rounded-lg p-2.5 font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">Pays d'Origine</label>
+                    <input
+                      type="text"
+                      value={countryOfOrigin}
+                      onChange={(e) => setCountryOfOrigin(e.target.value)}
+                      placeholder="France, Belgique, Inde, Chine..."
+                      className="w-full border border-slate-300 rounded-lg p-2.5 font-medium"
+                    />
+                  </div>
+                </div>
+
+                {/* Tracking Document Expirations */}
+                <div>
+                  <h4 className="font-bold text-sm text-[#1F3864] mb-3 flex items-center space-x-2">
+                    <FileText className="w-4 h-4" />
+                    <span>Documents Légaux de Séjour & Permis ONEM</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Visa */}
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-slate-800">Visa d'Établissement / Travail</span>
+                        {visaExpiryDate && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            new Date(visaExpiryDate) < new Date()
+                              ? 'bg-red-100 text-red-800 border border-red-300'
+                              : new Date(visaExpiryDate).getTime() - new Date().getTime() < 30*24*3600*1000
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                              : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          }`}>
+                            {new Date(visaExpiryDate) < new Date() ? 'Expiré !' : 'Valide'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={visaNumber}
+                          onChange={(e) => setVisaNumber(e.target.value)}
+                          placeholder="N° Visa"
+                          className="border border-slate-300 rounded-lg p-2 font-mono"
+                        />
+                        <input
+                          type="date"
+                          value={visaExpiryDate}
+                          onChange={(e) => setVisaExpiryDate(e.target.value)}
+                          className="border border-slate-300 rounded-lg p-2 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Permis de travail ONEM */}
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-slate-800">Carte du Travail ONEM (RDC)</span>
+                        {workPermitExpiryDate && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            new Date(workPermitExpiryDate) < new Date()
+                              ? 'bg-red-100 text-red-800 border border-red-300'
+                              : new Date(workPermitExpiryDate).getTime() - new Date().getTime() < 30*24*3600*1000
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                              : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          }`}>
+                            {new Date(workPermitExpiryDate) < new Date() ? 'Expiré !' : 'Valide'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={workPermitNumber}
+                          onChange={(e) => setWorkPermitNumber(e.target.value)}
+                          placeholder="N° Permis ONEM"
+                          className="border border-slate-300 rounded-lg p-2 font-mono"
+                        />
+                        <input
+                          type="date"
+                          value={workPermitExpiryDate}
+                          onChange={(e) => setWorkPermitExpiryDate(e.target.value)}
+                          className="border border-slate-300 rounded-lg p-2 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Passeport */}
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-slate-800">Passeport International</span>
+                        {passportExpiryDate && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            new Date(passportExpiryDate) < new Date()
+                              ? 'bg-red-100 text-red-800 border border-red-300'
+                              : 'bg-emerald-100 text-emerald-800'
+                          }`}>
+                            {new Date(passportExpiryDate) < new Date() ? 'Expiré !' : 'Valide'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={passportNumber}
+                          onChange={(e) => setPassportNumber(e.target.value)}
+                          placeholder="N° Passeport"
+                          className="border border-slate-300 rounded-lg p-2 font-mono"
+                        />
+                        <input
+                          type="date"
+                          value={passportExpiryDate}
+                          onChange={(e) => setPassportExpiryDate(e.target.value)}
+                          className="border border-slate-300 rounded-lg p-2 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Contrat d'expatriation */}
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-slate-800">Titre de Séjour / Contrat Expat</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={residencePermitNumber}
+                          onChange={(e) => setResidencePermitNumber(e.target.value)}
+                          placeholder="N° Titre Séjour"
+                          className="border border-slate-300 rounded-lg p-2 font-mono"
+                        />
+                        <input
+                          type="date"
+                          value={contractExpiryDate}
+                          onChange={(e) => setContractExpiryDate(e.target.value)}
+                          className="border border-slate-300 rounded-lg p-2 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Compensation Package Expat */}
+                <div className="pt-4 border-t space-y-3">
+                  <h4 className="font-bold text-sm text-[#1F3864]">Rémunération & Primes d'Expatriation</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Devise de Contrat</label>
+                      <select
+                        value={expatCurrency}
+                        onChange={(e) => setExpatCurrency(e.target.value as any)}
+                        className="w-full border border-slate-300 rounded-lg p-2.5 font-bold"
+                      >
+                        <option value="USD">USD ($)</option>
+                        <option value="CDF">CDF (FC)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Prime d'Expatriation Mensuelle</label>
+                      <input
+                        type="number"
+                        value={expatriationAllowance}
+                        onChange={(e) => setExpatriationAllowance(Number(e.target.value))}
+                        className="w-full border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-emerald-800"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Indemnité de Logement Expat</label>
+                      <input
+                        type="number"
+                        value={housingAllowance}
+                        onChange={(e) => setHousingAllowance(Number(e.target.value))}
+                        className="w-full border border-slate-300 rounded-lg p-2.5 font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                    <input
+                      type="checkbox"
+                      id="specialTaxCheck"
+                      checked={specialTaxTreatment}
+                      onChange={(e) => setSpecialTaxTreatment(e.target.checked)}
+                      className="w-4 h-4 text-amber-600 rounded"
+                    />
+                    <label htmlFor="specialTaxCheck" className="text-amber-950 font-bold">
+                      Régime fiscal / convention fiscale d'expatriation spécifique (Dérogations DGI RDC)
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-3 border-t">
+                  <button
+                    type="submit"
+                    disabled={isExpatSaving}
+                    className="bg-[#1F3864] text-white hover:bg-blue-900 font-bold px-5 py-2.5 rounded-xl shadow flex items-center space-x-2"
+                  >
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <span>{isExpatSaving ? 'Enregistrement...' : 'Enregistrer la Fiche Expatrié'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* TAB: REAL_COST */}
+          {activeTab === 'REAL_COST' && (
+            <div className="space-y-6">
+              <div className="bg-slate-900 text-white p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
+                <div>
+                  <h3 className="text-lg font-black text-amber-400">Coût Réel Employeur de l'Employé</h3>
+                  <p className="text-slate-300 text-xs mt-1">
+                    Vision consolidée globale : Salaire Brut + Charges Patronales (CNSS 13%, INPP 1-3%, ONEM 0.2%) + Prise en charge Santé + Notes de Frais
+                  </p>
+                </div>
+                <div className="bg-white/10 p-3 rounded-xl border border-white/20 text-right">
+                  <div className="text-[10px] text-slate-300 uppercase tracking-wide font-bold">Coût Estimé Mensuel Total</div>
+                  <div className="text-2xl font-black text-emerald-400 font-mono">
+                    {((employee.currentContract?.baseSalary || 1500) * 1.25).toLocaleString('fr-FR')} {employee.currentContract?.currency || 'USD'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+                  <span className="text-slate-500 font-bold text-[11px]">1. Salaire Brut Mensuel</span>
+                  <div className="text-lg font-black text-[#1F3864] font-mono">
+                    {(employee.currentContract?.baseSalary || 1500).toLocaleString('fr-FR')} {employee.currentContract?.currency || 'USD'}
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+                  <span className="text-slate-500 font-bold text-[11px]">2. Charges Patronales (+16.2%)</span>
+                  <div className="text-lg font-black text-amber-700 font-mono">
+                    {Math.round((employee.currentContract?.baseSalary || 1500) * 0.162).toLocaleString('fr-FR')} {employee.currentContract?.currency || 'USD'}
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+                  <span className="text-slate-500 font-bold text-[11px]">3. Forfait Santé / Mutuelle</span>
+                  <div className="text-lg font-black text-blue-700 font-mono">
+                    45 USD / mois
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+                  <span className="text-slate-500 font-bold text-[11px]">4. Notes de Frais Remboursées</span>
+                  <div className="text-lg font-black text-emerald-700 font-mono">
+                    120 USD (Moyenne)
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                <h4 className="font-bold text-sm text-[#1F3864]">Détail & Ventilation du Coût Employeur (Conforme RDC)</h4>
+                <table className="w-full text-left text-xs divide-y divide-slate-100">
+                  <thead className="bg-slate-100 font-bold text-slate-700 uppercase text-[10px]">
+                    <tr>
+                      <th className="p-3">Composante de Coût</th>
+                      <th className="p-3">Base de Calcul</th>
+                      <th className="p-3">Taux / Formule</th>
+                      <th className="p-3 text-right">Montant Mensuel Estimé</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    <tr>
+                      <td className="p-3 font-bold text-slate-900">Salaire de Base + Primes</td>
+                      <td className="p-3">Contrat en vigueur</td>
+                      <td className="p-3">Fixe mensuel</td>
+                      <td className="p-3 text-right font-mono font-bold">{(employee.currentContract?.baseSalary || 1500).toLocaleString()} USD</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 text-amber-900 font-bold">Cotisation CNSS Patronale</td>
+                      <td className="p-3">Salaire Brut (Plafonné RDC)</td>
+                      <td className="p-3">13.0% (Cotisation Employeur)</td>
+                      <td className="p-3 text-right font-mono">{Math.round((employee.currentContract?.baseSalary || 1500) * 0.13).toLocaleString()} USD</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 text-amber-900 font-bold">Cotisation INPP Patronale</td>
+                      <td className="p-3">Masse Salariale Brute</td>
+                      <td className="p-3">3.0% (Entreprise &gt; 50 sal)</td>
+                      <td className="p-3 text-right font-mono">{Math.round((employee.currentContract?.baseSalary || 1500) * 0.03).toLocaleString()} USD</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 text-amber-900 font-bold">Taxe ONEM Patronale</td>
+                      <td className="p-3">Masse Salariale Brute</td>
+                      <td className="p-3">0.2% (Office National de l'Emploi)</td>
+                      <td className="p-3 text-right font-mono">{Math.round((employee.currentContract?.baseSalary || 1500) * 0.002).toLocaleString()} USD</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 text-blue-900 font-bold">Prise en Charge Médicale & Hôpital</td>
+                      <td className="p-3">Couverture Santé Société</td>
+                      <td className="p-3">Convention / Factures à l'acte</td>
+                      <td className="p-3 text-right font-mono">45 USD</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 text-emerald-900 font-bold">Moyenne Notes de Frais Remboursées</td>
+                      <td className="p-3">Déplacements & Missions</td>
+                      <td className="p-3">Remboursement sur pièces justificatives</td>
+                      <td className="p-3 text-right font-mono">120 USD</td>
+                    </tr>
+                    <tr className="bg-slate-50 font-black text-[#1F3864]">
+                      <td className="p-3 text-sm">TOTAL COÛT EMPLOYEUR MENSUEL</td>
+                      <td className="p-3" colSpan={2}>Remarque: Les avances et prêts sont exclus car récupérables.</td>
+                      <td className="p-3 text-right font-mono text-sm text-emerald-700">
+                        {Math.round((employee.currentContract?.baseSalary || 1500) * 1.162 + 165).toLocaleString()} USD
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -721,7 +1307,7 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
                                       </head>
                                       <body>
                                         <div class="header">
-                                          <h2>KAZIPAY RDC — BULLETIN DE PAIE OFFICIEL</h2>
+                                          <h2>NOVARISPAY RDC — BULLETIN DE PAIE OFFICIEL</h2>
                                           <p><strong>Employé:</strong> ${ps.employeeName} (${ps.employeeMatricule}) | <strong>Période:</strong> ${ps.period}</p>
                                         </div>
                                         <table>
@@ -934,7 +1520,7 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
                                 <body>
                                   <div class="header">
                                     <h2>REPUBLIQUE DEMOCRATIQUE DU CONGO</h2>
-                                    <h3>KAZIPAY — RECU DE SOLDE DE TOUT COMPTE</h3>
+                                    <h3>NOVARISPAY — RECU DE SOLDE DE TOUT COMPTE</h3>
                                     <p><strong>Salarié:</strong> ${stc.employeeName} (${stc.employeeMatricule}) | <strong>Motif:</strong> ${stc.terminationReason}</p>
                                     <p><strong>Ancienneté:</strong> ${stc.seniorityYears} an(s) | <strong>Date de fin:</strong> ${stc.terminationDate}</p>
                                   </div>
@@ -1324,6 +1910,21 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
         isOpen={isServiceCertOpen}
         onClose={() => setIsServiceCertOpen(false)}
         initialEmployeeId={employee.id}
+      />
+
+      {/* Modal Capture / Importer Photo Employé */}
+      <EmployeePhotoModal
+        isOpen={isPhotoModalOpen}
+        onClose={() => setIsPhotoModalOpen(false)}
+        employeeName={`${employee.firstName} ${employee.lastName}`}
+        currentPhotoUrl={employee.photoUrl}
+        onPhotoSelected={async (photoUrl) => {
+          if (employee.id) {
+            await updateEmployeePhoto(employee.id, photoUrl, 'CAMERA', currentUser?.email || 'admin@novarispay.cd');
+            onRefresh();
+            loadAllEmployeeData();
+          }
+        }}
       />
     </div>
   );

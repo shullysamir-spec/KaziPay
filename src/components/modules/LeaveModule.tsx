@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import React, { useEffect, useState } from 'react';

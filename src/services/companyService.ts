@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - HR & Payroll Management System
  * Service de Gestion du Profil Entreprise, Logo, Couleurs & Signatures
  */
 
@@ -26,7 +26,7 @@ export interface CompanyConfig {
 }
 
 export const DEFAULT_COMPANY_CONFIG: CompanyConfig = {
-  name: 'KAZIPAY CONGO SARL',
+  name: 'NOVARISPAY CONGO SARL',
   rccm: 'CD/KIN/RCCM/22-B-01452',
   idNat: '01-93-N48120P',
   nif: 'A2210892X',
@@ -36,15 +36,15 @@ export const DEFAULT_COMPANY_CONFIG: CompanyConfig = {
   address: '14, Avenue de la Justice, Commune de la Gombe',
   cityProvince: 'Kinshasa, RDC',
   phone: '+243 810 000 000',
-  email: 'contact@kazipay.cd',
-  website: 'www.kazipay.cd',
+  email: 'contact@novarispay.cd',
+  website: 'www.novarispay.cd',
   primaryColor: '#1F3864',
   accentColor: '#BF9000',
   signerName: 'M. MUKENDI Jean-Luc',
   signerTitle: 'Directeur des Ressources Humaines',
 };
 
-const COMPANY_STORAGE_KEY = 'kazipay_active_company_config';
+const COMPANY_STORAGE_KEY = 'novarispay_active_company_config';
 
 export const getCompanyConfig = (): CompanyConfig => {
   try {

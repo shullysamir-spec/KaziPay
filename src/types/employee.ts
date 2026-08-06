@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 export type Currency = 'CDF' | 'USD';
@@ -64,6 +64,33 @@ export interface Employee {
   address: string;
   bankName: string;
   bankAccount: string;
+  swiftIban?: string;
+  mobileMoneyNumber?: string;
+  mobileMoneyProvider?: 'M-Pesa' | 'Airtel Money' | 'Orange Money' | 'Afrimoney' | 'Autre';
+  
+  // Expatriate Tracking
+  isExpatriate?: boolean;
+  nationality?: string;
+  countryOfOrigin?: string;
+  expatDocs?: {
+    visaNumber?: string;
+    visaExpiryDate?: string;
+    workPermitNumber?: string;
+    workPermitExpiryDate?: string;
+    residencePermitNumber?: string;
+    residencePermitExpiryDate?: string;
+    passportNumber?: string;
+    passportExpiryDate?: string;
+    contractExpiryDate?: string;
+  };
+  expatCompensation?: {
+    currency: Currency;
+    expatriationAllowance: number;
+    housingAllowance?: number;
+    specialTaxTreatment?: boolean;
+    notes?: string;
+  };
+
   site: string;
   department: string;
   position: string;

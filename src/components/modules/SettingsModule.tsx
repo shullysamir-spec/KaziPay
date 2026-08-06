@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * Module de Configuration Système, Barèmes Légaux RDC 100% Paramétrables & Branding Entreprise
  */
 
@@ -75,7 +75,7 @@ export const SettingsModule: React.FC = () => {
       'UPDATE_SETTINGS',
       'SETTINGS',
       `Mise à jour du branding entreprise pour ${company.name}`,
-      'admin@kazipay.cd',
+      'admin@novarispay.cd',
       'ADMINISTRATEUR'
     );
   };
@@ -112,7 +112,7 @@ export const SettingsModule: React.FC = () => {
     try {
       await saveStatutoryParams(
         newParamVersion,
-        'admin@kazipay.cd',
+        'admin@novarispay.cd',
         'Administrateur RH'
       );
       setSavedSuccess(true);
@@ -124,7 +124,7 @@ export const SettingsModule: React.FC = () => {
         'UPDATE_STATUTORY_RATES',
         'SETTINGS',
         `Création version barème légal : ${newParamVersion.version} (Date d'effet : ${newParamVersion.effectiveDate})`,
-        'admin@kazipay.cd',
+        'admin@novarispay.cd',
         'ADMINISTRATEUR'
       );
     } catch (err: any) {
@@ -445,7 +445,7 @@ export const SettingsModule: React.FC = () => {
                 </div>
 
                 <div className="text-[10px] text-right font-bold text-slate-700 pt-1">
-                  Direction RH & Paie — Généré via KaziPay RDC
+                  Direction RH & Paie — Généré via NovarisPay RDC
                 </div>
               </div>
             </div>

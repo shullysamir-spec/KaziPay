@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * Module GED (Gestion Électronique des Documents) & Traçabilité par Département et Employé
  */
 
@@ -30,6 +30,8 @@ import {
 import { getCompanyConfig, CompanyConfig } from '../../services/companyService';
 import { logAuditEvent } from '../../services/auditService';
 import { ServiceCertificateModal } from '../common/ServiceCertificateModal';
+import { DocumentUploadScanModal, DocumentUploadResult } from '../common/DocumentUploadScanModal';
+import { useToast } from '../../context/ToastContext';
 
 export interface CompanyDocument {
   id: string; // e.g. DOC-2026-089
@@ -65,6 +67,8 @@ export const DocumentGEDModule: React.FC = () => {
   const [selectedDoc, setSelectedDoc] = useState<CompanyDocument | null>(null);
   const [isNewDocModalOpen, setIsNewDocModalOpen] = useState(false);
   const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
+  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
+  const toast = useToast();
 
   // Initial Sample GED Data
   const [documents, setDocuments] = useState<CompanyDocument[]>([
@@ -219,7 +223,7 @@ export const DocumentGEDModule: React.FC = () => {
       'UPLOAD_DOCUMENT',
       'GED',
       `Enregistrement du document ${newDoc.id} (${newDoc.title}) pour ${newDoc.employeeName || newDoc.department}`,
-      'ged@kazipay.cd',
+      'ged@novarispay.cd',
       'ARCHIVISTE_RH',
       newDoc.id
     );
@@ -270,6 +274,13 @@ export const DocumentGEDModule: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setIsScanModalOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-2.5 rounded-xl text-xs flex items-center space-x-1.5 shadow transition"
+          >
+            <Upload className="w-4 h-4 text-emerald-200" />
+            <span>Numériser / Scan Caméra & Import</span>
+          </button>
           <button
             onClick={() => setIsCertificateModalOpen(true)}
             className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs flex items-center space-x-1.5 shadow transition"
@@ -367,7 +378,7 @@ export const DocumentGEDModule: React.FC = () => {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
             <h2 className="font-black text-xs text-[#1F3864] uppercase tracking-wider border-b pb-2 flex items-center justify-between">
               <span>Registre Électronique des Documents ({filteredDocs.length})</span>
-              <span className="text-[10px] text-slate-400 font-mono">Stockage Sécurisé KaziPay</span>
+              <span className="text-[10px] text-slate-400 font-mono">Stockage Sécurisé NovarisPay</span>
             </h2>
 
             <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
@@ -680,6 +691,33 @@ export const DocumentGEDModule: React.FC = () => {
         onClose={() => setIsCertificateModalOpen(false)}
         onDocumentGenerated={(newDoc) => {
           setDocuments((prev) => [newDoc, ...prev]);
+        }}
+      />
+
+      {/* Modal Numérisation & Import Scan Caméra / Fichier Dossier */}
+      <DocumentUploadScanModal
+        isOpen={isScanModalOpen}
+        onClose={() => setIsScanModalOpen(false)}
+        titleHint="Numérisation GED - Scan Caméra Direct ou Dossier"
+        defaultCategory="Contrats & Avenants"
+        onDocumentAdded={(res: DocumentUploadResult) => {
+          const today = new Date().toISOString().split('T')[0];
+          const created: CompanyDocument = {
+            id: `DOC-2026-00${documents.length + 1}`,
+            title: res.title,
+            category: 'Contrats & Avenants',
+            department: 'Exploitation',
+            uploadDate: today,
+            fileType: 'PDF',
+            fileSize: '1.8 MB',
+            confidentiality: 'CONFIDENTIEL_RH',
+            tags: ['NUMÉRISÉ', 'SCAN_DIRECT'],
+            status: 'VALID',
+            fileUrl: res.fileData,
+            notes: `Fichier numérisé via ${res.fileName}`,
+          };
+          setDocuments((prev) => [created, ...prev]);
+          setSelectedDoc(created);
         }}
       />
     </div>

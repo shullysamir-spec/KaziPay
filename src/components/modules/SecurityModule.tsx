@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import React, { useEffect, useState } from 'react';
@@ -198,7 +198,7 @@ export const SecurityModule: React.FC<SecurityModuleProps> = ({
             activeSubTab === 'ROLES' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600'
           }`}
         >
-          10 Rôles KaziPay
+          10 Rôles NovarisPay
         </button>
         <button
           onClick={() => setActiveSubTab('MATRIX')}
@@ -404,7 +404,7 @@ export const SecurityModule: React.FC<SecurityModuleProps> = ({
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `Audit_Trail_KaziPay_${new Date().toISOString().split('T')[0]}.csv`;
+                a.download = `Audit_Trail_NovarisPay_${new Date().toISOString().split('T')[0]}.csv`;
                 a.click();
               }}
               className="bg-[#1F3864] text-white font-bold px-3 py-1.5 rounded-lg text-xs"

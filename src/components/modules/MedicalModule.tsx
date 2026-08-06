@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * Module Suivi Médical & Génération de Bons de Soins (Code du Travail RDC Art. 177, 178)
  */
 
@@ -267,7 +267,7 @@ export const MedicalModule: React.FC = () => {
       'CREATE_VOUCHER',
       'MEDICAL',
       `Émission du bon de soins ${v.id} pour ${v.beneficiaryName} au centre ${v.medicalCenterName}`,
-      'rh@kazipay.cd',
+      'rh@novarispay.cd',
       'RESPONSABLE_RH',
       v.id
     );
@@ -305,7 +305,7 @@ export const MedicalModule: React.FC = () => {
       'CREATE_HOSPITAL_REPORT',
       'MEDICAL',
       `Enregistrement du rapport médical hôpital ${rep.id} pour ${rep.employeeName} (${rep.hospitalName})`,
-      'rh@kazipay.cd',
+      'rh@novarispay.cd',
       'RESPONSABLE_RH',
       rep.id
     );
@@ -689,7 +689,7 @@ export const MedicalModule: React.FC = () => {
                 <div className="flex items-center justify-between border-b pb-4">
                   <div>
                     <h2 className="font-black text-sm text-[#1F3864]">Aperçu Bon de Soins Officiel</h2>
-                    <p className="text-xs text-slate-500">Prise en charge médicale entreprise KaziPay RDC</p>
+                    <p className="text-xs text-slate-500">Prise en charge médicale entreprise NovarisPay RDC</p>
                   </div>
 
                   <div className="flex items-center space-x-2">
@@ -875,29 +875,174 @@ export const MedicalModule: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 3: CLINICS */}
+      {/* TAB 3: CLINICS & HEALTH COVERAGE MODES */}
       {activeTab === 'CLINICS' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { name: 'HJ Hospitals Kinshasa', city: 'Kinshasa / Limete', phone: '+243 818 000 000', rate: '100% ou 80%' },
-            { name: 'Centre Médical de la Gombe (CMG)', city: 'Kinshasa / Gombe', phone: '+243 890 000 000', rate: '100%' },
-            { name: 'Hôpital du Cinquantenaire', city: 'Kinshasa / Lingwala', phone: '+243 811 111 222', rate: '80%' },
-            { name: 'Centre Hospitalier Monkole', city: 'Kinshasa / Mont-Ngafula', phone: '+243 999 888 777', rate: '100%' },
-            { name: 'Polyclinique Don Bosco', city: 'Lubumbashi / Haut-Katanga', phone: '+243 850 123 456', rate: '100%' },
-            { name: 'Cliniques Universitaires de Kinshasa', city: 'Kinshasa / Lemba', phone: '+243 812 345 678', rate: '100%' },
-          ].map((c, i) => (
-            <div key={i} className="p-4 bg-white border rounded-2xl space-y-2 shadow-sm">
-              <div className="flex items-center space-x-2 text-[#1F3864]">
-                <Building2 className="w-5 h-5 text-blue-600" />
-                <h3 className="font-bold text-sm">{c.name}</h3>
+        <div className="space-y-6">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="font-black text-sm text-[#1F3864]">Registre des Hôpitaux, Prestataires & Modes de Prise en Charge</h2>
+                <p className="text-xs text-slate-500">
+                  Gestion sous-traitance médicale : Facturation à l'acte vs Contrats Forfaitaires mensuels par salarié.
+                </p>
               </div>
-              <p className="text-xs text-slate-500">{c.city}</p>
-              <div className="text-xs font-mono font-bold text-slate-700">{c.phone}</div>
-              <div className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded w-max">
-                Prise en charge: {c.rate}
+
+              <div className="flex items-center space-x-2">
+                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">
+                  2 Modes Agréés (Facture & Contrat)
+                </span>
               </div>
             </div>
-          ))}
+
+            {/* Hospital Cards Grid with Coverage Modes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                {
+                  name: 'HJ Hospitals Kinshasa',
+                  city: 'Kinshasa / Limete',
+                  phone: '+243 818 000 000',
+                  email: 'contact@hjhospitals.cd',
+                  mode: 'PAR FACTURE',
+                  details: 'Facturation directe des soins à l\'acte avec répartition (80% Employeur / 20% Employé).',
+                  rate: '80% - 100%',
+                },
+                {
+                  name: 'Centre Médical de la Gombe (CMG)',
+                  city: 'Kinshasa / Gombe',
+                  phone: '+243 890 000 000',
+                  email: 'admission@cmg.cd',
+                  mode: 'PAR CONTRAT FORFAITAIRE',
+                  monthlyCostPerEmployee: '45 USD / employé / mois',
+                  coverageScope: 'Consultations, Pharmacie 100%, Maternité & Urgences (Dépendants inclus)',
+                  annualCeiling: '3,000 USD / an / famille',
+                  rate: '100% Forfait',
+                },
+                {
+                  name: 'Hôpital du Cinquantenaire',
+                  city: 'Kinshasa / Lingwala',
+                  phone: '+243 811 111 222',
+                  email: 'facturation@cinquantenaire.cd',
+                  mode: 'PAR FACTURE',
+                  details: 'Facturation médicale mensuelle consolidée. Validation préalable du bon de soins RH obligatoire.',
+                  rate: '80%',
+                },
+                {
+                  name: 'Centre Hospitalier Monkole',
+                  city: 'Kinshasa / Mont-Ngafula',
+                  phone: '+243 999 888 777',
+                  email: 'soins@monkole.cd',
+                  mode: 'PAR CONTRAT FORFAITAIRE',
+                  monthlyCostPerEmployee: '30 USD / employé / mois',
+                  coverageScope: 'Soins de santé primaires, Pédiatrie & Biologie',
+                  annualCeiling: '1,500 USD / an / salarié',
+                  rate: '100% Forfait',
+                },
+              ].map((c, i) => (
+                <div key={i} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 shadow-sm hover:border-[#1F3864] transition">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-2 text-[#1F3864]">
+                      <Building2 className="w-5 h-5 text-blue-600 shrink-0" />
+                      <h3 className="font-bold text-sm text-slate-900">{c.name}</h3>
+                    </div>
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                      c.mode.includes('CONTRAT')
+                        ? 'bg-purple-100 text-purple-900 border border-purple-300'
+                        : 'bg-blue-100 text-blue-900 border border-blue-300'
+                    }`}>
+                      {c.mode}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-500">{c.city} • {c.phone}</p>
+
+                  {c.mode.includes('CONTRAT') ? (
+                    <div className="bg-purple-50 p-3 rounded-xl border border-purple-200 text-xs space-y-1">
+                      <div className="font-bold text-purple-950">Coût Forfaitaire : <span className="text-purple-700 font-mono font-black">{c.monthlyCostPerEmployee}</span></div>
+                      <div className="text-[11px] text-purple-900">Couverture : {c.coverageScope}</div>
+                      <div className="text-[10px] text-purple-800 font-mono">Plafond : {c.annualCeiling}</div>
+                    </div>
+                  ) : (
+                    <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 text-xs space-y-1">
+                      <div className="font-bold text-blue-950">Mode Facturation à l'acte</div>
+                      <div className="text-[11px] text-blue-900">{c.details}</div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center text-[11px] pt-1 border-t">
+                    <span className="text-slate-500 font-medium">Prise en charge : <strong className="text-emerald-700">{c.rate}</strong></span>
+                    <button
+                      onClick={() => alert(`Gestion de la convention avec ${c.name} (${c.mode})`)}
+                      className="text-[#1F3864] font-bold hover:underline"
+                    >
+                      Détails Convention
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Table: Invoices & Employee Allocations */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <h3 className="font-black text-sm text-[#1F3864]">Registre des Factures Médicales reçues & Imputation aux Employés</h3>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs divide-y divide-slate-100">
+                <thead className="bg-slate-100 font-bold text-slate-700 uppercase text-[10px]">
+                  <tr>
+                    <th className="p-3">N° Facture & Prestataire</th>
+                    <th className="p-3">Employé Concerné</th>
+                    <th className="p-3">Type de Prise en Charge</th>
+                    <th className="p-3">Montant Total</th>
+                    <th className="p-3">Part Employeur (80%)</th>
+                    <th className="p-3">Part Employé (20%)</th>
+                    <th className="p-3">Statut Paiement</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  <tr>
+                    <td className="p-3">
+                      <div className="font-bold text-slate-900">FAC-MED-2026-088</div>
+                      <div className="text-slate-500 text-[10px]">HJ Hospitals Kinshasa</div>
+                    </td>
+                    <td className="p-3">
+                      <div className="font-bold text-[#1F3864]">KASONGO Patrick</div>
+                      <div className="text-slate-500 font-mono text-[10px]">KP-2026-089</div>
+                    </td>
+                    <td className="p-3">Consultation & Examens Biologiques</td>
+                    <td className="p-3 font-mono font-bold">145,000 CDF</td>
+                    <td className="p-3 font-mono font-bold text-emerald-700">116,000 CDF</td>
+                    <td className="p-3 font-mono text-amber-700">29,000 CDF (Retenue paie)</td>
+                    <td className="p-3">
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        PAYÉE
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td className="p-3">
+                      <div className="font-bold text-slate-900">FAC-MED-2026-092</div>
+                      <div className="text-slate-500 text-[10px]">Centre Médical de la Gombe</div>
+                    </td>
+                    <td className="p-3">
+                      <div className="font-bold text-[#1F3864]">ILUNGA Samuel</div>
+                      <div className="text-slate-500 font-mono text-[10px]">KP-2026-042</div>
+                    </td>
+                    <td className="p-3">Soins Maternité Conjoint(e)</td>
+                    <td className="p-3 font-mono font-bold">85,000 CDF</td>
+                    <td className="p-3 font-mono font-bold text-emerald-700">68,000 CDF</td>
+                    <td className="p-3 font-mono text-amber-700">17,000 CDF (Retenue paie)</td>
+                    <td className="p-3">
+                      <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        EN ATTENTE
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
 

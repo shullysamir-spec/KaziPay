@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * 
  * MOTEUR DE EVALUATION DES PERMISSIONS RBAC
  * Respect strict de la séquence d'évaluation et de la garde anti-élévation.

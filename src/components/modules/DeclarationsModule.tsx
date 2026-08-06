@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * Module Déclarations Gouvernementales (DGI, CNSS, INPP, ONEM) & Lettres de Transmission Officielles
  */
 
@@ -137,7 +137,7 @@ export const DeclarationsModule: React.FC = () => {
       'GENERATE_LETTER',
       'DECLARATIONS',
       `Génération de la lettre de transmission ${newLetter.id} pour la ${newLetter.organism}`,
-      'finance@kazipay.cd',
+      'finance@novarispay.cd',
       'RESPONSABLE_FINANCIER'
     );
   };
@@ -203,7 +203,7 @@ export const DeclarationsModule: React.FC = () => {
 
   const handleOpenEditText = () => {
     if (!selectedLetter) return;
-    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations et obligations légales au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel employé par notre société ${company.name}.\n\nLe montant global récapitulatif dû s'élève à la somme de : ${selectedLetter.totalAmountCDF.toLocaleString()} CDF (Francs Congolais).\n\nLe règlement afférent a été effectué par : ${selectedLetter.paymentMode} (Référence de la transaction : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
+    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations et obligations légales au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel employé par notre société ${company.name}.\n\nLe montant global récapitulatif dû s'élève à la somme de : ${(selectedLetter.totalAmountCDF ?? 0).toLocaleString()} CDF (Francs Congolais).\n\nLe règlement afférent a été effectué par : ${selectedLetter.paymentMode} (Référence de la transaction : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
 
     setEditingText(selectedLetter.customBodyText || defaultBody);
     setIsEditingTextModalOpen(true);
@@ -224,7 +224,7 @@ export const DeclarationsModule: React.FC = () => {
       'UPDATE_LETTER_TEXT',
       'DECLARATIONS',
       `Modification du corps de texte personnalisé de la lettre ${selectedLetter.id}`,
-      'finance@kazipay.cd',
+      'finance@novarispay.cd',
       'RESPONSABLE_FINANCIER'
     );
   };
@@ -264,7 +264,7 @@ export const DeclarationsModule: React.FC = () => {
     // Body
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations / impôts Dus au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel de notre société ${company.name}.\n\nLe montant total à s'élever s'établit à : ${selectedLetter.totalAmountCDF.toLocaleString()} CDF (Francs Congolais).\n\nLe règlement de cette obligation a été effectué par : ${selectedLetter.paymentMode} (Réf. Règlement : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
+    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations / impôts Dus au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel de notre société ${company.name}.\n\nLe montant total à s'élever s'établit à : ${(selectedLetter.totalAmountCDF ?? 0).toLocaleString()} CDF (Francs Congolais).\n\nLe règlement de cette obligation a été effectué par : ${selectedLetter.paymentMode} (Réf. Règlement : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
 
     const body = selectedLetter.customBodyText || defaultBody;
 
@@ -510,7 +510,7 @@ export const DeclarationsModule: React.FC = () => {
                     </span>
                   </div>
                   <div className="font-bold text-sm">{lettr.recipientTitle}</div>
-                  <div className="text-[11px] opacity-80">Montant: {lettr.totalAmountCDF.toLocaleString()} CDF</div>
+                  <div className="text-[11px] opacity-80">Montant: {(lettr.totalAmountCDF ?? 0).toLocaleString()} CDF</div>
                   <div className="text-[10px] opacity-60 font-mono">Date: {lettr.generatedDate}</div>
                 </div>
               ))}
@@ -606,7 +606,7 @@ export const DeclarationsModule: React.FC = () => {
                         </p>
                         <p>
                           Le montant global récapitulatif dû s'élève à la somme de :{' '}
-                          <strong className="text-sm font-sans">{selectedLetter.totalAmountCDF.toLocaleString()} CDF</strong> (Francs
+                          <strong className="text-sm font-sans">{(selectedLetter.totalAmountCDF ?? 0).toLocaleString()} CDF</strong> (Francs
                           Congolais).
                         </p>
                         <p>

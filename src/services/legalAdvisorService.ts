@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * Service du Conseiller Juridique Virtuel RH RDC (Gemini AI Legal Advisor)
  */
 
@@ -90,7 +90,7 @@ Antécédents : ${historyCount} sanction(s) enregistrée(s) dans le dossier.
 
 Infraction reprochée : "${request.proposedInfraction}"
 
-Avis de la Réserve Juridique KaziPay RDC :
+Avis de la Réserve Juridique NovarisPay RDC :
 1. Principe du Contradictoire (Art. 72) : Aucune sanction ne peut être notifiée sans demande d'explication préalable avec un délai de réponse de 48 heures ouvrables.
 2. Délais d'Action : L'employeur dispose d'un délai strict de 15 jours ouvrables à compter de la découverte constatée des faits pour engager la procédure.
 3. Gradation des Sanctions : ${

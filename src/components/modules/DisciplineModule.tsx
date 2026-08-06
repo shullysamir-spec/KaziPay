@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * Module Disciplinaire & Contentieux RH (Code du Travail RDC - Art. 72, 73, 74)
  */
 
@@ -171,7 +171,7 @@ export const DisciplineModule: React.FC = () => {
       'DECISION_SANCTION',
       'DISCIPLINE',
       `Décision disciplinaire enregistrée pour ${selectedCase.employeeName} (${responseForm.finalDecision})`,
-      'rh@kazipay.cd',
+      'rh@novarispay.cd',
       'RESPONSABLE_RH',
       selectedCase.id
     );
@@ -259,7 +259,7 @@ export const DisciplineModule: React.FC = () => {
       'SANCTION',
       'DISCIPLINE',
       `Création procédure disciplinaire ${c.id} (${getSanctionLabel(c.type)}) pour ${c.employeeName}`,
-      'rh@kazipay.cd',
+      'rh@novarispay.cd',
       'GESTIONNAIRE_RH',
       c.id
     );
@@ -279,7 +279,7 @@ export const DisciplineModule: React.FC = () => {
       'UPDATE',
       'DISCIPLINE',
       `Modification texte du courrier ${selectedCase.id} pour ${selectedCase.employeeName}`,
-      'rh@kazipay.cd',
+      'rh@novarispay.cd',
       'GESTIONNAIRE_RH',
       selectedCase.id
     );
@@ -306,7 +306,7 @@ export const DisciplineModule: React.FC = () => {
       'SIGN_LETTER',
       'DISCIPLINE',
       `${newSignedStatus ? 'Signature électronique apposée sur' : 'Signature révoquée pour'} ${selectedCase.id}`,
-      'drh@kazipay.cd',
+      'drh@novarispay.cd',
       'DIRECTEUR_RH',
       selectedCase.id
     );
@@ -334,7 +334,7 @@ export const DisciplineModule: React.FC = () => {
       'CREATE',
       'DISCIPLINE',
       `Consultation Conseiller Juridique IA pour ${advisorForm.employeeName}`,
-      'rh@kazipay.cd',
+      'rh@novarispay.cd',
       'GESTIONNAIRE_RH'
     );
   };
@@ -422,7 +422,7 @@ export const DisciplineModule: React.FC = () => {
       doc.setFont('helvetica', 'normal');
       doc.text(selectedCase.signerName || 'M. MUKENDI Jean-Luc', 22, startSigY + 24);
       doc.setFontSize(7);
-      doc.text(selectedCase.signerTitle || 'Directeur RH KaziPay', 22, startSigY + 29);
+      doc.text(selectedCase.signerTitle || 'Directeur RH NovarisPay', 22, startSigY + 29);
       doc.text(`Horodatage : ${selectedCase.signedAt || selectedCase.notificationDate}`, 22, startSigY + 34);
     } else {
       doc.setTextColor(148, 163, 184);
@@ -447,7 +447,7 @@ export const DisciplineModule: React.FC = () => {
     doc.setFontSize(7);
     doc.setTextColor(148, 163, 184);
     doc.text(
-      'Document officiel généré par ERP KaziPay RDC — Conforme au Code du Travail RDC (Loi n° 15/013 Art. 72)',
+      'Document officiel généré par ERP NovarisPay RDC — Conforme au Code du Travail RDC (Loi n° 15/013 Art. 72)',
       15,
       285
     );
@@ -458,7 +458,7 @@ export const DisciplineModule: React.FC = () => {
       'EXPORT',
       'DISCIPLINE',
       `Téléchargement Lettre PDF ${selectedCase.id} pour ${selectedCase.employeeName}`,
-      'rh@kazipay.cd',
+      'rh@novarispay.cd',
       'GESTIONNAIRE_RH',
       selectedCase.id
     );
@@ -700,7 +700,7 @@ export const DisciplineModule: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t text-xs">
                   <div className="p-4 bg-slate-50 border rounded-xl space-y-2">
                     <span className="font-bold text-slate-800 block text-xs">
-                      Signature du Responsable RH (KaziPay)
+                      Signature du Responsable RH (NovarisPay)
                     </span>
                     {selectedCase.isSignedElectronically ? (
                       <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-[11px] space-y-1">

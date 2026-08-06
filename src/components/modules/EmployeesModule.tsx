@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import React, { useEffect, useState } from 'react';
@@ -52,6 +52,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
   const [filteredEmployees, setFilteredEmployees] = useState<EmployeeWithContract[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('ALL');
+  const [expatFilter, setExpatFilter] = useState<'ALL' | 'EXPAT_ONLY' | 'NATIONAL_ONLY'>('ALL');
   const [loading, setLoading] = useState(true);
 
   // Modals state
@@ -147,8 +148,13 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
     if (departmentFilter !== 'ALL') {
       result = result.filter((e) => e.department === departmentFilter);
     }
+    if (expatFilter === 'EXPAT_ONLY') {
+      result = result.filter((e) => e.isExpatriate);
+    } else if (expatFilter === 'NATIONAL_ONLY') {
+      result = result.filter((e) => !e.isExpatriate);
+    }
     setFilteredEmployees(result);
-  }, [searchQuery, departmentFilter, employees]);
+  }, [searchQuery, departmentFilter, expatFilter, employees]);
 
   const handleOpenCreate = () => {
     setSelectedEmployee(null);
@@ -347,6 +353,16 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
               <option key={d} value={d}>{d}</option>
             ))}
           </select>
+
+          <select
+            value={expatFilter}
+            onChange={(e) => setExpatFilter(e.target.value as any)}
+            className="border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 font-medium"
+          >
+            <option value="ALL">Tous les statuts (Locaux & Expats)</option>
+            <option value="NATIONAL_ONLY">Employés Nationaux RDC</option>
+            <option value="EXPAT_ONLY">Expatriés uniquement</option>
+          </select>
         </div>
       </div>
 
@@ -381,8 +397,30 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                 filteredEmployees.map((emp) => (
                   <tr key={emp.id} className="hover:bg-slate-50 transition">
                     <td className="py-3 px-4 font-bold text-slate-900">
-                      <div className="text-sm">{emp.lastName} {emp.firstName}</div>
-                      <div className="text-[11px] font-mono text-[#1F3864]">{emp.matricule}</div>
+                      <div className="flex items-center space-x-3">
+                        {emp.photoUrl ? (
+                          <img
+                            src={emp.photoUrl}
+                            alt={emp.lastName}
+                            className="w-9 h-9 rounded-xl object-cover border border-amber-400 shrink-0 shadow-sm"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-xl bg-[#BF9000] text-[#1F3864] font-black flex items-center justify-center text-xs shrink-0 shadow-sm border border-amber-300">
+                            {emp.firstName?.[0]}{emp.lastName?.[0]}
+                          </div>
+                        )}
+                        <div>
+                          <div className="text-sm flex items-center space-x-1">
+                            <span>{emp.lastName} {emp.firstName}</span>
+                            {emp.isExpatriate && (
+                              <span className="bg-blue-900 text-white text-[9px] font-bold px-1.5 py-0.2 rounded ml-1">
+                                EXPAT
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] font-mono text-[#1F3864]">{emp.matricule}</div>
+                        </div>
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       <div className="font-semibold text-slate-800">{emp.position}</div>
@@ -1008,7 +1046,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                                         </head>
                                         <body>
                                           <div class="header">
-                                            <h2>KAZIPAY RDC — BULLETIN DE PAIE OFFICEL</h2>
+                                            <h2>NOVARISPAY RDC — BULLETIN DE PAIE OFFICEL</h2>
                                             <p><strong>Employé:</strong> ${ps.employeeName} (${ps.employeeMatricule}) | <strong>Période:</strong> ${ps.period}</p>
                                             <p><strong>Poste:</strong> ${ps.position} | <strong>Département:</strong> ${ps.department}</p>
                                           </div>

@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import React, { useEffect, useState } from 'react';
@@ -27,6 +27,7 @@ import {
   RefreshCw,
   Info,
   ArrowRight,
+  DollarSign,
 } from 'lucide-react';
 
 interface PayrollModuleProps {
@@ -41,10 +42,76 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
   onViewPayslips,
 }) => {
   const [runs, setRuns] = useState<PayrollRun[]>([]);
-  const [activeTab, setActiveTab] = useState<'RUNS' | 'TEST_SUITE' | 'CHECKLIST_RECETTE'>('RUNS');
+  const [activeTab, setActiveTab] = useState<'RUNS' | 'EXPENSES' | 'TEST_SUITE' | 'CHECKLIST_RECETTE'>('RUNS');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [calculatingRunId, setCalculatingRunId] = useState<string | null>(null);
+
+  // Expense Reports State
+  const [expenseReports, setExpenseReports] = useState<any[]>([
+    {
+      id: 'NDF-2026-001',
+      employeeMatricule: 'KP-2026-089',
+      employeeName: 'KASONGO Patrick',
+      department: 'Exploitation',
+      category: 'TRANSPORT',
+      categoryLabel: 'Transport & Déplacement',
+      amount: 150,
+      currency: 'USD',
+      amountCDF: 427500,
+      expenseDate: '2026-07-18',
+      submissionDate: '2026-07-20',
+      description: 'Déplacement taxi & mission d\'inspection sur le site de Maluku.',
+      receiptFileName: 'Recu_Taxi_Maluku.pdf',
+      status: 'APPROVED_SUPERVISOR',
+      supervisorApproval: {
+        approvedBy: 'DRH - M. MUKENDI',
+        approvedAt: '2026-07-21',
+      },
+    },
+    {
+      id: 'NDF-2026-002',
+      employeeMatricule: 'KP-2026-042',
+      employeeName: 'ILUNGA Samuel',
+      department: 'Logistique',
+      category: 'HOTEL_LODGING',
+      categoryLabel: 'Hébergement & Hôtel',
+      amount: 320,
+      currency: 'USD',
+      amountCDF: 912000,
+      expenseDate: '2026-07-10',
+      submissionDate: '2026-07-12',
+      description: 'Hébergement 2 nuitées à Lubumbashi pour réunion avec le client SNCC.',
+      receiptFileName: 'Facture_Hotel_Caravia.pdf',
+      status: 'REIMBURSED',
+      supervisorApproval: {
+        approvedBy: 'DRH - M. MUKENDI',
+        approvedAt: '2026-07-13',
+      },
+      financeApproval: {
+        approvedBy: 'Comptabilité - Mme MWAMBA',
+        approvedAt: '2026-07-14',
+      },
+      reimbursementDetails: {
+        reimbursedAt: '2026-07-15',
+        paymentMethod: 'BANK_TRANSFER',
+        paymentReference: 'VIR-EQUITY-889021',
+      },
+    },
+  ]);
+
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [newExpenseForm, setNewExpenseForm] = useState({
+    employeeMatricule: 'KP-2026-089',
+    employeeName: 'KASONGO Patrick',
+    department: 'Exploitation',
+    category: 'TRANSPORT',
+    amount: 50,
+    currency: 'USD',
+    expenseDate: new Date().toISOString().split('T')[0],
+    description: '',
+    receiptFileName: '',
+  });
 
   // Bonus Calculation Options
   const [selectedRunForOptions, setSelectedRunForOptions] = useState<PayrollRun | null>(null);
@@ -152,6 +219,15 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
           }`}
         >
           Traitements Mensuels ({runs.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('EXPENSES')}
+          className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center space-x-1.5 ${
+            activeTab === 'EXPENSES' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <DollarSign className="w-4 h-4 text-emerald-400" />
+          <span>Notes de Frais & Remboursements ({expenseReports.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('TEST_SUITE')}
@@ -276,6 +352,159 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* EXPENSES TAB */}
+      {activeTab === 'EXPENSES' && (
+        <div className="space-y-6">
+          {/* Header & Stats */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div>
+              <h2 className="text-base font-black text-[#1F3864]">Notes de Frais & Demandes de Remboursement</h2>
+              <p className="text-xs text-slate-500">
+                Soumission des frais professionnels, circuit d'approbation (Manager → Comptabilité) & intégration en paie.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsExpenseModalOpen(true)}
+              className="bg-[#1F3864] hover:bg-[#152747] text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-1.5 shadow transition"
+            >
+              <Plus className="w-4 h-4 text-[#BF9000]" />
+              <span>Soumettre une Note de Frais</span>
+            </button>
+          </div>
+
+          {/* Stats Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <span className="text-xs text-slate-500 font-bold block">Total Notes Soumises</span>
+              <div className="text-xl font-black text-[#1F3864] mt-1">{expenseReports.length} demandes</div>
+            </div>
+
+            <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 shadow-sm">
+              <span className="text-xs text-amber-900 font-bold block">En Attente de Validation</span>
+              <div className="text-xl font-black text-amber-700 mt-1">
+                {expenseReports.filter((e) => e.status !== 'REIMBURSED' && e.status !== 'REJECTED').length} dossiers
+              </div>
+            </div>
+
+            <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 shadow-sm">
+              <span className="text-xs text-emerald-900 font-bold block">Total Remboursé (Valide)</span>
+              <div className="text-xl font-black text-emerald-700 mt-1">
+                ${expenseReports.filter((e) => e.status === 'REIMBURSED').reduce((sum, e) => sum + e.amount, 0).toLocaleString()} USD
+              </div>
+            </div>
+          </div>
+
+          {/* Expense Reports Table */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="bg-[#1F3864] text-white uppercase font-bold text-[11px] tracking-wider">
+                  <tr>
+                    <th className="py-3 px-4">N° Note & Date</th>
+                    <th className="py-3 px-4">Employé</th>
+                    <th className="py-3 px-4">Catégorie & Motif</th>
+                    <th className="py-3 px-4">Montant Soumis</th>
+                    <th className="py-3 px-4">Justificatif</th>
+                    <th className="py-3 px-4">Circuit & Statut</th>
+                    <th className="py-3 px-4 text-right">Actions Workflow</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  {expenseReports.map((exp) => (
+                    <tr key={exp.id} className="hover:bg-slate-50 transition">
+                      <td className="py-3 px-4">
+                        <div className="font-mono font-bold text-[#1F3864]">{exp.id}</div>
+                        <div className="text-[10px] text-slate-500">{exp.expenseDate}</div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-slate-900">{exp.employeeName}</div>
+                        <div className="text-[10px] text-slate-500">{exp.department} • {exp.employeeMatricule}</div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="bg-slate-100 text-slate-800 font-bold text-[10px] px-2 py-0.5 rounded">
+                          {exp.categoryLabel}
+                        </span>
+                        <div className="text-slate-600 text-[11px] mt-1 max-w-xs">{exp.description}</div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="font-mono font-bold text-slate-900">${exp.amount} USD</div>
+                        <div className="font-mono text-[10px] text-slate-500">{exp.amountCDF.toLocaleString()} CDF</div>
+                      </td>
+                      <td className="py-3 px-4">
+                        {exp.receiptFileName ? (
+                          <span className="text-blue-700 underline text-[11px] font-mono cursor-pointer">
+                            📎 {exp.receiptFileName}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 italic">Aucun fichier</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${
+                          exp.status === 'REIMBURSED'
+                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                            : exp.status === 'APPROVED_FINANCE'
+                            ? 'bg-blue-100 text-blue-900 border border-blue-300'
+                            : exp.status === 'APPROVED_SUPERVISOR'
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                            : exp.status === 'REJECTED'
+                            ? 'bg-red-100 text-red-900 border border-red-300'
+                            : 'bg-slate-100 text-slate-800'
+                        }`}>
+                          {exp.status === 'REIMBURSED'
+                            ? 'Remboursé'
+                            : exp.status === 'APPROVED_FINANCE'
+                            ? 'Validé Finance'
+                            : exp.status === 'APPROVED_SUPERVISOR'
+                            ? 'Approuvé Supérieur'
+                            : exp.status === 'REJECTED'
+                            ? 'Rejeté'
+                            : 'Soumis'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right space-x-1">
+                        {exp.status === 'SUBMITTED' && (
+                          <button
+                            onClick={() => {
+                              setExpenseReports(expenseReports.map((e) => e.id === exp.id ? { ...e, status: 'APPROVED_SUPERVISOR', supervisorApproval: { approvedBy: currentUser?.displayName || 'Supérieur', approvedAt: new Date().toISOString().split('T')[0] } } : e));
+                            }}
+                            className="bg-amber-600 text-white font-bold text-[10px] px-2 py-1 rounded shadow"
+                          >
+                            Approuver (Supérieur)
+                          </button>
+                        )}
+                        {exp.status === 'APPROVED_SUPERVISOR' && (
+                          <button
+                            onClick={() => {
+                              setExpenseReports(expenseReports.map((e) => e.id === exp.id ? { ...e, status: 'APPROVED_FINANCE', financeApproval: { approvedBy: currentUser?.displayName || 'Finance', approvedAt: new Date().toISOString().split('T')[0] } } : e));
+                            }}
+                            className="bg-blue-700 text-white font-bold text-[10px] px-2 py-1 rounded shadow"
+                          >
+                            Valider (Finance)
+                          </button>
+                        )}
+                        {exp.status === 'APPROVED_FINANCE' && (
+                          <button
+                            onClick={() => {
+                              const ref = prompt('N° de référence du virement/paiement de remboursement :') || 'VIR-BANK-2026';
+                              setExpenseReports(expenseReports.map((e) => e.id === exp.id ? { ...e, status: 'REIMBURSED', reimbursementDetails: { reimbursedAt: new Date().toISOString().split('T')[0], paymentMethod: 'BANK_TRANSFER', paymentReference: ref } } : e));
+                            }}
+                            className="bg-emerald-700 text-white font-bold text-[10px] px-2 py-1 rounded shadow"
+                          >
+                            Marquer Remboursé
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -430,7 +659,7 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
             <div>
               <h2 className="text-base font-black text-[#1F3864] flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-emerald-600" />
-                <span>Checklist de Recette & Pré-Production KaziPay RDC</span>
+                <span>Checklist de Recette & Pré-Production NovarisPay RDC</span>
               </h2>
               <p className="text-xs text-slate-500 mt-1">
                 Contrôle de conformité intégrale aux standards de sécurité, RBAC, droit du travail congolais et stabilité technique.
@@ -617,6 +846,162 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
                   className="px-4 py-2 bg-[#1F3864] text-white font-bold rounded shadow"
                 >
                   Créer le Traitement
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Create Expense Modal */}
+      {isExpenseModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 space-y-4">
+            <h2 className="text-base font-black text-[#1F3864]">Soumettre une Note de Frais Professional</h2>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const newId = `NDF-2026-${Math.floor(100 + Math.random() * 900)}`;
+                const categoriesMap: Record<string, string> = {
+                  TRANSPORT: 'Transport & Déplacement',
+                  HOTEL_LODGING: 'Hébergement & Hôtel',
+                  MEALS: 'Restauration & Repas',
+                  MISSION_PERDIEM: 'Mission & Per Diem',
+                  OFFICE_SUPPLIES: 'Fournitures & Bureau',
+                  OTHER: 'Autres Frais',
+                };
+                const amountCDF = newExpenseForm.currency === 'USD' ? newExpenseForm.amount * 2850 : newExpenseForm.amount;
+                setExpenseReports([
+                  ...expenseReports,
+                  {
+                    id: newId,
+                    ...newExpenseForm,
+                    categoryLabel: categoriesMap[newExpenseForm.category] || 'Autre',
+                    amountCDF,
+                    submissionDate: new Date().toISOString().split('T')[0],
+                    status: 'SUBMITTED',
+                  },
+                ]);
+                setIsExpenseModalOpen(false);
+              }}
+              className="space-y-3 text-xs"
+            >
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700">Employé Demandeur *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newExpenseForm.employeeName}
+                    onChange={(e) => setNewExpenseForm({ ...newExpenseForm, employeeName: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700">Matricule *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newExpenseForm.employeeMatricule}
+                    onChange={(e) => setNewExpenseForm({ ...newExpenseForm, employeeMatricule: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-lg font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700">Catégorie de Frais *</label>
+                  <select
+                    value={newExpenseForm.category}
+                    onChange={(e) => setNewExpenseForm({ ...newExpenseForm, category: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-lg font-bold text-slate-800"
+                  >
+                    <option value="TRANSPORT">Transport & Déplacement</option>
+                    <option value="HOTEL_LODGING">Hébergement & Hôtel</option>
+                    <option value="MEALS">Restauration & Repas</option>
+                    <option value="MISSION_PERDIEM">Mission & Per Diem</option>
+                    <option value="OFFICE_SUPPLIES">Fournitures & Bureau</option>
+                    <option value="OTHER">Autres Frais</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700">Date de la Dépense *</label>
+                  <input
+                    type="date"
+                    required
+                    value={newExpenseForm.expenseDate}
+                    onChange={(e) => setNewExpenseForm({ ...newExpenseForm, expenseDate: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-lg font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700">Montant *</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={newExpenseForm.amount}
+                    onChange={(e) => setNewExpenseForm({ ...newExpenseForm, amount: parseFloat(e.target.value) || 0 })}
+                    className="w-full p-2 border border-slate-300 rounded-lg font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700">Devise *</label>
+                  <select
+                    value={newExpenseForm.currency}
+                    onChange={(e) => setNewExpenseForm({ ...newExpenseForm, currency: e.target.value as any })}
+                    className="w-full p-2 border border-slate-300 rounded-lg font-bold text-slate-800"
+                  >
+                    <option value="USD">USD ($)</option>
+                    <option value="CDF">CDF (FC)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1 text-slate-700">Description & Motif Professionnel *</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={newExpenseForm.description}
+                  onChange={(e) => setNewExpenseForm({ ...newExpenseForm, description: e.target.value })}
+                  placeholder="Expliquez la nécessité de la dépense pour la société..."
+                  className="w-full p-2 border border-slate-300 rounded-lg text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1 text-slate-700">Justificatif / Reçu (PDF/JPG)</label>
+                <input
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setNewExpenseForm({ ...newExpenseForm, receiptFileName: file.name });
+                    }
+                  }}
+                  className="w-full p-1.5 border border-slate-300 rounded-lg text-xs bg-slate-50"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setIsExpenseModalOpen(false)}
+                  className="px-4 py-2 border rounded-xl font-bold text-slate-600 hover:bg-slate-100"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#1F3864] text-white font-black rounded-xl shadow hover:bg-[#152747]"
+                >
+                  Soumettre la Note
                 </button>
               </div>
             </form>

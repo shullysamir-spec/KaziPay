@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import React, { useEffect, useState } from 'react';
@@ -119,7 +119,7 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     doc.text('Signature de l\'Employeur / Cachet RH', 18, y + 7);
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(8);
-    doc.text('[ Signature électronique KaziPay RDC ]', 18, y + 18);
+    doc.text('[ Signature électronique NovarisPay RDC ]', 18, y + 18);
 
     // Employee signature box
     doc.setFont('helvetica', 'bold');
@@ -310,7 +310,7 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
                   <span className="font-bold text-slate-700 block mb-2">Signature de l'Employeur / Cachet RH</span>
                   <div className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 py-1 px-2 rounded inline-flex items-center gap-1 my-2">
                     <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[1.75]" />
-                    <span>Signé électroniquement (KaziPay)</span>
+                    <span>Signé électroniquement (NovarisPay)</span>
                   </div>
                   <span className="text-[10px] text-slate-400 block font-mono">Approuvé & Payé par la Direction RH</span>
                 </div>

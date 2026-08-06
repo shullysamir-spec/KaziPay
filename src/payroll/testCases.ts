@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * 
  * SUITE DE TESTS ET CAS DE RÉFÉRENCE DE PAIE RDC 2026
  */

@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * 
  * MOTEUR DE PAIE DÉTERMINISTE RDC 2026
  * Code TypeScript pur, déterministe et testable.

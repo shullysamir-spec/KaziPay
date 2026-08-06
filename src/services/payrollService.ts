@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * 
  * SERVICE DE TRAITEMENT ET DE CLÔTURE DE LA PAIE
  */
@@ -280,7 +280,7 @@ export async function createPayrollRectificatif(
   employeeId: string,
   newNetSalaryCDF: number,
   adjustmentReason: string,
-  authorEmail: string = 'admin@kazipay.cd'
+  authorEmail: string = 'admin@novarispay.cd'
 ): Promise<PayrollRectificatif> {
   const payslipDocId = `${runId}_${employeeId}`;
   const payslipRef = doc(db, 'payslips', payslipDocId);
@@ -355,7 +355,7 @@ export async function saveSoldeDeToutCompte(solde: SoldeDeToutCompte): Promise<s
     'CREATE',
     'PAYROLL',
     `Génération du Solde de Tout Compte pour ${solde.employeeName} (Motif: ${solde.terminationReason}) - Net: ${solde.netPayableCDF.toLocaleString()} CDF`,
-    solde.createdBy || 'admin@kazipay.cd',
+    solde.createdBy || 'admin@novarispay.cd',
     'GESTIONNAIRE_RH',
     ref.id,
     null,

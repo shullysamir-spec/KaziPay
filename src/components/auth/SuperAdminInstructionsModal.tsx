@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import React from 'react';
@@ -41,10 +41,10 @@ export const SuperAdminInstructionsModal: React.FC<SuperAdminInstructionsModalPr
               <span>1. Identifiants du Super Administrateur de Démonstration</span>
             </h3>
             <p className="text-slate-700 text-xs mb-3">
-              Au premier chargement de l'application, KaziPay crée automatiquement le compte Super Administrateur ci-dessous avec le niveau de privilège 100 :
+              Au premier chargement de l'application, NovarisPay crée automatiquement le compte Super Administrateur ci-dessous avec le niveau de privilège 100 :
             </p>
             <div className="bg-white p-3 rounded border border-slate-200 font-mono text-xs space-y-1">
-              <div><strong>Email :</strong> admin@kazipay.cd</div>
+              <div><strong>Email :</strong> admin@novarispay.cd</div>
               <div><strong>Mot de passe :</strong> Admin@2026!</div>
               <div><strong>Rôle :</strong> SUPERADMIN (Niveau 100)</div>
             </div>
@@ -57,7 +57,7 @@ export const SuperAdminInstructionsModal: React.FC<SuperAdminInstructionsModalPr
               <span>2. Connexion du Projet Firebase Firestore</span>
             </h3>
             <p className="text-slate-600 text-xs mb-3">
-              KaziPay est connecté à votre projet Firestore via le fichier de configuration <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-bold">firebase-applet-config.json</code>.
+              NovarisPay est connecté à votre projet Firestore via le fichier de configuration <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-bold">firebase-applet-config.json</code>.
             </p>
             <ul className="space-y-2 text-xs text-slate-700">
               <li className="flex items-start space-x-2">
@@ -70,7 +70,7 @@ export const SuperAdminInstructionsModal: React.FC<SuperAdminInstructionsModalPr
               </li>
               <li className="flex items-start space-x-2">
                 <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <span><strong>Règles de sécurité :</strong> Déployées et configurées dans <code>firestore.rules</code> pour restreindre les accès selon le RBAC KaziPay.</span>
+                <span><strong>Règles de sécurité :</strong> Déployées et configurées dans <code>firestore.rules</code> pour restreindre les accès selon le RBAC NovarisPay.</span>
               </li>
             </ul>
           </div>

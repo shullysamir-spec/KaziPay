@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * 
  * SERVICE DE NOTIFICATIONS RH & PAIE
  * Alerte RH: Contrats à expiration, Visites Médicales en attente, Demandes de Congés à valider.
@@ -26,7 +26,7 @@ export interface NotificationItem {
 }
 
 // Key for storing read notification IDs in localStorage so state persists across sessions
-const READ_NOTIFS_STORAGE_KEY = 'kazipay_read_notifications';
+const READ_NOTIFS_STORAGE_KEY = 'novarispay_read_notifications';
 
 export function getReadNotificationIds(): string[] {
   try {

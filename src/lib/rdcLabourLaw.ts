@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * Base de Données des Textes de Loi, Code du Travail & Décrets RDC
  */
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - HR & Payroll Management System
  */
 
 import React from 'react';
@@ -64,12 +64,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule, 
   ];
 
   const hrItems: Array<{ key: ModuleKey; label: string; icon: React.ReactNode }> = [
-    { key: 'recruitment', label: 'Recrutement & Interviews', icon: <UserCheck className="w-5 h-5" strokeWidth={1.75} /> },
-    { key: 'performance', label: 'Performance & Formations', icon: <Target className="w-5 h-5" strokeWidth={1.75} /> },
-    { key: 'discipline', label: 'Procédures & Sanctions', icon: <AlertTriangle className="w-5 h-5" strokeWidth={1.75} /> },
-    { key: 'medical', label: 'Suivi Médical & Bons', icon: <Stethoscope className="w-5 h-5 text-emerald-400" strokeWidth={1.75} /> },
-    { key: 'documents', label: 'Documents & GED RH', icon: <FolderArchive className="w-5 h-5 text-amber-400" strokeWidth={1.75} /> },
-    { key: 'automation', label: 'Workflows & Alertes', icon: <Zap className="w-5 h-5" strokeWidth={1.75} /> },
+    { key: 'recruitment', label: t.recruitment, icon: <UserCheck className="w-5 h-5" strokeWidth={1.75} /> },
+    { key: 'performance', label: t.performance, icon: <Target className="w-5 h-5" strokeWidth={1.75} /> },
+    { key: 'discipline', label: t.discipline, icon: <AlertTriangle className="w-5 h-5" strokeWidth={1.75} /> },
+    { key: 'medical', label: t.medical, icon: <Stethoscope className="w-5 h-5 text-emerald-400" strokeWidth={1.75} /> },
+    { key: 'documents', label: t.documents, icon: <FolderArchive className="w-5 h-5 text-amber-400" strokeWidth={1.75} /> },
+    { key: 'automation', label: t.automation, icon: <Zap className="w-5 h-5" strokeWidth={1.75} /> },
   ];
 
   const operationsItems: Array<{ key: ModuleKey; label: string; icon: React.ReactNode }> = [
@@ -114,11 +114,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule, 
       {/* Sidebar Branding Header */}
       <div className="p-5 flex items-center gap-3 border-b border-blue-900/50">
         <div className="w-10 h-10 bg-[#BF9000] text-[#1F3864] rounded-lg flex items-center justify-center font-black text-xl shadow-md">
-          K
+          N
         </div>
         <div className="overflow-hidden">
           <div className="flex items-center gap-1.5">
-            <span className="text-xl font-black tracking-tight text-white">KaziPay</span>
+            <span className="text-xl font-black tracking-tight text-white">NovarisPay</span>
             <span className="text-[10px] bg-white/10 text-white/90 px-1.5 py-0.5 rounded font-bold uppercase">RDC</span>
           </div>
           <p className="text-[10px] text-white/60 truncate font-mono">ERP RH & Paie 2026</p>
@@ -127,10 +127,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule, 
 
       {/* Navigation Group List */}
       <nav className="flex-1 py-2 overflow-y-auto divide-y divide-blue-900/30">
-        {renderNavGroup('Principal', principalItems)}
-        {renderNavGroup('RH & Procédures', hrItems)}
-        {renderNavGroup('Paie & Déclarations', operationsItems)}
-        {renderNavGroup('Système', systemItems)}
+        {renderNavGroup(t.groupMain, principalItems)}
+        {renderNavGroup(t.groupHR, hrItems)}
+        {renderNavGroup(t.groupPayroll, operationsItems)}
+        {renderNavGroup(t.groupSystem, systemItems)}
       </nav>
 
       {/* Bottom Profile Summary Card */}

@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import { Currency } from './employee';
@@ -12,12 +12,15 @@ export interface Loan {
   employeeId: string;
   employeeName?: string;
   label: string;
+  reason?: string;
   totalAmount: number;
+  amount?: number;
   currency: Currency;
   monthlyDeduction: number;
   remainingBalance: number;
-  startDate: string;
+  startDate?: string;
+  requestDate?: string;
   endDate?: string;
   status: LoanStatus;
-  createdAt: string;
+  createdAt?: string;
 }

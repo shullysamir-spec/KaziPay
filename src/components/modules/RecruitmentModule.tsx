@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import React, { useState } from 'react';
@@ -47,7 +47,7 @@ export const RecruitmentModule: React.FC = () => {
       level: 'Agent de Maîtrise',
       salaryMinCDF: 1800000,
       salaryMaxCDF: 3200000,
-      keySkills: ['SYSCOHADA', 'Déclarations CNSS/INPP/IRPP', 'KaziPay ERP'],
+      keySkills: ['SYSCOHADA', 'Déclarations CNSS/INPP/IRPP', 'NovarisPay ERP'],
     },
     {
       id: 'POS-03',
@@ -295,7 +295,7 @@ export const RecruitmentModule: React.FC = () => {
             <div className="p-4 border rounded-xl bg-slate-50 space-y-2">
               <strong className="text-xs font-bold text-slate-900">4. Pratique des Outils RH ERP & Langes (15 Pts)</strong>
               <p className="text-xs text-slate-600">
-                Maîtrise de KaziPay ERP, tableurs avancés, Français et Anglais professionnel.
+                Maîtrise de NovarisPay ERP, tableurs avancés, Français et Anglais professionnel.
               </p>
             </div>
           </div>

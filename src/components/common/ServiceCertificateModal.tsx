@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * Composant de Génération de l'Attestation de Fin de Service / Certificat de Travail (Art. 168 Code du Travail RDC)
  */
 
@@ -113,7 +113,7 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
-      doc.text('RÉPUBLIQUE DÉMOCRATIQUE DU CONGO — ERP RH KAZIPAY', 15, 9);
+      doc.text('RÉPUBLIQUE DÉMOCRATIQUE DU CONGO — ERP RH NOVARISPAY', 15, 9);
       doc.text('DOCUMENT OFFICIEL CONFORME CODE DU TRAVAIL', pageWidth - 15, 9, { align: 'right' });
 
       // Information Entreprise Header
@@ -263,7 +263,7 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       doc.rect(0, 282, pageWidth, 15, 'F');
       doc.setFontSize(7);
       doc.setTextColor(100, 116, 139);
-      doc.text('Document généré conformément au Code du Travail RDC par KaziPay ERP System.', 15, 290);
+      doc.text('Document généré conformément au Code du Travail RDC par NovarisPay ERP System.', 15, 290);
       doc.text(`Page 1/1 — Certificat RH N° CERT-${Date.now().toString().slice(-6)}`, pageWidth - 15, 290, { align: 'right' });
 
       // Save PDF
@@ -545,7 +545,7 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
 
                   <div className="pt-2 flex justify-between items-end border-t border-slate-100">
                     <div className="text-[10px] text-slate-400">
-                      Généré via KaziPay ERP System RDC
+                      Généré via NovarisPay ERP System RDC
                     </div>
                     <div className="text-right">
                       <span className="text-[10px] block font-bold text-slate-800">Fait à {issueCity}, le {issueDate}</span>

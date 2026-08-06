@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * 
  * COMPOSANT DE NOTIFICATIONS RH & PAIE
  * Alerte RH: Contrats à expiration, Visites Médicales en attente, Demandes de Congés à valider.

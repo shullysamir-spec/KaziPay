@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import React, { useEffect, useState } from 'react';
@@ -68,7 +68,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate, cu
       {/* Top Banner */}
       <div className="bg-[#1F3864] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black">Tableau de Bord KaziPay</h1>
+          <h1 className="text-2xl font-black">Tableau de Bord NovarisPay</h1>
           <p className="text-xs text-blue-200 mt-1">
             Gestion RH & Paie conforme au Code du travail de la République Démocratique du Congo.
           </p>

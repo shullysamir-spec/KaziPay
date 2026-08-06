@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * Service de Journal d'Audit & Traçabilité (Audit Trail)
  */
 
@@ -21,13 +21,13 @@ export interface AuditLogEntry {
   ipAddress?: string;
 }
 
-const LOCAL_AUDIT_KEY = 'kazipay_audit_trail_logs';
+const LOCAL_AUDIT_KEY = 'novarispay_audit_trail_logs';
 
 export const logAuditEvent = async (
   action: AuditLogEntry['action'],
   module: string,
   details: string,
-  userEmail: string = 'admin@kazipay.cd',
+  userEmail: string = 'admin@novarispay.cd',
   userRole: string = 'SUPER_ADMIN',
   targetEntityId?: string,
   oldValue?: any,
@@ -99,7 +99,7 @@ export const getAuditLogs = async (): Promise<AuditLogEntry[]> => {
     {
       id: 'AUD-001',
       timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-      userEmail: 'admin@kazipay.cd',
+      userEmail: 'admin@novarispay.cd',
       userRole: 'SUPER_ADMIN',
       module: 'DISCIPLINE',
       action: 'SANCTION',
@@ -108,7 +108,7 @@ export const getAuditLogs = async (): Promise<AuditLogEntry[]> => {
     {
       id: 'AUD-002',
       timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
-      userEmail: 'rh@kazipay.cd',
+      userEmail: 'rh@novarispay.cd',
       userRole: 'GESTIONNAIRE_RH',
       module: 'EMPLOYEES',
       action: 'CREATE',
@@ -117,7 +117,7 @@ export const getAuditLogs = async (): Promise<AuditLogEntry[]> => {
     {
       id: 'AUD-003',
       timestamp: new Date(Date.now() - 3600000 * 24).toISOString(),
-      userEmail: 'paie@kazipay.cd',
+      userEmail: 'paie@novarispay.cd',
       userRole: 'GESTIONNAIRE_PAIE',
       module: 'PAYROLL',
       action: 'PAYROLL_RUN',

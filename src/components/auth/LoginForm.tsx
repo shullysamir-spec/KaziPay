@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import React, { useState } from 'react';
@@ -21,7 +21,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onOpenAdminInstructions,
 }) => {
   const t = i18n[lang].auth;
-  const [email, setEmail] = useState('admin@kazipay.cd');
+  const [email, setEmail] = useState('admin@novarispay.cd');
   const [password, setPassword] = useState('Admin@2026!');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -64,7 +64,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           <div className="w-16 h-16 mx-auto bg-[#BF9000] text-[#1F3864] font-black text-3xl rounded-xl flex items-center justify-center shadow-lg mb-3">
             KP
           </div>
-          <h1 className="text-2xl font-extrabold tracking-tight">KaziPay</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">NovarisPay</h1>
           <p className="text-xs text-blue-200 mt-1">{t.loginSubtitle}</p>
         </div>
 
@@ -79,62 +79,62 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => quickLoginAs('admin@kazipay.cd', 'Super Admin')}
+                onClick={() => quickLoginAs('admin@novarispay.cd', 'Super Admin')}
                 disabled={loading}
                 className="p-2.5 bg-white border border-slate-300 hover:border-[#1F3864] hover:bg-blue-50 rounded-lg text-left transition shadow-xs group"
               >
                 <div className="text-xs font-bold text-[#1F3864] group-hover:text-blue-900">Super Admin</div>
-                <div className="text-[10px] text-slate-500 font-mono">admin@kazipay.cd</div>
+                <div className="text-[10px] text-slate-500 font-mono">admin@novarispay.cd</div>
               </button>
 
               <button
                 type="button"
-                onClick={() => quickLoginAs('rh@kazipay.cd', 'Directrice RH')}
+                onClick={() => quickLoginAs('rh@novarispay.cd', 'Directrice RH')}
                 disabled={loading}
                 className="p-2.5 bg-white border border-slate-300 hover:border-[#1F3864] hover:bg-blue-50 rounded-lg text-left transition shadow-xs group"
               >
                 <div className="text-xs font-bold text-[#1F3864] group-hover:text-blue-900">Directrice RH</div>
-                <div className="text-[10px] text-slate-500 font-mono">rh@kazipay.cd</div>
+                <div className="text-[10px] text-slate-500 font-mono">rh@novarispay.cd</div>
               </button>
 
               <button
                 type="button"
-                onClick={() => quickLoginAs('paie@kazipay.cd', 'Responsable Paie')}
+                onClick={() => quickLoginAs('paie@novarispay.cd', 'Responsable Paie')}
                 disabled={loading}
                 className="p-2.5 bg-white border border-slate-300 hover:border-[#1F3864] hover:bg-blue-50 rounded-lg text-left transition shadow-xs group"
               >
                 <div className="text-xs font-bold text-[#1F3864] group-hover:text-blue-900">Responsable Paie</div>
-                <div className="text-[10px] text-slate-500 font-mono">paie@kazipay.cd</div>
+                <div className="text-[10px] text-slate-500 font-mono">paie@novarispay.cd</div>
               </button>
 
               <button
                 type="button"
-                onClick={() => quickLoginAs('manager@kazipay.cd', 'Manager')}
+                onClick={() => quickLoginAs('manager@novarispay.cd', 'Manager')}
                 disabled={loading}
                 className="p-2.5 bg-white border border-slate-300 hover:border-[#1F3864] hover:bg-blue-50 rounded-lg text-left transition shadow-xs group"
               >
                 <div className="text-xs font-bold text-[#1F3864] group-hover:text-blue-900">Manager / Service</div>
-                <div className="text-[10px] text-slate-500 font-mono">manager@kazipay.cd</div>
+                <div className="text-[10px] text-slate-500 font-mono">manager@novarispay.cd</div>
               </button>
 
               <button
                 type="button"
-                onClick={() => quickLoginAs('finance@kazipay.cd', 'Directeur Financier')}
+                onClick={() => quickLoginAs('finance@novarispay.cd', 'Directeur Financier')}
                 disabled={loading}
                 className="p-2.5 bg-white border border-slate-300 hover:border-[#1F3864] hover:bg-blue-50 rounded-lg text-left transition shadow-xs group"
               >
                 <div className="text-xs font-bold text-[#1F3864] group-hover:text-blue-900">Directeur Financier</div>
-                <div className="text-[10px] text-slate-500 font-mono">finance@kazipay.cd</div>
+                <div className="text-[10px] text-slate-500 font-mono">finance@novarispay.cd</div>
               </button>
 
               <button
                 type="button"
-                onClick={() => quickLoginAs('auditeur@kazipay.cd', 'Auditeur Externe')}
+                onClick={() => quickLoginAs('auditeur@novarispay.cd', 'Auditeur Externe')}
                 disabled={loading}
                 className="p-2.5 bg-white border border-slate-300 hover:border-[#1F3864] hover:bg-blue-50 rounded-lg text-left transition shadow-xs group"
               >
                 <div className="text-xs font-bold text-[#1F3864] group-hover:text-blue-900">Auditeur / Inspection</div>
-                <div className="text-[10px] text-slate-500 font-mono">auditeur@kazipay.cd</div>
+                <div className="text-[10px] text-slate-500 font-mono">auditeur@novarispay.cd</div>
               </button>
             </div>
           </div>

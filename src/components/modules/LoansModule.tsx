@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import React, { useEffect, useState } from 'react';
@@ -101,30 +101,36 @@ export const LoansModule: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                loans.map((loan) => (
-                  <tr key={loan.id} className="hover:bg-slate-50 transition">
-                    <td className="py-3 px-4 font-bold text-slate-900">{loan.employeeName || loan.employeeId}</td>
-                    <td className="py-3 px-4 text-slate-800 font-semibold">{loan.label}</td>
-                    <td className="py-3 px-4 font-bold">
-                      {loan.totalAmount.toLocaleString()} {loan.currency}
-                    </td>
-                    <td className="py-3 px-4 font-bold text-[#1F3864]">
-                      {loan.monthlyDeduction.toLocaleString()} {loan.currency} / mois
-                    </td>
-                    <td className="py-3 px-4 font-bold text-red-600">
-                      {loan.remainingBalance.toLocaleString()} {loan.currency}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        loan.status === 'SOLDE'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        {loan.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                loans.map((loan) => {
+                  const totalAmt = loan.totalAmount ?? loan.amount ?? 0;
+                  const deduction = loan.monthlyDeduction ?? 0;
+                  const balance = loan.remainingBalance ?? totalAmt;
+                  const labelStr = loan.label || loan.reason || 'Avance sur salaire';
+                  return (
+                    <tr key={loan.id} className="hover:bg-slate-50 transition">
+                      <td className="py-3 px-4 font-bold text-slate-900">{loan.employeeName || loan.employeeId}</td>
+                      <td className="py-3 px-4 text-slate-800 font-semibold">{labelStr}</td>
+                      <td className="py-3 px-4 font-bold">
+                        {totalAmt.toLocaleString()} {loan.currency || 'CDF'}
+                      </td>
+                      <td className="py-3 px-4 font-bold text-[#1F3864]">
+                        {deduction.toLocaleString()} {loan.currency || 'CDF'} / mois
+                      </td>
+                      <td className="py-3 px-4 font-bold text-red-600">
+                        {balance.toLocaleString()} {loan.currency || 'CDF'}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          loan.status === 'SOLDE'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {loan.status || 'EN_COURS'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

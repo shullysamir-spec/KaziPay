@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  */
 
 import { RoleCode, RoleDefinition, PermissionKey, ROLE_LEVELS } from '../types/auth';

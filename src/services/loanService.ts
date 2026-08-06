@@ -1,6 +1,6 @@
 /**
  * @license
- * KaziPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC
  * 
  * SERVICE PRÊTS ET AVANCES
  */
@@ -12,7 +12,20 @@ import { Loan } from '../types/loan';
 export async function getLoans(): Promise<Loan[]> {
   try {
     const snap = await getDocs(collection(db, 'loans'));
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Loan));
+    return snap.docs.map((d) => {
+      const data = d.data();
+      const totalAmt = data.totalAmount ?? data.amount ?? 0;
+      return {
+        id: d.id,
+        ...data,
+        label: data.label || data.reason || 'Avance sur salaire',
+        totalAmount: Number(totalAmt),
+        monthlyDeduction: Number(data.monthlyDeduction ?? 0),
+        remainingBalance: Number(data.remainingBalance ?? totalAmt),
+        currency: data.currency || 'CDF',
+        status: data.status || 'EN_COURS',
+      } as Loan;
+    });
   } catch (err) {
     console.error('Erreur getLoans:', err);
     return [];
