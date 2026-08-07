@@ -6,7 +6,7 @@
  */
 
 import { doc, getDoc, setDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, sanitizeData } from '../lib/firebase';
 import { RoleCode, PermissionKey, UserProfile } from '../types/auth';
 import { ALL_ROLES } from '../lib/constants';
 import { DEFAULT_STATUTORY_PARAMS_2026, calculatePayslip, calculateSoldeDeToutCompte } from '../payroll/engine';
@@ -1086,7 +1086,7 @@ export async function seedFullDemoDataset(): Promise<void> {
 
       payslip.runId = r.id;
       const payslipId = `${r.id}_${emp.id}`;
-      await setDoc(doc(db, 'payslips', payslipId), payslip);
+      await setDoc(doc(db, 'payslips', payslipId), sanitizeData(payslip));
 
       runGrossCDF += payslip.grossSalaryCDF;
       runNetCDF += payslip.netSalaryCDF;
@@ -1115,7 +1115,7 @@ export async function seedFullDemoDataset(): Promise<void> {
       employeeCount: demoEmployees.length,
     };
 
-    await setDoc(doc(db, 'payrollRuns', r.id), runData);
+    await setDoc(doc(db, 'payrollRuns', r.id), sanitizeData(runData));
   }
 
   // 7. Soldes de Tout Compte (STC) pour les 2 employés inactifs (emp-008 et emp-013)
@@ -1134,7 +1134,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     unusedLeaveDays: 14,
     createdBy: 'rh@novarispay.cd',
   });
-  await setDoc(doc(db, 'soldesDeToutCompte', 'stc-emp-008'), stc1);
+  await setDoc(doc(db, 'soldesDeToutCompte', 'stc-emp-008'), sanitizeData(stc1));
 
   const stc2 = calculateSoldeDeToutCompte({
     employeeId: 'emp-013',
@@ -1151,7 +1151,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     unusedLeaveDays: 6,
     createdBy: 'rh@novarispay.cd',
   });
-  await setDoc(doc(db, 'soldesDeToutCompte', 'stc-emp-013'), stc2);
+  await setDoc(doc(db, 'soldesDeToutCompte', 'stc-emp-013'), sanitizeData(stc2));
 
   // 8. Journaux d'Audit Initialisés
   const demoAuditLogs = [

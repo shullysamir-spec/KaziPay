@@ -24,7 +24,7 @@ import {
   orderBy,
   limit,
 } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { auth, db, sanitizeData } from '../lib/firebase';
 import { UserProfile, RoleCode, SecurityLog, ROLE_LEVELS } from '../types/auth';
 
 /**
@@ -110,7 +110,7 @@ export async function ensureSuperAdminExists(): Promise<void> {
           createdAt: new Date().toISOString(),
           lastLogin: new Date().toISOString(),
         };
-        await setDoc(userRef, profile);
+        await setDoc(userRef, sanitizeData(profile));
       }
     }
   } catch (err) {
@@ -207,7 +207,7 @@ export async function loginUser(email: string, password: string): Promise<UserPr
     };
 
     try {
-      await setDoc(userRef, profile);
+      await setDoc(userRef, sanitizeData(profile));
     } catch (saveErr) {
       console.warn('setDoc user profile error:', saveErr);
     }

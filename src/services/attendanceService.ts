@@ -6,7 +6,7 @@
  */
 
 import { collection, getDocs, setDoc, doc, updateDoc, addDoc, query, where } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, sanitizeData } from '../lib/firebase';
 import { AttendanceRecord, LeaveRequest, LeaveBalance } from '../types/attendance';
 
 export async function getAttendanceByPeriod(period: string): Promise<AttendanceRecord[]> {
@@ -23,10 +23,10 @@ export async function getAttendanceByPeriod(period: string): Promise<AttendanceR
 
 export async function saveAttendanceRecord(record: AttendanceRecord): Promise<void> {
   const docId = `${record.employeeId}_${record.period}`;
-  await setDoc(doc(db, 'attendance', docId), {
+  await setDoc(doc(db, 'attendance', docId), sanitizeData({
     ...record,
     updatedAt: new Date().toISOString(),
-  });
+  }));
 }
 
 export async function lockAttendancePeriod(period: string): Promise<void> {
@@ -49,10 +49,10 @@ export async function getLeaveRequests(): Promise<LeaveRequest[]> {
 }
 
 export async function createLeaveRequest(request: Omit<LeaveRequest, 'id' | 'createdAt'>): Promise<void> {
-  await addDoc(collection(db, 'leave'), {
+  await addDoc(collection(db, 'leave'), sanitizeData({
     ...request,
     createdAt: new Date().toISOString(),
-  });
+  }));
 }
 
 export async function updateLeaveStatus(id: string, status: LeaveRequest['status'], approvedBy: string): Promise<void> {

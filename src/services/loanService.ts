@@ -6,7 +6,7 @@
  */
 
 import { collection, getDocs, setDoc, doc, updateDoc, addDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, sanitizeData } from '../lib/firebase';
 import { Loan } from '../types/loan';
 
 export async function getLoans(): Promise<Loan[]> {
@@ -33,10 +33,10 @@ export async function getLoans(): Promise<Loan[]> {
 }
 
 export async function createLoan(loan: Omit<Loan, 'id' | 'createdAt'>): Promise<void> {
-  await addDoc(collection(db, 'loans'), {
+  await addDoc(collection(db, 'loans'), sanitizeData({
     ...loan,
     createdAt: new Date().toISOString(),
-  });
+  }));
 }
 
 export async function updateLoanBalance(loanId: string, newBalance: number): Promise<void> {

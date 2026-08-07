@@ -6,7 +6,7 @@
  */
 
 import { collection, doc, getDocs, getDoc, setDoc, updateDoc, addDoc, query, where } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, sanitizeData } from '../lib/firebase';
 import { PayrollRun, Payslip, StatutoryParams, PayrollRectificatif, SoldeDeToutCompte } from '../types/payroll';
 import { calculatePayslip, DEFAULT_STATUTORY_PARAMS_2026, calculateSoldeDeToutCompte } from '../payroll/engine';
 import { getEmployees } from './employeeService';
@@ -110,7 +110,7 @@ export async function createPayrollRun(
     employeeCount: 0,
   };
 
-  await setDoc(newRunRef, runData);
+  await setDoc(newRunRef, sanitizeData(runData));
   return runId;
 }
 
@@ -189,7 +189,7 @@ export async function calculatePayrollRun(
   // Sauvegarder les fiches générées
   for (const payslip of generatedPayslips) {
     const payslipDocId = `${runId}_${payslip.employeeId}`;
-    await setDoc(doc(db, 'payslips', payslipDocId), payslip);
+    await setDoc(doc(db, 'payslips', payslipDocId), sanitizeData(payslip));
   }
 
   // Mettre à jour les totaux du traitement
@@ -349,7 +349,7 @@ export async function getRectificatifsForRun(runId: string): Promise<PayrollRect
  * Enregistrer un Solde de Tout Compte
  */
 export async function saveSoldeDeToutCompte(solde: SoldeDeToutCompte): Promise<string> {
-  const ref = await addDoc(collection(db, 'soldesDeToutCompte'), solde);
+  const ref = await addDoc(collection(db, 'soldesDeToutCompte'), sanitizeData(solde));
 
   await logAuditEvent(
     'CREATE',

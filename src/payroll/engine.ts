@@ -9,6 +9,7 @@
 
 import { StatutoryParams, Payslip, PayslipLine } from '../types/payroll';
 import { Currency } from '../types/employee';
+import { sanitizeData } from '../lib/firebase';
 
 export interface CalculationInput {
   employeeId: string;
@@ -162,7 +163,7 @@ export function calculatePayslip(input: CalculationInput): Payslip {
   const loanRolloverCDF = Math.max(0, requestedLoanDeductionCDF - loanDeductionCDF);
   const loanDeductionWarning = loanRolloverCDF > 0
     ? `Dépassement de la quotité cessible (${Math.round(maxQuotiteRate * 100)}% du net). Retenue plafonnée à ${loanDeductionCDF.toLocaleString()} FC. Reliquat de ${loanRolloverCDF.toLocaleString()} FC reporté.`
-    : undefined;
+    : null;
 
   // 11. Salaire Net & Arrondis Espèces CDF (Plus petite coupure usuelle: ex 50 FC)
   const exactNetSalaryCDF = netBeforeLoanCDF - loanDeductionCDF;
@@ -192,7 +193,7 @@ export function calculatePayslip(input: CalculationInput): Payslip {
   const maxOvertimeAllowed = params.maxMonthlyOvertimeHours || 48;
   const overtimeWarning = (overtimeHoursTotal > maxOvertimeAllowed && !input.hasOvertimeDerogation)
     ? `Dépassement du plafond légal des heures sup (${overtimeHoursTotal}h > ${maxOvertimeAllowed}h/mois - Art. 119 RDC) sans dérogation certifiée.`
-    : undefined;
+    : null;
 
   // 13. Lignes détaillées du bulletin
   const lines: PayslipLine[] = [
@@ -302,7 +303,7 @@ export function calculatePayslip(input: CalculationInput): Payslip {
     });
   }
 
-  return {
+  return sanitizeData({
     runId: '',
     employeeId: input.employeeId,
     employeeMatricule: input.employeeMatricule,
@@ -348,11 +349,11 @@ export function calculatePayslip(input: CalculationInput): Payslip {
     dependentsCount,
     daysWorked,
     overtimeHoursTotal,
-    overtimeWarning,
-    hasOvertimeDerogation: input.hasOvertimeDerogation,
+    overtimeWarning: overtimeWarning || null,
+    hasOvertimeDerogation: Boolean(input.hasOvertimeDerogation),
     lines,
     createdAt: new Date().toISOString(),
-  };
+  });
 }
 
 export interface SoldeDeToutCompteInput {
@@ -438,7 +439,7 @@ export function calculateSoldeDeToutCompte(input: SoldeDeToutCompteInput) {
     remarks += "Terme du contrat à durée déterminée respecté avec droit aux congés payés et gratification.";
   }
 
-  return {
+  return sanitizeData({
     employeeId: input.employeeId,
     employeeMatricule: input.employeeMatricule,
     employeeName: input.employeeName,
@@ -468,6 +469,6 @@ export function calculateSoldeDeToutCompte(input: SoldeDeToutCompteInput) {
     remarks,
     createdAt: new Date().toISOString(),
     createdBy: input.createdBy || 'RH System',
-  };
+  });
 }
 

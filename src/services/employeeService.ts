@@ -16,7 +16,7 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, sanitizeData } from '../lib/firebase';
 import { Employee, Contract, EmployeeWithContract, EmployeeStatus, EmployeeCircumstance, PhotoRecord } from '../types/employee';
 import { logAuditEvent } from './auditService';
 import { calculateSoldeDeToutCompte } from '../payroll/engine';
@@ -105,7 +105,7 @@ export async function createCircumstance(
     }
   }
 
-  const ref = await addDoc(collection(db, 'employeeCircumstances'), docData);
+  const ref = await addDoc(collection(db, 'employeeCircumstances'), sanitizeData(docData));
   const circId = ref.id;
 
   // Calculer le nouveau statut dérivé
@@ -404,7 +404,7 @@ export async function createEmployee(
     updatedAt: new Date().toISOString(),
   };
 
-  await setDoc(newEmpRef, fullEmp);
+  await setDoc(newEmpRef, sanitizeData(fullEmp));
 
   // Créer le contrat
   const newContractRef = doc(collection(db, 'contracts'));
@@ -418,7 +418,7 @@ export async function createEmployee(
     updatedAt: new Date().toISOString(),
   };
 
-  await setDoc(newContractRef, fullContract);
+  await setDoc(newContractRef, sanitizeData(fullContract));
   return empId;
 }
 

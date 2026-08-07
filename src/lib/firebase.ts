@@ -62,4 +62,31 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
+/**
+ * Recursively cleans an object by stripping any undefined fields or converting undefined to null,
+ * preventing Firestore setDoc/updateDoc/addDoc errors ("Unsupported field value: undefined").
+ */
+export function sanitizeData<T>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return null as unknown as T;
+  }
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+  if (obj instanceof Date) {
+    return obj as unknown as T;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map((item) => sanitizeData(item)) as unknown as T;
+  }
+  const cleanObj: Record<string, any> = {};
+  for (const key of Object.keys(obj as Record<string, any>)) {
+    const value = (obj as Record<string, any>)[key];
+    if (value !== undefined) {
+      cleanObj[key] = typeof value === 'object' && value !== null ? sanitizeData(value) : value;
+    }
+  }
+  return cleanObj as T;
+}
+
 export default app;
