@@ -40,9 +40,10 @@ export async function createLoan(loan: Omit<Loan, 'id' | 'createdAt'>): Promise<
 }
 
 export async function updateLoanBalance(loanId: string, newBalance: number): Promise<void> {
-  const isSolde = newBalance <= 0;
-  await updateDoc(doc(db, 'loans', loanId), {
-    remainingBalance: Math.max(0, newBalance),
+  const cleanBalance = isNaN(newBalance) ? 0 : Math.max(0, newBalance);
+  const isSolde = cleanBalance <= 0;
+  await updateDoc(doc(db, 'loans', loanId), sanitizeData({
+    remainingBalance: cleanBalance,
     status: isSolde ? 'SOLDE' : 'EN_COURS',
-  });
+  }));
 }

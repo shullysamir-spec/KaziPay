@@ -46,6 +46,8 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [calculatingRunId, setCalculatingRunId] = useState<string | null>(null);
+  const [validatingRunId, setValidatingRunId] = useState<string | null>(null);
+  const [closingRunId, setClosingRunId] = useState<string | null>(null);
 
   // Expense Reports State
   const [expenseReports, setExpenseReports] = useState<any[]>([
@@ -171,14 +173,30 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
   };
 
   const handleValidate = async (runId: string) => {
-    await validatePayrollRun(runId);
-    loadRuns();
+    setValidatingRunId(runId);
+    try {
+      await validatePayrollRun(runId);
+      await loadRuns();
+    } catch (err: any) {
+      console.error('Erreur validation paie:', err);
+      alert('Erreur lors de la validation: ' + (err?.message || err));
+    } finally {
+      setValidatingRunId(null);
+    }
   };
 
   const handleClose = async (runId: string) => {
-    if (window.confirm('Confirmer la clôture définitive de cette paie ? Les montants seront figés.')) {
-      await closePayrollRun(runId);
-      loadRuns();
+    if (window.confirm('Confirmer la clôture définitive de cette paie ? Les montants seront figés et l\'amortissement des prêts sera comptabilisé.')) {
+      setClosingRunId(runId);
+      try {
+        await closePayrollRun(runId);
+        await loadRuns();
+      } catch (err: any) {
+        console.error('Erreur clôture paie:', err);
+        alert('Erreur lors de la clôture de la paie: ' + (err?.message || err));
+      } finally {
+        setClosingRunId(null);
+      }
     }
   };
 
@@ -325,17 +343,19 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
                         {run.status === 'CALCULATED' && canValidate && (
                           <button
                             onClick={() => run.id && handleValidate(run.id)}
-                            className="bg-blue-600 text-white hover:bg-blue-700 px-2.5 py-1 rounded text-[11px] font-bold"
+                            disabled={validatingRunId === run.id}
+                            className="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 px-2.5 py-1 rounded text-[11px] font-bold"
                           >
-                            Valider
+                            {validatingRunId === run.id ? 'Validation...' : 'Valider'}
                           </button>
                         )}
                         {run.status === 'VALIDATED' && canClose && (
                           <button
                             onClick={() => run.id && handleClose(run.id)}
-                            className="bg-emerald-700 text-white hover:bg-emerald-800 px-2.5 py-1 rounded text-[11px] font-bold"
+                            disabled={closingRunId === run.id}
+                            className="bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50 px-2.5 py-1 rounded text-[11px] font-bold"
                           >
-                            Clôturer
+                            {closingRunId === run.id ? 'Clôture...' : 'Clôturer'}
                           </button>
                         )}
                         {run.id && (

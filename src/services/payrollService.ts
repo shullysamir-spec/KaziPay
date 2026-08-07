@@ -212,7 +212,7 @@ export async function calculatePayrollRun(
  * Valider le traitement de paie
  */
 export async function validatePayrollRun(runId: string): Promise<void> {
-  await updateDoc(doc(db, 'payrollRuns', runId), { status: 'VALIDATED' });
+  await updateDoc(doc(db, 'payrollRuns', runId), sanitizeData({ status: 'VALIDATED' }));
 }
 
 /**
@@ -224,21 +224,22 @@ export async function closePayrollRun(runId: string): Promise<void> {
 
   // Déduire les prêts remboursés lors de la clôture
   for (const payslip of payslips) {
-    if (payslip.loanDeductionCDF > 0) {
+    if (payslip.loanDeductionCDF && payslip.loanDeductionCDF > 0) {
       const activeLoan = loans.find((l) => l.employeeId === payslip.employeeId && l.status === 'EN_COURS');
       if (activeLoan && activeLoan.id) {
+        const rate = payslip.exchangeRate || 2850;
         const deductionInLoanCurrency = activeLoan.currency === 'USD'
-          ? payslip.loanDeductionCDF / payslip.exchangeRate
+          ? payslip.loanDeductionCDF / rate
           : payslip.loanDeductionCDF;
         await updateLoanBalance(activeLoan.id, activeLoan.remainingBalance - deductionInLoanCurrency);
       }
     }
   }
 
-  await updateDoc(doc(db, 'payrollRuns', runId), {
+  await updateDoc(doc(db, 'payrollRuns', runId), sanitizeData({
     status: 'CLOSED',
     closedAt: new Date().toISOString(),
-  });
+  }));
 }
 
 /**
