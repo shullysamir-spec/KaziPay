@@ -19,22 +19,51 @@ export interface CalculationInput {
   position: string;
   period: string; // YYYYMM
   contractType?: 'CDI' | 'CDD' | 'Journalier' | 'STAGE' | 'CONSULTANCE';
+  hireDate?: string;
+  grade?: string;
+  costCenter?: string;
+  nationality?: string;
+  cnssNumber?: string;
+  nif?: string;
+  bankName?: string;
+  bankAccount?: string;
+  paymentMethod?: string;
+  
   baseSalary: number; // Montant selon le contrat
   currency: Currency; // CDF ou USD
   exchangeRate: number; // Ex: 2850 FC pour 1 USD
   daysWorked?: number; // Défaut 26 jours
   totalStandardDays?: number; // Défaut 26 jours
+  paidDays?: number;
+  normalHours?: number;
   overtime130Hours?: number;
   overtime160Hours?: number;
   overtime200Hours?: number;
   hasOvertimeDerogation?: boolean;
+  nightHours?: number;
+  sundayHours?: number;
+  holidayHours?: number;
+  absenceDays?: number;
+  paidLeaveDays?: number;
+  sickLeaveDays?: number;
+  unpaidLeaveDays?: number;
+
   dependentsCount?: number;
+  housingAllowanceCDF?: number;
+  transportAllowanceCDF?: number;
+  riskAllowanceCDF?: number;
+  responsibilityAllowanceCDF?: number;
   primesCDF?: number;
   allowancesCDF?: number;
   thirteenthMonthCDF?: number;
   performanceBonusCDF?: number;
   activeLoanMonthlyDeduction?: number;
   companyEmployeeCount?: number;
+
+  leaveEarnedDays?: number;
+  leaveTakenDays?: number;
+  leaveRemainingDays?: number;
+
   statutoryParams: StatutoryParams;
 }
 
@@ -303,6 +332,40 @@ export function calculatePayslip(input: CalculationInput): Payslip {
     });
   }
 
+  // 14. Métadonnées calculées pour conformité RDC & audit
+  const totalDeductionsCDF = cnssEmployeeCDF + irppFinalCDF + loanDeductionCDF;
+  const totalEmployerCostCDF = grossSalaryCDF + totalEmployerChargesCDF;
+  
+  // Masquage compte bancaire & référence virement
+  const bankAcc = input.bankAccount || '';
+  const bankAccountMasked = bankAcc.length > 4
+    ? `${input.bankName || 'Banque'} •••• ${bankAcc.slice(-4)}`
+    : (input.bankName ? `${input.bankName}` : 'Virement Bancaire (Compte principal)');
+
+  const paymentReference = `VIR-${input.period}-${input.employeeMatricule}`;
+  const payslipRef = `BS-${input.period}-${input.employeeMatricule}`;
+
+  // Formater date de paie à partir du mois YYYYMM (ex: 202607 -> 28/07/2026)
+  const yr = input.period.substring(0, 4);
+  const mo = input.period.substring(4, 6);
+  const payDate = `${yr}-${mo}-28`;
+
+  // Ancienneté
+  let seniorityText = '1 an 0 mois';
+  if (input.hireDate) {
+    const hire = new Date(input.hireDate);
+    const now = new Date();
+    const diffMonths = (now.getFullYear() - hire.getFullYear()) * 12 + (now.getMonth() - hire.getMonth());
+    const yrs = Math.floor(diffMonths / 12);
+    const mths = Math.max(0, diffMonths % 12);
+    seniorityText = `${yrs} an${yrs > 1 ? 's' : ''} ${mths} mois`;
+  }
+
+  const normalHours = Math.round((daysWorked / totalStandardDays) * 173.33 * 10) / 10;
+  const leaveEarned = input.leaveEarnedDays ?? 18;
+  const leaveTaken = input.leaveTakenDays ?? 4;
+  const leaveRemaining = input.leaveRemainingDays ?? (leaveEarned - leaveTaken);
+
   return sanitizeData({
     runId: '',
     employeeId: input.employeeId,
@@ -315,13 +378,53 @@ export function calculatePayslip(input: CalculationInput): Payslip {
     baseCurrency: input.currency,
     baseSalaryContract: input.baseSalary,
 
+    // Métadonnées Salarié & Contrat
+    contractType: input.contractType || 'CDI',
+    hireDate: input.hireDate || '2023-01-15',
+    seniorityText,
+    grade: input.grade || 'Agent de Maîtrise / Catégorie 5',
+    costCenter: input.costCenter || 'Siège Kinshasa',
+    nationality: input.nationality || 'Congolaise (RDC)',
+    cnssNumber: input.cnssNumber || 'CNSS-0000000',
+    nif: input.nif || 'NIF-0000000',
+    bankName: input.bankName || 'RAWBANK RDC',
+    bankAccountMasked,
+    paymentMethod: input.paymentMethod || 'Virement Bancaire',
+    paymentReference,
+    payDate,
+
+    // Temps de travail & Présences
+    totalStandardDays,
+    daysWorked,
+    paidDays: input.paidDays ?? daysWorked,
+    normalHours,
+    overtime130Hours: input.overtime130Hours || 0,
+    overtime160Hours: input.overtime160Hours || 0,
+    overtime200Hours: input.overtime200Hours || 0,
+    overtimeHoursTotal,
+    nightHours: input.nightHours || 0,
+    sundayHours: input.sundayHours || 0,
+    holidayHours: input.holidayHours || 0,
+    absenceDays: input.absenceDays || 0,
+    paidLeaveDays: input.paidLeaveDays || 0,
+    sickLeaveDays: input.sickLeaveDays || 0,
+    unpaidLeaveDays: input.unpaidLeaveDays || 0,
+
+    // Éléments du Brut
     baseSalaryProratedCDF,
+    housingAllowanceCDF: input.housingAllowanceCDF || 0,
+    transportAllowanceCDF: input.transportAllowanceCDF || 0,
+    riskAllowanceCDF: input.riskAllowanceCDF || 0,
+    responsibilityAllowanceCDF: input.responsibilityAllowanceCDF || 0,
     overtimeAmountCDF: overtimeTotalCDF,
     allowancesCDF: totalAllowancesCDF + primesCDF,
+    primesCDF: primesCDF || 0,
+    familyAllowanceCDF,
     thirteenthMonthCDF,
     performanceBonusCDF,
     grossSalaryCDF,
 
+    // Cotisations & Impôts
     cnssBaseCDF,
     cnssEmployeeCDF,
     taxableBaseCDF,
@@ -331,13 +434,21 @@ export function calculatePayslip(input: CalculationInput): Payslip {
     irppCapAppliedCDF,
     irppFinalCDF,
 
+    // Retenues & Prêts
     loanDeductionCDF,
     loanRolloverCDF,
     loanDeductionWarning,
     roundingDifferenceCDF,
+    totalDeductionsCDF,
     netSalaryCDF,
     netSalaryUSD,
 
+    // Congés
+    leaveEarnedDays: leaveEarned,
+    leaveTakenDays: leaveTaken,
+    leaveRemainingDays: leaveRemaining,
+
+    // Charges Patronales
     cnssEmployerCDF,
     cnssEmployerPensionsCDF,
     cnssEmployerWorkRisksCDF,
@@ -345,12 +456,13 @@ export function calculatePayslip(input: CalculationInput): Payslip {
     inppEmployerCDF,
     onemEmployerCDF,
     totalEmployerChargesCDF,
+    totalEmployerCostCDF,
 
+    // Contrôle & Identification
     dependentsCount,
-    daysWorked,
-    overtimeHoursTotal,
     overtimeWarning: overtimeWarning || null,
     hasOvertimeDerogation: Boolean(input.hasOvertimeDerogation),
+    payslipRef,
     lines,
     createdAt: new Date().toISOString(),
   });

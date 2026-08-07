@@ -91,13 +91,51 @@ export interface Payslip {
   exchangeRate: number;
   baseCurrency: Currency;
   baseSalaryContract: number;
-  
+
+  // Extended Employee Metadata for Audit & Compliance
+  contractType?: 'CDI' | 'CDD' | 'Journalier' | 'STAGE' | 'CONSULTANCE';
+  hireDate?: string;
+  seniorityText?: string;
+  grade?: string;
+  costCenter?: string;
+  nationality?: string;
+  cnssNumber?: string;
+  nif?: string;
+  bankName?: string;
+  bankAccountMasked?: string;
+  paymentMethod?: string;
+  paymentReference?: string;
+  payDate?: string;
+
+  // Attendance & Time Summary
+  totalStandardDays?: number;
+  daysWorked: number;
+  paidDays?: number;
+  normalHours?: number;
+  overtime130Hours?: number;
+  overtime160Hours?: number;
+  overtime200Hours?: number;
+  overtimeHoursTotal?: number;
+  nightHours?: number;
+  sundayHours?: number;
+  holidayHours?: number;
+  absenceDays?: number;
+  paidLeaveDays?: number;
+  sickLeaveDays?: number;
+  unpaidLeaveDays?: number;
+
   // Elements du Brut
   baseSalaryProratedCDF: number;
+  housingAllowanceCDF?: number;
+  transportAllowanceCDF?: number;
+  riskAllowanceCDF?: number;
+  responsibilityAllowanceCDF?: number;
   overtimeAmountCDF: number;
   allowancesCDF: number;
-  thirteenthMonthCDF?: number; // Gratification du 13e mois
-  performanceBonusCDF?: number; // Bonus de performance
+  primesCDF?: number;
+  familyAllowanceCDF?: number;
+  thirteenthMonthCDF?: number;
+  performanceBonusCDF?: number;
   grossSalaryCDF: number;
 
   // Cotisations & Impôts
@@ -106,7 +144,7 @@ export interface Payslip {
   taxableBaseCDF: number;
   irppBrutCDF: number;
   irppDiscountDependentsCDF: number;
-  irppCalculatedCDF: number;
+  irppCalculatedCDF?: number;
   irppCapAppliedCDF: number; // Plafond 30%
   irppFinalCDF: number;
 
@@ -115,24 +153,30 @@ export interface Payslip {
   loanRolloverCDF?: number; // Reliquat reporté si plafonnement à 30%
   loanDeductionWarning?: string; // Alerte sur dépassement quotité cessible
   roundingDifferenceCDF?: number; // Écart d'arrondi espèces
+  totalDeductionsCDF?: number;
   netSalaryCDF: number;
   netSalaryUSD: number;
 
+  // Solde de Congés
+  leaveEarnedDays?: number;
+  leaveTakenDays?: number;
+  leaveRemainingDays?: number;
+
   // Charges Patronales
-  cnssEmployerCDF: number; // Total CNSS Patronal (dérivé des paramètres)
-  cnssEmployerPensionsCDF?: number; // Branche Pensions
-  cnssEmployerWorkRisksCDF?: number; // Branche Risques Professionnels
-  cnssEmployerFamilyCDF?: number; // Branche Prestations Familiales
-  inppEmployerCDF: number; // 2% ou 3%
+  cnssEmployerCDF: number; // Total CNSS Patronal
+  cnssEmployerPensionsCDF?: number; // Branche Pensions (5%)
+  cnssEmployerWorkRisksCDF?: number; // Branche Risques Professionnels (1.5%)
+  cnssEmployerFamilyCDF?: number; // Branche Prestations Familiales (2.5%)
+  inppEmployerCDF: number; // 1%, 2% ou 3%
   onemEmployerCDF: number; // 0.2%
   totalEmployerChargesCDF: number;
+  totalEmployerCostCDF?: number; // Brut + Charges patronales
 
   // Données de contrôle
   dependentsCount: number;
-  daysWorked: number;
-  overtimeHoursTotal?: number;
   overtimeWarning?: string;
   hasOvertimeDerogation?: boolean;
+  payslipRef?: string;
   lines: PayslipLine[];
   createdAt: string;
 }
