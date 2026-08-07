@@ -11,6 +11,8 @@ import { getPayrollRuns, getPayslipsForRun } from '../../services/payrollService
 import { PayrollRun, Payslip } from '../../types/payroll';
 import { DEFAULT_COMPANY_DETAILS } from '../../lib/constants';
 import { getCompanyConfig, CompanyConfig } from '../../services/companyService';
+import { DocumentBarcode } from '../common/DocumentBarcode';
+import { generateBarcodeDataUrl } from '../../services/barcodeService';
 import { jsPDF } from 'jspdf';
 import {
   FileText,
@@ -81,9 +83,12 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     return `${months[monthIndex] || ''} ${year}`;
   };
 
-  // Generation PDF haute résolution A4
-  const renderPayslipPDFPage = (doc: jsPDF, ps: Payslip, isFirstPage = true) => {
+  // Generation PDF haute résolution A4 avec Code-Barres certifié
+  const renderPayslipPDFPage = async (doc: jsPDF, ps: Payslip, isFirstPage = true) => {
     if (!isFirstPage) doc.addPage();
+
+    const barcodeId = ps.barcodeId || 'NVP-PAY-2026-000245-9A73F2';
+    const barcodeDataUrl = await generateBarcodeDataUrl(barcodeId, 'CODE128', { height: 35, displayValue: true });
 
     // Palette Couleurs Enterprise
     const primaryColor = [31, 56, 100]; // #1F3864
@@ -106,13 +111,22 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
 
     // Titre Bulletin
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(130, 12, 66, 14, 'F');
+    doc.rect(130, 10, 66, 12, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(255, 255, 255);
-    doc.text('BULLETIN DE PAIE', 133, 20);
-    doc.setFontSize(8);
-    doc.text(`Période : ${formatPeriodLabel(ps.period)}`, 133, 24);
+    doc.text('BULLETIN DE PAIE', 133, 16);
+    doc.setFontSize(7.5);
+    doc.text(`Période : ${formatPeriodLabel(ps.period)}`, 133, 20);
+
+    // Dessiner l'image du Code-Barres certifié
+    if (barcodeDataUrl) {
+      try {
+        doc.addImage(barcodeDataUrl, 'PNG', 130, 23, 66, 12);
+      } catch (err) {
+        console.warn('Erreur ajout image barcode PDF:', err);
+      }
+    }
 
     doc.setLineWidth(0.5);
     doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -245,18 +259,18 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     doc.text(`Bulletin de paie édité le ${new Date().toLocaleDateString('fr-FR')} — Réf: ${ps.payslipRef || 'BS-' + ps.period}. Conformément à l'Art. 91 du Code du Travail RDC, ce bulletin est à conserver sans limitation de durée.`, 14, y);
   };
 
-  const exportPDF = (ps: Payslip) => {
+  const exportPDF = async (ps: Payslip) => {
     const doc = new jsPDF();
-    renderPayslipPDFPage(doc, ps, true);
+    await renderPayslipPDFPage(doc, ps, true);
     doc.save(`Bulletin_${ps.employeeMatricule}_${ps.period}.pdf`);
   };
 
-  const exportAllPDFs = () => {
+  const exportAllPDFs = async () => {
     if (payslips.length === 0) return;
     const doc = new jsPDF();
-    payslips.forEach((ps, index) => {
-      renderPayslipPDFPage(doc, ps, index === 0);
-    });
+    for (let index = 0; index < payslips.length; index++) {
+      await renderPayslipPDFPage(doc, payslips[index], index === 0);
+    }
     doc.save(`Liasse_Bulletins_Paie_${selectedRunId}.pdf`);
   };
 
@@ -394,11 +408,15 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
                   </div>
                 </div>
 
-                <div className="text-right self-stretch md:self-auto flex flex-col justify-between items-end">
+                <div className="text-right self-stretch md:self-auto flex flex-col justify-between items-end gap-2">
                   <div className="bg-[#1F3864] text-white px-4 py-1.5 rounded-md text-xs font-black tracking-widest uppercase shadow">
                     BULLETIN DE PAIE
                   </div>
-                  <div className="mt-2 text-right">
+                  <DocumentBarcode
+                    value={selectedPayslip.barcodeId || 'NVP-PAY-2026-000245-9A73F2'}
+                    documentType="BULLETIN DE PAIE"
+                  />
+                  <div className="text-right">
                     <span className="text-[10px] text-slate-400 font-bold uppercase block">Période de Paie</span>
                     <strong className="text-sm font-black text-slate-900">{formatPeriodLabel(selectedPayslip.period)}</strong>
                     <div className="text-[11px] text-slate-500 font-mono">Taux : 1 USD = {selectedPayslip.exchangeRate} FC</div>
@@ -659,15 +677,16 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
                 </div>
 
                 {/* Footer Legal Notice */}
-                <div className="bg-slate-100 p-2.5 rounded-lg text-[10px] text-slate-500 flex items-center justify-between">
+                <div className="bg-slate-100 p-3 rounded-xl text-[10px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div>
-                    <strong>Réf Bulletin :</strong> {selectedPayslip.payslipRef || 'BS-' + selectedPayslip.period} | <strong>Émis le :</strong> {new Date().toLocaleDateString('fr-FR')}
-                    <p className="text-[9px] text-slate-400 mt-0.5">Conformément à l'Art. 91 du Code du Travail de la RDC, ce bulletin doit être conservé sans limitation de durée. Il fait foi du versement des cotisations sociales CNSS et IPR.</p>
+                    <strong>Réf Bulletin :</strong> {selectedPayslip.payslipRef || 'BS-' + selectedPayslip.period} | <strong>Code-barres Unique :</strong> <span className="font-mono font-bold text-[#1F3864]">{selectedPayslip.barcodeId || 'NVP-PAY-2026-000245-9A73F2'}</span>
+                    <p className="text-[9px] text-slate-400 mt-0.5">Conformément à l'Art. 91 du Code du Travail de la RDC, ce bulletin est certifié immuable et doit être conservé sans limitation de durée.</p>
                   </div>
-                  <div className="hidden sm:flex items-center space-x-1 text-slate-400 font-mono text-[9px] bg-white px-2 py-1 rounded border">
-                    <QrCode className="w-3.5 h-3.5 text-[#1F3864]" />
-                    <span>VERIFIED-RDC</span>
-                  </div>
+                  <DocumentBarcode
+                    compact
+                    value={selectedPayslip.barcodeId || 'NVP-PAY-2026-000245-9A73F2'}
+                    documentType="PAIE RDC"
+                  />
                 </div>
               </div>
 

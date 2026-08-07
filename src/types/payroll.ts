@@ -177,6 +177,7 @@ export interface Payslip {
   overtimeWarning?: string;
   hasOvertimeDerogation?: boolean;
   payslipRef?: string;
+  barcodeId?: string;
   lines: PayslipLine[];
   createdAt: string;
 }

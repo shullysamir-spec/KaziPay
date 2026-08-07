@@ -31,7 +31,10 @@ import { getCompanyConfig, CompanyConfig } from '../../services/companyService';
 import { logAuditEvent } from '../../services/auditService';
 import { ServiceCertificateModal } from '../common/ServiceCertificateModal';
 import { DocumentUploadScanModal, DocumentUploadResult } from '../common/DocumentUploadScanModal';
+import { DocumentBarcode } from '../common/DocumentBarcode';
+import { BarcodeScannerModal } from '../common/BarcodeScannerModal';
 import { useToast } from '../../context/ToastContext';
+import { QrCode } from 'lucide-react';
 
 export interface CompanyDocument {
   id: string; // e.g. DOC-2026-089
@@ -57,6 +60,7 @@ export interface CompanyDocument {
   status: 'VALID' | 'EXPIRING_SOON' | 'EXPIRED' | 'ARCHIVED';
   fileUrl?: string; // Base64 or object URL
   notes?: string;
+  barcodeId?: string;
 }
 
 export const DocumentGEDModule: React.FC = () => {
@@ -68,7 +72,23 @@ export const DocumentGEDModule: React.FC = () => {
   const [isNewDocModalOpen, setIsNewDocModalOpen] = useState(false);
   const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
+  const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState(false);
+  const [activeBarcodeVerifyId, setActiveBarcodeVerifyId] = useState<string>('');
   const toast = useToast();
+
+  useEffect(() => {
+    const handleOpenVerify = (e: CustomEvent<{ barcodeId: string }>) => {
+      if (e.detail?.barcodeId) {
+        setActiveBarcodeVerifyId(e.detail.barcodeId);
+        setIsBarcodeModalOpen(true);
+      }
+    };
+
+    window.addEventListener('novarispay_open_barcode_verify', handleOpenVerify as EventListener);
+    return () => {
+      window.removeEventListener('novarispay_open_barcode_verify', handleOpenVerify as EventListener);
+    };
+  }, []);
 
   // Initial Sample GED Data
   const [documents, setDocuments] = useState<CompanyDocument[]>([
@@ -274,6 +294,16 @@ export const DocumentGEDModule: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => {
+              setActiveBarcodeVerifyId('');
+              setIsBarcodeModalOpen(true);
+            }}
+            className="bg-indigo-700 hover:bg-indigo-800 text-white font-black px-4 py-2.5 rounded-xl text-xs flex items-center space-x-1.5 shadow transition"
+          >
+            <QrCode className="w-4 h-4 text-yellow-300" />
+            <span>Contrôle Code-Barres</span>
+          </button>
           <button
             onClick={() => setIsScanModalOpen(true)}
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-2.5 rounded-xl text-xs flex items-center space-x-1.5 shadow transition"
@@ -719,6 +749,13 @@ export const DocumentGEDModule: React.FC = () => {
           setDocuments((prev) => [created, ...prev]);
           setSelectedDoc(created);
         }}
+      />
+
+      {/* Modal Universel de Vérification & Contrôle Optique des Codes-Barres */}
+      <BarcodeScannerModal
+        isOpen={isBarcodeModalOpen}
+        onClose={() => setIsBarcodeModalOpen(false)}
+        initialBarcodeId={activeBarcodeVerifyId}
       />
     </div>
   );

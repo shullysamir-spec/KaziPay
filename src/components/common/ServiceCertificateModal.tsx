@@ -25,6 +25,8 @@ import { getCompanyConfig, CompanyConfig } from '../../services/companyService';
 import { EmployeeWithContract } from '../../types/employee';
 import { logAuditEvent } from '../../services/auditService';
 import { CompanyDocument } from '../modules/DocumentGEDModule';
+import { generateBarcodeIdentifier, registerDocument, generateBarcodeDataUrl } from '../../services/barcodeService';
+import { DocumentBarcode } from './DocumentBarcode';
 
 interface ServiceCertificateModalProps {
   isOpen: boolean;
@@ -106,6 +108,25 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
 
+      // Barcode generation
+      const barcodeId = generateBarcodeIdentifier('CERT');
+      const barcodeDataUrl = await generateBarcodeDataUrl(barcodeId, 'CODE128', { height: 35, displayValue: true });
+
+      registerDocument({
+        barcodeId,
+        documentType: 'Certificat / Attestation',
+        documentTypeCode: 'CERT',
+        documentNumber: `CERT-${Date.now().toString().slice(-6)}`,
+        title: `Attestation de Fin de Service - ${currentEmp.lastName} ${currentEmp.firstName}`,
+        employeeName: `${currentEmp.lastName} ${currentEmp.firstName}`,
+        employeeMatricule: currentEmp.matricule,
+        createdAt: new Date().toISOString(),
+        createdBy: signerName,
+        status: 'Validated',
+        version: 'v1.0',
+        moduleRoute: 'ged',
+      });
+
       // En-tête officiel de l'entreprise
       doc.setFillColor(31, 56, 100); // #1F3864 Navy
       doc.rect(0, 0, pageWidth, 14, 'F');
@@ -121,6 +142,15 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.text(company.name.toUpperCase(), 15, 28);
+
+      // Add Barcode image top right
+      if (barcodeDataUrl) {
+        try {
+          doc.addImage(barcodeDataUrl, 'PNG', pageWidth - 70, 18, 55, 12);
+        } catch (err) {
+          console.warn('Barcode PDF insertion error:', err);
+        }
+      }
 
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
@@ -486,10 +516,11 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
                     N° ID.NAT: {company.idNat || '01-93-N45100P'} • CNSS: {company.cnssEmployerNumber || '1014850021'}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex flex-col items-end gap-1">
                   <span className="text-[10px] font-bold bg-[#1F3864] text-white px-2 py-0.5 rounded">
                     DOCUMENT OFFICIEL
                   </span>
+                  <DocumentBarcode compact value="NVP-CERT-2026-000102-4F81A3" documentType="ATTESTATION RH" />
                 </div>
               </div>
 

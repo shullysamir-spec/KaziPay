@@ -13,6 +13,7 @@ import { getEmployees } from './employeeService';
 import { getAttendanceByPeriod } from './attendanceService';
 import { getLoans, updateLoanBalance } from './loanService';
 import { logAuditEvent } from './auditService';
+import { generateBarcodeIdentifier, registerDocument } from './barcodeService';
 
 /**
  * Récupérer l'historique complet des barèmes légaux versionnés
@@ -184,6 +185,27 @@ export async function calculatePayrollRun(
     });
 
     payslip.runId = runId;
+    if (!payslip.barcodeId) {
+      payslip.barcodeId = generateBarcodeIdentifier('PAY');
+    }
+
+    // Enregistrer dans le registre universel des codes-barres
+    registerDocument({
+      barcodeId: payslip.barcodeId,
+      documentType: 'Bulletin de Paie',
+      documentTypeCode: 'PAY',
+      documentNumber: payslip.payslipRef || `BS-${payslip.period}-${payslip.employeeMatricule}`,
+      title: `Bulletin de Paie - ${payslip.employeeName} (${payslip.period})`,
+      employeeName: payslip.employeeName,
+      employeeMatricule: payslip.employeeMatricule,
+      createdAt: payslip.createdAt || new Date().toISOString(),
+      createdBy: 'Système de Paie NovarisPay',
+      status: 'Validated',
+      version: 'v1.0',
+      moduleRoute: 'payslips',
+      targetId: runId,
+    });
+
     generatedPayslips.push(payslip);
 
     totalGrossCDF += payslip.grossSalaryCDF;
@@ -256,9 +278,32 @@ export async function closePayrollRun(runId: string): Promise<void> {
 export async function getPayslipsForRun(runId: string): Promise<Payslip[]> {
   try {
     const snap = await getDocs(collection(db, 'payslips'));
-    return snap.docs
+    const list = snap.docs
       .map((d) => ({ id: d.id, ...d.data() } as Payslip))
       .filter((p) => p.runId === runId);
+
+    list.forEach((ps) => {
+      if (!ps.barcodeId) {
+        ps.barcodeId = generateBarcodeIdentifier('PAY');
+      }
+      registerDocument({
+        barcodeId: ps.barcodeId,
+        documentType: 'Bulletin de Paie',
+        documentTypeCode: 'PAY',
+        documentNumber: ps.payslipRef || `BS-${ps.period}-${ps.employeeMatricule}`,
+        title: `Bulletin de Paie - ${ps.employeeName} (${ps.period})`,
+        employeeName: ps.employeeName,
+        employeeMatricule: ps.employeeMatricule,
+        createdAt: ps.createdAt || new Date().toISOString(),
+        createdBy: 'Direction RH & Paie NovarisPay',
+        status: 'Closed',
+        version: 'v1.0',
+        moduleRoute: 'payslips',
+        targetId: runId,
+      });
+    });
+
+    return list;
   } catch (err) {
     console.error('Erreur getPayslipsForRun:', err);
     return [];
