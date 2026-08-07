@@ -193,9 +193,9 @@ export async function calculatePayrollRun(
   }
 
   // Mettre à jour les totaux du traitement
-  await updateDoc(doc(db, 'payrollRuns', runId), {
+  await updateDoc(doc(db, 'payrollRuns', runId), sanitizeData({
     status: 'CALCULATED',
-    statutoryVersion: statutoryParams.version,
+    statutoryVersion: statutoryParams.version || '2026.1',
     totalGrossCDF,
     totalNetCDF,
     totalNetUSD,
@@ -203,7 +203,7 @@ export async function calculatePayrollRun(
     totalCNSSEmployeeCDF,
     totalEmployerChargesCDF,
     employeeCount: generatedPayslips.length,
-  });
+  }));
 
   return generatedPayslips;
 }
