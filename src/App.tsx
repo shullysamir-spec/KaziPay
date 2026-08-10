@@ -11,6 +11,7 @@ import { bootstrapSystemData } from './services/seedService';
 import { ensureSuperAdminExists, getUserProfile, logoutUser } from './services/authService';
 import { UserProfile, RolePermissionMapping } from './types/auth';
 import { Language, i18n } from './lib/i18n';
+import { NovarisLogo } from './components/common/NovarisLogo';
 import { Header } from './components/layout/Header';
 import { Sidebar, ModuleKey } from './components/layout/Sidebar';
 import { LoginForm } from './components/auth/LoginForm';
@@ -199,12 +200,14 @@ export function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#1F3864] flex flex-col items-center justify-center text-white p-4">
-        <div className="w-16 h-16 bg-[#BF9000] text-[#1F3864] font-black text-3xl rounded-2xl flex items-center justify-center shadow-2xl animate-pulse mb-4">
-          NP
+      <div className="min-h-screen bg-[#071D49] flex flex-col items-center justify-center text-white p-6">
+        <div className="animate-pulse mb-6">
+          <NovarisLogo variant="full" theme="white" customHeight={64} />
         </div>
-        <div className="text-xl font-bold tracking-tight">NovarisPay - HR & Payroll Management System</div>
-        <div className="text-xs text-blue-200 mt-2">Initialisation du système et des paramètres légaux 2026...</div>
+        <div className="w-48 h-1.5 bg-white/10 rounded-full overflow-hidden mb-4">
+          <div className="w-2/3 h-full bg-[#287BFF] rounded-full animate-pulse"></div>
+        </div>
+        <div className="text-xs text-slate-300 font-medium">Initialisation du système NovarisPay...</div>
       </div>
     );
   }

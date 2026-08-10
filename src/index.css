@@ -1,1 +1,158 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    
+    /* Novaris Brand Color System */
+    --novaris-navy: #071D49;
+    --novaris-blue: #287BFF;
+    --novaris-electric: #119CFF;
+    --novaris-violet: #663BFF;
+
+    /* Neutrals */
+    --color-bg: #F6F8FC;
+    --color-card: #FFFFFF;
+    --color-[#0F172A]: #0F172A;
+    --color-secondary: #64748B;
+    --color-muted: #94A3B8;
+    --color-border: #E2E8F0;
+    --color-hover: #F8FAFC;
+
+    /* System Status */
+    --color-success: #16A34A;
+    --color-warning: #F59E0B;
+    --color-error: #DC2626;
+    --color-info: #2563EB;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-bg);
+    color: var(--color-[#0F172A]);
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Custom Novaris Utilities & Gradients */
+.bg-novaris-navy {
+  background-color: #071D49;
+}
+
+.text-novaris-navy {
+  color: #071D49;
+}
+
+.bg-novaris-blue {
+  background-color: #287BFF;
+}
+
+.text-novaris-blue {
+  color: #287BFF;
+}
+
+.border-novaris-blue {
+  border-color: #287BFF;
+}
+
+.bg-novaris-gradient {
+  background: linear-gradient(135deg, #119CFF 0%, #287BFF 50%, #663BFF 100%);
+}
+
+.text-novaris-gradient {
+  background: linear-gradient(135deg, #119CFF 0%, #287BFF 50%, #663BFF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-novaris-gradient {
+  border-image: linear-gradient(135deg, #119CFF 0%, #287BFF 50%, #663BFF 100%) 1;
+}
+
+/* Card Style Standard */
+.novaris-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+/* Input Standard */
+.novaris-input {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  color: #0F172A;
+  transition: all 0.15s ease-in-out;
+}
+
+.novaris-input:focus {
+  outline: none;
+  border-color: #287BFF;
+  box-shadow: 0 0 0 3px rgba(40, 123, 255, 0.15);
+}
+
+/* Button Primary Standard */
+.novaris-btn-primary {
+  background-color: #287BFF;
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  items-center: center;
+  gap: 0.5rem;
+}
+
+.novaris-btn-primary:hover {
+  background-color: #1A6CFA;
+  box-shadow: 0 4px 12px rgba(40, 123, 255, 0.25);
+}
+
+.novaris-btn-primary:active {
+  transform: translateY(1px);
+}
+
+/* Button Secondary Standard */
+.novaris-btn-secondary {
+  background-color: #FFFFFF;
+  color: #071D49;
+  font-weight: 600;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  items-center: center;
+  gap: 0.5rem;
+}
+
+.novaris-btn-secondary:hover {
+  background-color: #F8FAFC;
+  border-color: #CBD5E1;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}

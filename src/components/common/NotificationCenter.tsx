@@ -145,7 +145,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
         onClick={() => setIsOpen(!isOpen)}
         className={`relative p-2 rounded-xl border transition shadow-xs flex items-center justify-center ${
           isOpen
-            ? 'bg-slate-100 dark:bg-slate-800 border-[#1F3864] text-[#1F3864] dark:text-blue-400'
+            ? 'bg-slate-100 dark:bg-slate-800 border-[#287BFF] text-[#287BFF] dark:text-blue-400'
             : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
         }`}
         title="Notifications & Alertes RH"
@@ -165,8 +165,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
           {/* Header */}
           <div className="p-4 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-[#BF9000]" />
-              <h2 className="font-extrabold text-sm text-[#1F3864] dark:text-blue-300">
+              <Sparkles className="w-4 h-4 text-[#287BFF]" />
+              <h2 className="font-extrabold text-sm text-[#071D49] dark:text-blue-300">
                 Centre d'Alertes RH & Paie
               </h2>
               {unreadCount > 0 && (
@@ -180,7 +180,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}
-                  className="p-1 text-slate-500 hover:text-[#1F3864] dark:hover:text-blue-300 text-[11px] font-bold flex items-center space-x-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                  className="p-1 text-slate-500 hover:text-[#287BFF] dark:hover:text-blue-300 text-[11px] font-bold flex items-center space-x-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition"
                   title="Tout marquer comme lu"
                 >
                   <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -202,7 +202,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
               onClick={() => setActiveFilter('ALL')}
               className={`flex-1 py-1.5 px-2 rounded-lg transition text-center whitespace-nowrap ${
                 activeFilter === 'ALL'
-                  ? 'bg-[#1F3864] text-white shadow-xs'
+                  ? 'bg-[#071D49] text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -212,7 +212,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
               onClick={() => setActiveFilter('CONTRACT')}
               className={`flex-1 py-1.5 px-2 rounded-lg transition text-center whitespace-nowrap ${
                 activeFilter === 'CONTRACT'
-                  ? 'bg-[#1F3864] text-white shadow-xs'
+                  ? 'bg-[#071D49] text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -222,7 +222,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
               onClick={() => setActiveFilter('LEAVE')}
               className={`flex-1 py-1.5 px-2 rounded-lg transition text-center whitespace-nowrap ${
                 activeFilter === 'LEAVE'
-                  ? 'bg-[#1F3864] text-white shadow-xs'
+                  ? 'bg-[#071D49] text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -232,7 +232,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
               onClick={() => setActiveFilter('MEDICAL')}
               className={`flex-1 py-1.5 px-2 rounded-lg transition text-center whitespace-nowrap ${
                 activeFilter === 'MEDICAL'
-                  ? 'bg-[#1F3864] text-white shadow-xs'
+                  ? 'bg-[#071D49] text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -259,7 +259,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
                   className={`p-3 rounded-xl transition cursor-pointer flex items-start space-x-3 group relative ${
                     notif.isRead
                       ? 'bg-white dark:bg-slate-900 opacity-80 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                      : 'bg-slate-50 dark:bg-slate-800/80 border-l-4 border-l-[#1F3864] dark:border-l-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      : 'bg-slate-50 dark:bg-slate-800/80 border-l-4 border-l-[#287BFF] dark:border-l-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <div className="p-2 bg-slate-100 dark:bg-slate-700/60 rounded-xl shrink-0 mt-0.5">
@@ -280,7 +280,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
 
                     <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 pt-1">
                       <span>Échéance / Date: {notif.date}</span>
-                      <span className="text-[#1F3864] dark:text-blue-400 font-bold group-hover:underline flex items-center space-x-0.5">
+                      <span className="text-[#287BFF] dark:text-blue-400 font-bold group-hover:underline flex items-center space-x-0.5">
                         <span>Traiter</span>
                         <ArrowRight className="w-3 h-3 ml-0.5" />
                       </span>

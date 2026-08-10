@@ -38,8 +38,8 @@ export const DEFAULT_COMPANY_CONFIG: CompanyConfig = {
   phone: '+243 810 000 000',
   email: 'contact@novarispay.cd',
   website: 'www.novarispay.cd',
-  primaryColor: '#1F3864',
-  accentColor: '#BF9000',
+  primaryColor: '#071D49',
+  accentColor: '#287BFF',
   signerName: 'M. MUKENDI Jean-Luc',
   signerTitle: 'Directeur des Ressources Humaines',
 };

@@ -103,8 +103,8 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="h-16 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between px-6 shrink-0 z-40 sticky top-0 shadow-xs transition-colors">
       {/* Current Module Title */}
       <div className="flex items-center gap-3 shrink-0">
-        <h1 className="text-base md:text-lg font-bold text-[#1F3864] dark:text-blue-300 tracking-tight">{title}</h1>
-        <span className="hidden sm:inline-block text-[11px] bg-[#BF9000]/15 dark:bg-[#BF9000]/30 text-[#856404] dark:text-amber-200 border border-[#BF9000]/30 font-bold px-2 py-0.5 rounded-full">
+        <h1 className="text-base md:text-lg font-bold text-[#071D49] dark:text-blue-300 tracking-tight">{title}</h1>
+        <span className="hidden sm:inline-block text-[11px] bg-[#287BFF]/10 dark:bg-[#287BFF]/20 text-[#287BFF] dark:text-blue-300 border border-[#287BFF]/20 font-bold px-2.5 py-0.5 rounded-full">
           {t.header.compliantBadge}
         </span>
       </div>
@@ -120,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
             placeholder="Recherche globale (Nom, Matricule, Code-barres NVP...)"
-            className="w-full pl-9 pr-9 py-1.5 text-xs font-medium text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1F3864] dark:focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all"
+            className="w-full pl-9 pr-9 py-1.5 text-xs font-medium text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#287BFF] dark:focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all"
           />
           {searchQuery && (
             <button
@@ -153,7 +153,7 @@ export const Header: React.FC<HeaderProps> = ({
                     className="p-2 hover:bg-blue-50/70 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition flex items-center justify-between gap-2 border border-transparent hover:border-blue-200 dark:hover:border-slate-700"
                   >
                     <div className="flex items-center space-x-2.5 min-w-0">
-                      <div className="p-1.5 bg-[#1F3864] text-white rounded-lg">
+                      <div className="p-1.5 bg-[#071D49] text-white rounded-lg">
                         <Layers className="w-4 h-4" />
                       </div>
                       <div className="truncate">
@@ -181,13 +181,13 @@ export const Header: React.FC<HeaderProps> = ({
                     className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition flex items-center justify-between gap-2 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
                   >
                     <div className="flex items-center space-x-2.5 min-w-0">
-                      <div className="p-1.5 bg-amber-500/10 text-[#BF9000] dark:text-amber-400 rounded-lg">
+                      <div className="p-1.5 bg-blue-50 text-[#287BFF] dark:text-blue-400 rounded-lg">
                         <QrCode className="w-4 h-4" />
                       </div>
                       <div className="truncate">
                         <div className="font-bold text-slate-900 dark:text-slate-100 truncate">{doc.title}</div>
                         <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center space-x-1">
-                          <span className="font-bold text-[#1F3864] dark:text-blue-300">{doc.barcodeId}</span>
+                          <span className="font-bold text-[#287BFF] dark:text-blue-300">{doc.barcodeId}</span>
                           <span>•</span>
                           <span>{doc.employeeName || doc.documentType}</span>
                         </div>
@@ -206,7 +206,7 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className="p-3 text-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition"
                 >
-                  <QrCode className="w-5 h-5 text-[#1F3864] dark:text-blue-400 mx-auto mb-1" />
+                  <QrCode className="w-5 h-5 text-[#287BFF] dark:text-blue-400 mx-auto mb-1" />
                   <p className="font-bold text-slate-800 dark:text-slate-200">Rechercher / Vérifier "{searchQuery}"</p>
                   <span className="text-[10px] text-slate-400">Clic pour lancer le contrôle optique et la traçabilité immuable</span>
                 </div>

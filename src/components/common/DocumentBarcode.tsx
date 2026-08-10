@@ -86,7 +86,7 @@ export const DocumentBarcode: React.FC<DocumentBarcodeProps> = ({
       } ${className}`}
       title="Code-barres authentifié NovarisPay - Clic pour vérifier l'authenticité"
     >
-      <div className="flex items-center space-x-1.5 text-[9px] font-mono text-slate-500 mb-0.5 group-hover:text-[#1F3864]">
+      <div className="flex items-center space-x-1.5 text-[9px] font-mono text-slate-500 mb-0.5 group-hover:text-[#287BFF]">
         <ShieldCheck className="w-3 h-3 text-emerald-600 inline" />
         <span className="font-bold tracking-tight uppercase">{documentType || 'DOC SÉCURISÉ'}</span>
         <button
@@ -100,7 +100,7 @@ export const DocumentBarcode: React.FC<DocumentBarcodeProps> = ({
 
       {/* Barcode Image */}
       {dataUrl ? (
-        <div className="bg-white p-1 rounded border border-slate-200 shadow-2xs group-hover:border-[#1F3864] transition">
+        <div className="bg-white p-1 rounded border border-slate-200 shadow-2xs group-hover:border-[#287BFF] transition">
           <img
             src={dataUrl}
             alt={`Code-Barres ${value}`}
@@ -115,8 +115,8 @@ export const DocumentBarcode: React.FC<DocumentBarcodeProps> = ({
 
       {/* Identifier string under barcode */}
       <div className="flex items-center space-x-1 mt-0.5">
-        <span className="font-mono text-[10px] font-black text-[#1F3864] tracking-wider">{value}</span>
-        <ExternalLink className="w-2.5 h-2.5 text-slate-400 group-hover:text-[#BF9000]" />
+        <span className="font-mono text-[10px] font-black text-[#071D49] tracking-wider">{value}</span>
+        <ExternalLink className="w-2.5 h-2.5 text-slate-400 group-hover:text-[#287BFF]" />
       </div>
     </div>
   );

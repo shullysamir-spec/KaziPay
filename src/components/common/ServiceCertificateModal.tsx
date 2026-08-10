@@ -517,7 +517,7 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
                   </p>
                 </div>
                 <div className="text-right flex flex-col items-end gap-1">
-                  <span className="text-[10px] font-bold bg-[#1F3864] text-white px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-bold bg-[#071D49] text-white px-2 py-0.5 rounded">
                     DOCUMENT OFFICIEL
                   </span>
                   <DocumentBarcode compact value="NVP-CERT-2026-000102-4F81A3" documentType="ATTESTATION RH" />
@@ -526,10 +526,10 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
 
               {/* Title */}
               <div className="text-center bg-slate-50 py-3 rounded border border-slate-200 space-y-0.5">
-                <h2 className="font-black text-sm text-[#1F3864] uppercase tracking-wider">
+                <h2 className="font-black text-sm text-[#071D49] uppercase tracking-wider">
                   ATTESTATION DE FIN DE SERVICE
                 </h2>
-                <p className="text-[9px] font-bold text-[#BF9000] uppercase">
+                <p className="text-[9px] font-bold text-[#287BFF] uppercase">
                   (Certificat de travail - Article 168 du Code du Travail RDC)
                 </p>
               </div>
@@ -581,9 +581,9 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
                     <div className="text-right">
                       <span className="text-[10px] block font-bold text-slate-800">Fait à {issueCity}, le {issueDate}</span>
                       <div className="mt-2 border border-slate-300 p-2 rounded bg-slate-50 inline-block text-[10px] text-left">
-                        <span className="font-bold text-[#1F3864] block">POUR L'EMPLOYEUR</span>
+                        <span className="font-bold text-[#071D49] block">POUR L'EMPLOYEUR</span>
                         <span className="text-emerald-600 font-bold block text-[9px]">✓ SIGNÉ ÉLECTRONIQUEMENT</span>
-                        <span className="text-slate-400 text-[8px] font-mono">Hash: KZ-CERT-VERIFIED</span>
+                        <span className="text-slate-400 text-[8px] font-mono">Hash: NVP-CERT-VERIFIED</span>
                       </div>
                     </div>
                   </div>
@@ -604,9 +604,9 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
               <button
                 onClick={handleGeneratePDF}
                 disabled={downloading || !currentEmp}
-                className="px-5 py-2.5 bg-[#1F3864] hover:bg-[#152747] text-white font-bold text-xs rounded-xl shadow transition flex items-center space-x-2 disabled:opacity-50"
+                className="px-5 py-2.5 bg-[#287BFF] hover:bg-[#1A6CFA] text-white font-bold text-xs rounded-xl shadow transition flex items-center space-x-2 disabled:opacity-50"
               >
-                <Download className="w-4 h-4 text-amber-400 stroke-[1.75]" />
+                <Download className="w-4 h-4 text-white stroke-[1.75]" />
                 <span>{downloading ? 'Génération du PDF...' : 'Télécharger le PDF & Enregistrer dans la GED'}</span>
               </button>
             </div>

@@ -109,7 +109,7 @@ export async function generateBarcodeDataUrl(
         width: options?.width || 140,
         margin: 1,
         color: {
-          dark: '#1F3864',
+          dark: '#071D49',
           light: '#FFFFFF',
         },
       });
@@ -125,7 +125,7 @@ export async function generateBarcodeDataUrl(
     const canvas = document.createElement('canvas');
     JsBarcode(canvas, value, {
       format: 'CODE128',
-      lineColor: '#1F3864',
+      lineColor: '#071D49',
       width: 2,
       height: options?.height || settings.barHeight || 40,
       displayValue: showText,

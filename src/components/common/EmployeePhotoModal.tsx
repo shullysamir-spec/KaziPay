@@ -128,9 +128,9 @@ export const EmployeePhotoModal: React.FC<EmployeePhotoModalProps> = ({
     <div className="fixed inset-0 z-[9999] bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
         {/* Header */}
-        <div className="p-4 bg-[#1F3864] text-white flex items-center justify-between">
+        <div className="p-4 bg-[#071D49] text-white flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Camera className="w-5 h-5 text-[#BF9000]" />
+            <Camera className="w-5 h-5 text-[#287BFF]" />
             <div>
               <h3 className="font-extrabold text-sm tracking-tight">Photo d'Identité du Salarié</h3>
               <p className="text-[10px] text-blue-200 truncate max-w-[260px]">{employeeName}</p>
@@ -141,7 +141,7 @@ export const EmployeePhotoModal: React.FC<EmployeePhotoModalProps> = ({
               stopCamera();
               onClose();
             }}
-            className="p-1 text-[#BF9000] hover:text-white rounded"
+            className="p-1 text-slate-300 hover:text-white rounded"
           >
             <X className="w-5 h-5" />
           </button>
@@ -156,7 +156,7 @@ export const EmployeePhotoModal: React.FC<EmployeePhotoModalProps> = ({
             }}
             className={`flex-1 py-3 px-4 flex items-center justify-center space-x-2 border-b-2 transition ${
               activeTab === 'CAMERA'
-                ? 'border-[#1F3864] text-[#1F3864] dark:text-blue-400 bg-white dark:bg-slate-900 font-black'
+                ? 'border-[#287BFF] text-[#287BFF] dark:text-blue-400 bg-white dark:bg-slate-900 font-black'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -170,7 +170,7 @@ export const EmployeePhotoModal: React.FC<EmployeePhotoModalProps> = ({
             }}
             className={`flex-1 py-3 px-4 flex items-center justify-center space-x-2 border-b-2 transition ${
               activeTab === 'FOLDER'
-                ? 'border-[#1F3864] text-[#1F3864] dark:text-blue-400 bg-white dark:bg-slate-900 font-black'
+                ? 'border-[#287BFF] text-[#287BFF] dark:text-blue-400 bg-white dark:bg-slate-900 font-black'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -184,7 +184,7 @@ export const EmployeePhotoModal: React.FC<EmployeePhotoModalProps> = ({
           {activeTab === 'CAMERA' && (
             <div className="flex flex-col items-center space-y-4">
               {!capturedPhoto ? (
-                <div className="relative w-64 h-64 bg-slate-900 rounded-full border-4 border-[#1F3864] overflow-hidden shadow-inner flex items-center justify-center">
+                <div className="relative w-64 h-64 bg-slate-900 rounded-full border-4 border-[#071D49] overflow-hidden shadow-inner flex items-center justify-center">
                   <video
                     ref={videoRef}
                     autoPlay
@@ -194,7 +194,7 @@ export const EmployeePhotoModal: React.FC<EmployeePhotoModalProps> = ({
                   />
                   {!isCameraActive && !cameraError && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-900">
-                      <RefreshCw className="w-8 h-8 animate-spin mb-2 text-[#BF9000]" />
+                      <RefreshCw className="w-8 h-8 animate-spin mb-2 text-[#287BFF]" />
                       <span className="text-xs">Activation de la webcam...</span>
                     </div>
                   )}
@@ -224,9 +224,9 @@ export const EmployeePhotoModal: React.FC<EmployeePhotoModalProps> = ({
                 <button
                   onClick={takeSnapshot}
                   disabled={!isCameraActive}
-                  className="w-full py-3 bg-[#1F3864] hover:bg-[#152747] disabled:opacity-50 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-md transition"
+                  className="w-full py-3 bg-[#287BFF] hover:bg-[#1A6CFA] disabled:opacity-50 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-md transition"
                 >
-                  <Camera className="w-4 h-4 text-[#BF9000]" />
+                  <Camera className="w-4 h-4 text-white" />
                   <span>Prendre la Photo</span>
                 </button>
               ) : (

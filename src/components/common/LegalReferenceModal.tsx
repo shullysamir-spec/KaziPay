@@ -37,10 +37,10 @@ export const LegalReferenceModal: React.FC<LegalReferenceModalProps> = ({
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col border border-slate-200 overflow-hidden">
         {/* Header */}
-        <div className="bg-[#1F3864] text-white p-5 flex items-center justify-between">
+        <div className="bg-[#071D49] text-white p-5 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-[#BF9000] text-[#1F3864] rounded-xl flex items-center justify-center font-black">
-              <BookOpen className="w-5 h-5 text-[#1F3864]" />
+            <div className="w-10 h-10 bg-[#287BFF] text-white rounded-xl flex items-center justify-center font-black">
+              <BookOpen className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-base font-black tracking-wide">Base Légale & Code du Travail RDC</h2>
@@ -67,7 +67,7 @@ export const LegalReferenceModal: React.FC<LegalReferenceModalProps> = ({
               placeholder="Rechercher un article de loi, un décret ou un mot clé..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border rounded-xl text-xs bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#1F3864] outline-none"
+              className="w-full pl-9 pr-4 py-2 border rounded-xl text-xs bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#287BFF] outline-none"
             />
           </div>
 
@@ -79,12 +79,12 @@ export const LegalReferenceModal: React.FC<LegalReferenceModalProps> = ({
                 onClick={() => setSelectedArticle(art)}
                 className={`p-4 rounded-xl border text-xs cursor-pointer transition space-y-2 ${
                   selectedArticle?.article === art.article
-                    ? 'border-[#BF9000] bg-amber-50/50 shadow-md ring-1 ring-[#BF9000]'
+                    ? 'border-[#287BFF] bg-blue-50/50 shadow-md ring-1 ring-[#287BFF]'
                     : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-black text-[#1F3864] bg-blue-50 px-2 py-0.5 rounded font-mono">
+                  <span className="font-black text-[#071D49] bg-blue-50 px-2 py-0.5 rounded font-mono">
                     {art.article}
                   </span>
                   <span className="text-[10px] text-slate-400 italic truncate max-w-[150px]">{art.source}</span>
@@ -99,7 +99,7 @@ export const LegalReferenceModal: React.FC<LegalReferenceModalProps> = ({
           {selectedArticle && (
             <div className="mt-4 p-5 bg-slate-900 text-slate-100 rounded-xl space-y-3 border border-slate-700 animate-fadeIn">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="text-xs font-black text-[#BF9000] font-mono">
+                <span className="text-xs font-black text-[#119CFF] font-mono">
                   {selectedArticle.article} — {selectedArticle.title}
                 </span>
                 <span className="text-[10px] text-slate-400">{selectedArticle.source}</span>
@@ -114,7 +114,7 @@ export const LegalReferenceModal: React.FC<LegalReferenceModalProps> = ({
                 </span>
                 <button
                   onClick={() => setSelectedArticle(null)}
-                  className="text-amber-400 font-bold hover:underline"
+                  className="text-blue-400 font-bold hover:underline"
                 >
                   Fermer la vue détaillée
                 </button>
@@ -131,7 +131,7 @@ export const LegalReferenceModal: React.FC<LegalReferenceModalProps> = ({
           </span>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-[#1F3864] text-white font-bold rounded-lg text-xs"
+            className="px-4 py-2 bg-[#287BFF] hover:bg-[#1A6CFA] text-white font-bold rounded-xl text-xs shadow transition"
           >
             Fermer le Guide
           </button>

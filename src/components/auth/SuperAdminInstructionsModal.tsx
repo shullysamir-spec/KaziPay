@@ -20,14 +20,14 @@ export const SuperAdminInstructionsModal: React.FC<SuperAdminInstructionsModalPr
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
-        <div className="bg-[#1F3864] text-white p-5 flex items-center justify-between sticky top-0 z-10">
+        <div className="bg-[#071D49] text-white p-5 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center space-x-2">
-            <ShieldCheck className="w-6 h-6 text-[#BF9000]" />
+            <ShieldCheck className="w-6 h-6 text-[#119CFF]" />
             <h2 className="text-lg font-bold">Guide de Configuration Super Administrateur & Firebase</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-300 hover:text-white p-1 rounded-lg hover:bg-blue-900 transition"
+            className="text-slate-300 hover:text-white p-1 rounded-lg hover:bg-white/10 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -35,9 +35,9 @@ export const SuperAdminInstructionsModal: React.FC<SuperAdminInstructionsModalPr
 
         <div className="p-6 space-y-6 text-slate-800 text-sm">
           {/* Section 1: Super Admin Credentials */}
-          <div className="bg-blue-50 border-l-4 border-[#1F3864] p-4 rounded-r-lg">
-            <h3 className="font-bold text-[#1F3864] text-base mb-2 flex items-center space-x-2">
-              <Key className="w-5 h-5 text-[#BF9000]" />
+          <div className="bg-blue-50 border-l-4 border-[#287BFF] p-4 rounded-r-lg">
+            <h3 className="font-bold text-[#071D49] text-base mb-2 flex items-center space-x-2">
+              <Key className="w-5 h-5 text-[#287BFF]" />
               <span>1. Identifiants du Super Administrateur de Démonstration</span>
             </h3>
             <p className="text-slate-700 text-xs mb-3">
@@ -86,7 +86,7 @@ export const SuperAdminInstructionsModal: React.FC<SuperAdminInstructionsModalPr
           <div className="text-right pt-2 border-t border-slate-200">
             <button
               onClick={onClose}
-              className="bg-[#1F3864] hover:bg-[#152747] text-white font-bold px-5 py-2 rounded-lg text-xs transition"
+              className="bg-[#287BFF] hover:bg-[#1A6CFA] text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow transition"
             >
               J'ai compris, fermer
             </button>

@@ -3,9 +3,10 @@
  * NovarisPay - HR & Payroll Management System
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Language, i18n } from '../../lib/i18n';
 import { UserProfile } from '../../types/auth';
+import { NovarisLogo } from '../common/NovarisLogo';
 import {
   LayoutDashboard,
   Users,
@@ -24,6 +25,8 @@ import {
   Zap,
   Stethoscope,
   FolderArchive,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 export type ModuleKey =
@@ -54,6 +57,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule, lang, currentUser }) => {
   const t = i18n[lang].nav;
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const principalItems: Array<{ key: ModuleKey; label: string; icon: React.ReactNode }> = [
     { key: 'dashboard', label: t.dashboard, icon: <LayoutDashboard className="w-5 h-5" strokeWidth={1.75} /> },
@@ -67,8 +71,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule, 
     { key: 'recruitment', label: t.recruitment, icon: <UserCheck className="w-5 h-5" strokeWidth={1.75} /> },
     { key: 'performance', label: t.performance, icon: <Target className="w-5 h-5" strokeWidth={1.75} /> },
     { key: 'discipline', label: t.discipline, icon: <AlertTriangle className="w-5 h-5" strokeWidth={1.75} /> },
-    { key: 'medical', label: t.medical, icon: <Stethoscope className="w-5 h-5 text-emerald-400" strokeWidth={1.75} /> },
-    { key: 'documents', label: t.documents, icon: <FolderArchive className="w-5 h-5 text-amber-400" strokeWidth={1.75} /> },
+    { key: 'medical', label: t.medical, icon: <Stethoscope className="w-5 h-5" strokeWidth={1.75} /> },
+    { key: 'documents', label: t.documents, icon: <FolderArchive className="w-5 h-5" strokeWidth={1.75} /> },
     { key: 'automation', label: t.automation, icon: <Zap className="w-5 h-5" strokeWidth={1.75} /> },
   ];
 
@@ -86,23 +90,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule, 
 
   const renderNavGroup = (title: string, items: typeof principalItems) => (
     <div className="py-2">
-      <div className="px-6 py-2 text-[10px] uppercase tracking-widest text-white/40 font-bold">
-        {title}
-      </div>
+      {!isCollapsed && (
+        <div className="px-5 py-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+          {title}
+        </div>
+      )}
       {items.map((item) => {
         const isActive = activeModule === item.key;
         return (
           <button
             key={item.key}
             onClick={() => onSelectModule(item.key)}
-            className={`w-full flex items-center gap-3 px-6 py-2.5 text-xs transition font-medium text-left ${
+            title={isCollapsed ? item.label : undefined}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs transition-all font-medium text-left my-0.5 rounded-xl ${
               isActive
-                ? 'bg-white/10 border-l-4 border-[#BF9000] text-white font-bold'
-                : 'text-white/70 hover:bg-white/5 hover:text-white'
-            }`}
+                ? 'bg-[#287BFF] text-white font-bold shadow-md shadow-blue-500/20'
+                : 'text-slate-300 hover:bg-white/10 hover:text-white'
+            } ${isCollapsed ? 'justify-center px-0' : 'mx-2 w-[calc(100%-1rem)]'}`}
           >
-            <span className={isActive ? 'text-[#BF9000]' : 'text-white/60'}>{item.icon}</span>
-            <span className={item.key === 'payroll' ? 'text-[#BF9000] font-bold' : ''}>{item.label}</span>
+            <span className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}>
+              {item.icon}
+            </span>
+            {!isCollapsed && <span className="truncate">{item.label}</span>}
           </button>
         );
       })}
@@ -110,23 +119,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule, 
   );
 
   return (
-    <aside className="w-64 bg-[#1F3864] text-white flex flex-col shrink-0 min-h-[calc(100vh-4rem)] border-r border-blue-900/50">
-      {/* Sidebar Branding Header */}
-      <div className="p-5 flex items-center gap-3 border-b border-blue-900/50">
-        <div className="w-10 h-10 bg-[#BF9000] text-[#1F3864] rounded-lg flex items-center justify-center font-black text-xl shadow-md">
-          N
-        </div>
-        <div className="overflow-hidden">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xl font-black tracking-tight text-white">NovarisPay</span>
-            <span className="text-[10px] bg-white/10 text-white/90 px-1.5 py-0.5 rounded font-bold uppercase">RDC</span>
+    <aside
+      className={`${
+        isCollapsed ? 'w-20' : 'w-64'
+      } bg-[#071D49] text-white flex flex-col shrink-0 min-h-screen border-r border-slate-800 transition-all duration-300 z-30 relative`}
+    >
+      {/* Sidebar Header with Official Logo */}
+      <div className="p-4 flex items-center justify-between border-b border-white/10 h-16">
+        {!isCollapsed ? (
+          <div className="flex items-center gap-2 overflow-hidden">
+            <NovarisLogo variant="full" theme="white" customHeight={32} />
           </div>
-          <p className="text-[10px] text-white/60 truncate font-mono">ERP RH & Paie 2026</p>
-        </div>
+        ) : (
+          <div className="mx-auto">
+            <NovarisLogo variant="icon" theme="white" customHeight={32} />
+          </div>
+        )}
+
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition"
+          title={isCollapsed ? 'Développer le menu' : 'Réduire le menu'}
+        >
+          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
       </div>
 
       {/* Navigation Group List */}
-      <nav className="flex-1 py-2 overflow-y-auto divide-y divide-blue-900/30">
+      <nav className="flex-1 py-2 overflow-y-auto space-y-1">
         {renderNavGroup(t.groupMain, principalItems)}
         {renderNavGroup(t.groupHR, hrItems)}
         {renderNavGroup(t.groupPayroll, operationsItems)}
@@ -135,18 +155,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule, 
 
       {/* Bottom Profile Summary Card */}
       {currentUser && (
-        <div className="p-4 bg-black/20 border-t border-blue-900/50 mt-auto">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-slate-400 border-2 border-[#BF9000] flex items-center justify-center text-[#1F3864] font-bold text-xs uppercase">
-              {currentUser.displayName ? currentUser.displayName.substring(0, 2) : 'SA'}
+        <div className="p-3 bg-[#051433] border-t border-white/10 mt-auto">
+          <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
+            <div className="w-9 h-9 rounded-xl bg-[#287BFF] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
+              {currentUser.displayName ? currentUser.displayName.substring(0, 2).toUpperCase() : 'NP'}
             </div>
-            <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-white">{currentUser.displayName || 'Super Admin'}</p>
-              <p className="text-[10px] text-white/60 truncate">{currentUser.email}</p>
-            </div>
+            {!isCollapsed && (
+              <div className="overflow-hidden min-w-0">
+                <p className="text-xs font-bold truncate text-white">{currentUser.displayName || 'Super Admin'}</p>
+                <p className="text-[10px] text-slate-400 truncate">{currentUser.email}</p>
+              </div>
+            )}
           </div>
         </div>
       )}
     </aside>
   );
 };
+
