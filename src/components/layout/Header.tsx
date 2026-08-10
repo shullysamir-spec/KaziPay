@@ -9,6 +9,7 @@ import { Language, i18n } from '../../lib/i18n';
 import { Globe, LogOut, ShieldCheck, HelpCircle, Sun, Moon, Keyboard, Search, QrCode, FileText, User, Layers, ArrowRight } from 'lucide-react';
 import { NotificationCenter } from '../common/NotificationCenter';
 import { getRegisteredDocuments, DocumentMetadata } from '../../services/barcodeService';
+import { ModuleKey } from './Sidebar';
 
 interface HeaderProps {
   currentUser: UserProfile | null;
@@ -20,7 +21,7 @@ interface HeaderProps {
   title?: string;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
-  onNavigateToModule?: (moduleKey: any) => void;
+  onNavigateToModule?: (moduleKey: ModuleKey) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -40,6 +41,30 @@ export const Header: React.FC<HeaderProps> = ({
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const allRegisteredDocs = getRegisteredDocuments();
+
+  const MODULE_SEARCH_ITEMS: { key: ModuleKey; label: string; desc: string; iconName: string }[] = [
+    { key: 'dashboard', label: 'Tableau de Bord', desc: 'Indicateurs clés RH et masse salariale', iconName: 'Layers' },
+    { key: 'employees', label: 'Gestion des Employés', desc: 'Dossiers du personnel, contrats et ayants droit', iconName: 'Users' },
+    { key: 'attendance', label: 'Pointages & Présences', desc: 'Heures supplémentaires, absences et retards', iconName: 'Clock' },
+    { key: 'leave', label: 'Congés & Absences', desc: 'Demandes de congé, calendrier et soldes', iconName: 'Calendar' },
+    { key: 'loans', label: 'Prêts & Avances', desc: 'Prêts scolaires, avances sur salaire et échéanciers', iconName: 'CreditCard' },
+    { key: 'payroll', label: 'Calcul de la Paie', desc: 'Calculs bruts/nets, barème IPR, CNSS et déductions', iconName: 'Calculator' },
+    { key: 'payslips', label: 'Bulletins de Paie', desc: 'Consulter et imprimer les bulletins certifiés', iconName: 'FileText' },
+    { key: 'declarations', label: 'Déclarations Légales RDC', desc: 'IPR, CNSS, INPP, ONEM et télédéclarations', iconName: 'ShieldCheck' },
+    { key: 'reports', label: 'Rapports & Audit', desc: 'Analyses RH, exportations Excel et journaux', iconName: 'BarChart' },
+    { key: 'documents', label: 'Gestion Documentaire (GED)', desc: 'Documents certifiés, contrats et codes-barres', iconName: 'FileText' },
+    { key: 'security', label: 'Sécurité & Droits (RBAC)', desc: 'Rôles, permissions et traçabilité', iconName: 'Lock' },
+    { key: 'settings', label: 'Paramètres Système', desc: 'Taux de change USD/CDF, barèmes et entreprise', iconName: 'Settings' },
+  ];
+
+  const matchedModules = searchQuery.trim()
+    ? MODULE_SEARCH_ITEMS.filter(
+        (m) =>
+          m.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          m.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          m.key.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   const filteredDocs = searchQuery.trim()
     ? allRegisteredDocs.filter(
@@ -110,50 +135,83 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Global Search Dropdown Results */}
         {isSearchFocused && searchQuery.trim().length > 0 && (
-          <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-2 z-50 text-xs space-y-1 max-h-80 overflow-y-auto">
-            <div className="px-2 py-1 text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center justify-between">
-              <span>Résultats des documents & codes-barres</span>
-              <span className="font-mono text-[#1F3864] dark:text-blue-400 font-bold">{filteredDocs.length} trouvé(s)</span>
-            </div>
-
-            {filteredDocs.length > 0 ? (
-              filteredDocs.map((doc) => (
-                <div
-                  key={doc.barcodeId}
-                  onMouseDown={() => handleSelectDocument(doc)}
-                  className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition flex items-center justify-between gap-2 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-                >
-                  <div className="flex items-center space-x-2.5 min-w-0">
-                    <div className="p-1.5 bg-blue-50 dark:bg-slate-800 text-[#1F3864] dark:text-blue-300 rounded-lg">
-                      <QrCode className="w-4 h-4" />
-                    </div>
-                    <div className="truncate">
-                      <div className="font-bold text-slate-900 dark:text-slate-100 truncate">{doc.title}</div>
-                      <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center space-x-1">
-                        <span className="font-bold text-[#1F3864] dark:text-blue-300">{doc.barcodeId}</span>
-                        <span>•</span>
-                        <span>{doc.employeeName || doc.documentType}</span>
+          <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-2 z-50 text-xs space-y-2 max-h-96 overflow-y-auto">
+            {/* Matched Modules Section */}
+            {matchedModules.length > 0 && (
+              <div className="space-y-1">
+                <div className="px-2 py-0.5 text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center justify-between">
+                  <span>Modules Système ({matchedModules.length})</span>
+                </div>
+                {matchedModules.map((mod) => (
+                  <div
+                    key={mod.key}
+                    onMouseDown={() => {
+                      if (onNavigateToModule) onNavigateToModule(mod.key);
+                      setIsSearchFocused(false);
+                      setSearchQuery('');
+                    }}
+                    className="p-2 hover:bg-blue-50/70 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition flex items-center justify-between gap-2 border border-transparent hover:border-blue-200 dark:hover:border-slate-700"
+                  >
+                    <div className="flex items-center space-x-2.5 min-w-0">
+                      <div className="p-1.5 bg-[#1F3864] text-white rounded-lg">
+                        <Layers className="w-4 h-4" />
+                      </div>
+                      <div className="truncate">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 truncate">{mod.label}</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{mod.desc}</div>
                       </div>
                     </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                </div>
-              ))
-            ) : (
-              <div
-                onMouseDown={() => {
-                  window.dispatchEvent(
-                    new CustomEvent('novarispay_open_barcode_verify', { detail: { barcodeId: searchQuery.trim() } })
-                  );
-                  setIsSearchFocused(false);
-                }}
-                className="p-3 text-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition"
-              >
-                <QrCode className="w-5 h-5 text-[#1F3864] dark:text-blue-400 mx-auto mb-1" />
-                <p className="font-bold text-slate-800 dark:text-slate-200">Rechercher/Vérifier "{searchQuery}"</p>
-                <span className="text-[10px] text-slate-400">Clic pour lancer le contrôle optique et la traçabilité</span>
+                ))}
               </div>
             )}
+
+            {/* Matched Documents & Barcodes Section */}
+            <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <div className="px-2 py-0.5 text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center justify-between">
+                <span>Documents & Codes-Barres ({filteredDocs.length})</span>
+              </div>
+
+              {filteredDocs.length > 0 ? (
+                filteredDocs.map((doc) => (
+                  <div
+                    key={doc.barcodeId}
+                    onMouseDown={() => handleSelectDocument(doc)}
+                    className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition flex items-center justify-between gap-2 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                  >
+                    <div className="flex items-center space-x-2.5 min-w-0">
+                      <div className="p-1.5 bg-amber-500/10 text-[#BF9000] dark:text-amber-400 rounded-lg">
+                        <QrCode className="w-4 h-4" />
+                      </div>
+                      <div className="truncate">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 truncate">{doc.title}</div>
+                        <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center space-x-1">
+                          <span className="font-bold text-[#1F3864] dark:text-blue-300">{doc.barcodeId}</span>
+                          <span>•</span>
+                          <span>{doc.employeeName || doc.documentType}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  </div>
+                ))
+              ) : (
+                <div
+                  onMouseDown={() => {
+                    window.dispatchEvent(
+                      new CustomEvent('novarispay_open_barcode_verify', { detail: { barcodeId: searchQuery.trim() } })
+                    );
+                    setIsSearchFocused(false);
+                  }}
+                  className="p-3 text-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition"
+                >
+                  <QrCode className="w-5 h-5 text-[#1F3864] dark:text-blue-400 mx-auto mb-1" />
+                  <p className="font-bold text-slate-800 dark:text-slate-200">Rechercher / Vérifier "{searchQuery}"</p>
+                  <span className="text-[10px] text-slate-400">Clic pour lancer le contrôle optique et la traçabilité immuable</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -19,6 +19,7 @@ import { SuperAdminInstructionsModal } from './components/auth/SuperAdminInstruc
 import { TestModeBanner } from './components/common/TestModeBanner';
 import { ToastProvider } from './context/ToastContext';
 import { KeyboardShortcutsModal } from './components/common/KeyboardShortcutsModal';
+import { BarcodeScannerModal } from './components/common/BarcodeScannerModal';
 
 // Modules
 import { DashboardModule } from './components/modules/DashboardModule';
@@ -50,7 +51,23 @@ export function App() {
   });
   const [isSuperAdminModalOpen, setIsSuperAdminModalOpen] = useState<boolean>(false);
   const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState<boolean>(false);
+  const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState<boolean>(false);
+  const [barcodeVerifyId, setBarcodeVerifyId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const handleOpenBarcodeVerify = (e: CustomEvent<{ barcodeId: string }>) => {
+      if (e.detail?.barcodeId !== undefined) {
+        setBarcodeVerifyId(e.detail.barcodeId);
+        setIsBarcodeModalOpen(true);
+      }
+    };
+
+    window.addEventListener('novarispay_open_barcode_verify', handleOpenBarcodeVerify as EventListener);
+    return () => {
+      window.removeEventListener('novarispay_open_barcode_verify', handleOpenBarcodeVerify as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -316,6 +333,18 @@ export function App() {
         isOpen={isKeyboardShortcutsOpen}
         onClose={() => setIsKeyboardShortcutsOpen(false)}
         lang={lang}
+      />
+
+      {/* Global Universal Barcode Verification & Audit Modal */}
+      <BarcodeScannerModal
+        isOpen={isBarcodeModalOpen}
+        onClose={() => setIsBarcodeModalOpen(false)}
+        initialBarcodeId={barcodeVerifyId}
+        onNavigateToDocument={(route) => {
+          if (route) {
+            setActiveModule(route as ModuleKey);
+          }
+        }}
       />
     </div>
     </ToastProvider>
