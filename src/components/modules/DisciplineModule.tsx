@@ -347,17 +347,27 @@ export const DisciplineModule: React.FC = () => {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const primaryColor = '#1F3864';
 
-    // Header Company Box
+    // Header Company Box with NovarisPay Emblem Logo
     doc.setFillColor(31, 56, 100);
     doc.rect(15, 12, 180, 22, 'F');
+
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(20, 14, 10, 10, 1.5, 1.5, 'F');
+    doc.setFillColor(191, 144, 0);
+    doc.rect(26, 16, 2.5, 5, 'F');
+    doc.setTextColor(31, 56, 100);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(7.5);
+    doc.text('N', 21.5, 21);
+
     doc.setTextColor(255, 255, 255);
     doc.setFont('times', 'bold');
-    doc.setFontSize(14);
-    doc.text(company.name.toUpperCase(), 20, 22);
+    doc.setFontSize(13);
+    doc.text(company.name.toUpperCase(), 34, 20);
 
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setFont('times', 'normal');
-    doc.text('DIRECTION DES RESSOURCES HUMAINES & CONTENTIEUX SOCIAL - RDC', 20, 28);
+    doc.text('DIRECTION DES RESSOURCES HUMAINES & CONTENTIEUX SOCIAL - RDC', 34, 27);
 
     // Right Ref Box
     doc.setFillColor(240, 240, 240);

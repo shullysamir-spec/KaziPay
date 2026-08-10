@@ -158,22 +158,40 @@ export const DeclarationsModule: React.FC = () => {
 
   const exportPDF = () => {
     const doc = new jsPDF();
+
+    // NovarisPay Brand Emblem / Logo in Header
+    doc.setFillColor(31, 56, 100);
+    doc.roundedRect(14, 12, 12, 12, 2, 2, 'F');
+    doc.setFillColor(191, 144, 0);
+    doc.rect(21, 15, 3, 6, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8.5);
+    doc.text('N', 16, 20.5);
+
     doc.setFont('times', 'bold');
     doc.setFontSize(13);
-    doc.text(company.name.toUpperCase(), 14, 18);
+    doc.setTextColor(31, 56, 100);
+    doc.text(company.name.toUpperCase(), 30, 18);
 
     doc.setFontSize(9);
     doc.setFont('times', 'normal');
-    doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 14, 24);
+    doc.setTextColor(51, 65, 85);
+    doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 30, 24);
 
     doc.setFontSize(11);
     doc.setFont('times', 'bold');
-    doc.text(`DÉCLARATION RÉCAPITULATIVE LÉGALE RDC : ${selectedDoc}`, 14, 32);
-    doc.text(`Période : ${activeRun?.period || ''} | Échéance légale : 15 du mois suivant`, 14, 38);
+    doc.setTextColor(31, 56, 100);
+    doc.text(`DÉCLARATION RÉCAPITULATIVE LÉGALE RDC : ${selectedDoc}`, 14, 34);
+    doc.setFont('times', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Période : ${activeRun?.period || ''} | Échéance légale : 15 du mois suivant`, 14, 40);
 
-    let y = 48;
-    doc.setFontSize(9);
+    let y = 50;
+    doc.setFontSize(9.5);
     doc.setFont('times', 'bold');
+    doc.setTextColor(30, 41, 59);
     doc.text('Matricule & Nom Salarié', 14, y);
     doc.text('Brut (CDF)', 140, y, { align: 'right' });
     doc.text('Montant Dû (CDF)', 192, y, { align: 'right' });
@@ -206,7 +224,7 @@ export const DeclarationsModule: React.FC = () => {
 
   const handleOpenEditText = () => {
     if (!selectedLetter) return;
-    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations et obligations légales au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel employé par notre société ${company.name}.\n\nLe montant total s'élève à : ${formatCDF(selectedLetter.totalAmountCDF)} (Francs Congolais).\n\nLe règlement afférent a été effectué par : ${selectedLetter.paymentMode} (Référence de la transaction : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
+    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations dues au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel employé par notre société ${company.name}.\n\nLe montant total s'élève à : ${formatCDF(selectedLetter.totalAmountCDF)} (Francs Congolais).\n\nLe règlement afférent a été effectué par : ${selectedLetter.paymentMode} (Référence de la transaction : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
 
     setEditingText(selectedLetter.customBodyText || defaultBody);
     setIsEditingTextModalOpen(true);
@@ -237,18 +255,33 @@ export const DeclarationsModule: React.FC = () => {
 
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-    // Header with Logo if exists
+    // NovarisPay Brand Emblem / Logo in Header
+    doc.setFillColor(31, 56, 100);
+    doc.roundedRect(20, 15, 12, 12, 2, 2, 'F');
+    doc.setFillColor(191, 144, 0);
+    doc.rect(27, 18, 3, 6, 'F');
+    doc.setTextColor(255, 255, 255);
     doc.setFont('times', 'bold');
-    doc.setFontSize(12);
-    doc.text(company.name.toUpperCase(), 20, 20);
+    doc.setFontSize(8.5);
+    doc.text('N', 22, 23.5);
+
+    doc.setFont('times', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(31, 56, 100);
+    doc.text(company.name.toUpperCase(), 36, 20);
 
     doc.setFontSize(9);
     doc.setFont('times', 'normal');
-    doc.text(`${company.address} — ${company.cityProvince}`, 20, 25);
-    doc.text(`RCCM: ${company.rccm} | ID.NAT: ${company.idNat} | NIF: ${company.nif}`, 20, 29);
+    doc.setTextColor(51, 65, 85);
+    doc.text(`${company.address} — ${company.cityProvince}`, 36, 25);
+    doc.text(`RCCM: ${company.rccm} | ID.NAT: ${company.idNat} | NIF: ${company.nif}`, 36, 29);
 
     // Date & Ref
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(9.5);
+    doc.setFont('times', 'bold');
     doc.text(`Réf N° : ${selectedLetter.id}`, 20, 42);
+    doc.setFont('times', 'normal');
     doc.text(`Fait à ${company.cityProvince}, le ${selectedLetter.generatedDate}`, 120, 42);
 
     // Destinataire Box
@@ -258,16 +291,21 @@ export const DeclarationsModule: React.FC = () => {
     doc.text(selectedLetter.recipientTitle, 114, 55, { maxWidth: 78 });
 
     // Objet
+    doc.setFont('times', 'bold');
     doc.setFontSize(10.5);
+    doc.setTextColor(31, 56, 100);
     doc.text(`OBJET : TRANSMISSION DE LA DÉCLARATION LÉGALE - ${selectedLetter.organism}`, 20, 82);
     doc.text(`PÉRIODE : ${selectedLetter.period.toUpperCase()}`, 20, 88);
 
+    doc.setDrawColor(200, 200, 200);
     doc.line(20, 92, 195, 92);
 
     // Body
     doc.setFont('times', 'normal');
-    doc.setFontSize(10.5);
-    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations et impôts dus au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel de notre société ${company.name}.\n\nLe montant total s'élève à : ${formatCDF(selectedLetter.totalAmountCDF)} (Francs Congolais).\n\nLe règlement de cette obligation a été effectué par : ${selectedLetter.paymentMode} (Réf. Règlement : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
+    doc.setFontSize(11);
+    doc.setTextColor(30, 41, 59);
+
+    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations dues au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel de notre société ${company.name}.\n\nLe montant total s'élève à : ${formatCDF(selectedLetter.totalAmountCDF)} (Francs Congolais).\n\nLe règlement de cette obligation a été effectué par : ${selectedLetter.paymentMode} (Réf. Règlement : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
 
     const body = selectedLetter.customBodyText || defaultBody;
 
@@ -276,15 +314,24 @@ export const DeclarationsModule: React.FC = () => {
 
     // Signature Area
     doc.setFont('times', 'bold');
+    doc.setFontSize(10);
     doc.text('POUR LA DIRECTION GÉNÉRALE', 20, 190);
     doc.text(company.signerName, 20, 210);
     doc.setFont('times', 'normal');
+    doc.setFontSize(9);
     doc.text(company.signerTitle, 20, 215);
 
+    // Accusé de réception box - padded & wrapped to fit completely inside box
     doc.rect(120, 185, 75, 40);
-    doc.text("ACCUSÉ DE RÉCEPTION DE L'ORGANISME", 123, 192);
+    doc.setFont('times', 'bold');
     doc.setFontSize(8.5);
-    doc.text('Sceau, Date & Cachet à la réception :', 123, 202);
+    doc.setTextColor(31, 56, 100);
+    doc.text("ACCUSÉ DE RÉCEPTION DE L'ORGANISME", 123, 192, { maxWidth: 68 });
+    doc.setFont('times', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text('Sceau, Date & Cachet à la réception :', 123, 204);
+    doc.text('Signature de l\'Agent Récepteur :', 123, 214);
 
     doc.save(`Lettre_Transmission_${selectedLetter.id}.pdf`);
   };
@@ -513,7 +560,7 @@ export const DeclarationsModule: React.FC = () => {
                     </span>
                   </div>
                   <div className="font-bold text-sm">{lettr.recipientTitle}</div>
-                  <div className="text-[11px] opacity-80">Montant: {(lettr.totalAmountCDF ?? 0).toLocaleString()} CDF</div>
+                  <div className="text-[11px] opacity-80">Montant: {formatCDF(lettr.totalAmountCDF ?? 0)}</div>
                   <div className="text-[10px] opacity-60 font-mono">Date: {lettr.generatedDate}</div>
                 </div>
               ))}
@@ -712,7 +759,7 @@ export const DeclarationsModule: React.FC = () => {
               <div className="p-3 bg-slate-50 border rounded-xl flex items-center justify-between">
                 <span className="font-bold text-slate-700">Montant Déclaré Calculé :</span>
                 <span className="font-black text-emerald-700 text-sm">
-                  {getCurrentDocAmount(letterForm.organism).toLocaleString()} FC
+                  {formatCDF(getCurrentDocAmount(letterForm.organism))}
                 </span>
               </div>
 

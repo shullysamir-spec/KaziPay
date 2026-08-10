@@ -97,16 +97,25 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     const textColor = [40, 40, 40];
     const lightGray = [245, 247, 250];
 
-    // 1. En-tête Employeur (Times New Roman)
+    // 1. En-tête Employeur avec Logo NovarisPay (Times New Roman)
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.roundedRect(14, 11, 10, 10, 1.5, 1.5, 'F');
+    doc.setFillColor(goldColor[0], goldColor[1], goldColor[2]);
+    doc.rect(20, 13, 2.5, 5, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(7.5);
+    doc.text('N', 15.5, 18);
+
     doc.setFont('times', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text(company.name || DEFAULT_COMPANY_DETAILS.name, 14, 18);
+    doc.text(company.name || DEFAULT_COMPANY_DETAILS.name, 28, 18);
 
     doc.setFontSize(9);
     doc.setFont('times', 'normal');
     doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-    doc.text(`${company.address || DEFAULT_COMPANY_DETAILS.address}`, 14, 23);
+    doc.text(`${company.address || DEFAULT_COMPANY_DETAILS.address}`, 28, 23);
     doc.text(`RCCM: ${company.rccm || DEFAULT_COMPANY_DETAILS.rccm}  |  ID.NAT: ${company.idNat || DEFAULT_COMPANY_DETAILS.idNat}  |  NIF: ${company.nif || DEFAULT_COMPANY_DETAILS.nif}`, 14, 28);
     doc.text(`N° CNSS Employeur: ${company.cnssEmployerNumber || DEFAULT_COMPANY_DETAILS.cnssEmployerNumber}  |  Tél: ${company.phone || '+243 810 000 000'}`, 14, 33);
 
@@ -383,7 +392,7 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
                   </div>
                   <div className="text-right">
                     <div className={`font-black ${selectedPayslip?.employeeId === ps.employeeId ? 'text-yellow-300' : 'text-[#1F3864]'}`}>
-                      {ps.netSalaryCDF.toLocaleString('fr-FR')} FC
+                      {formatCDF(ps.netSalaryCDF)}
                     </div>
                     <div className={`text-[10px] font-bold ${selectedPayslip?.employeeId === ps.employeeId ? 'text-slate-300' : 'text-slate-400'}`}>
                       ${ps.netSalaryUSD} USD

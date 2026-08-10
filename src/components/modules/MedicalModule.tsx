@@ -317,18 +317,28 @@ export const MedicalModule: React.FC = () => {
 
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-    // Header Company Box
+    // Header Company Box with NovarisPay Emblem Logo
     doc.setFillColor(31, 56, 100);
     doc.rect(15, 12, 180, 24, 'F');
+    
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(20, 15, 10, 10, 1.5, 1.5, 'F');
+    doc.setFillColor(191, 144, 0);
+    doc.rect(26, 17, 2.5, 5, 'F');
+    doc.setTextColor(31, 56, 100);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(7.5);
+    doc.text('N', 21.5, 22);
+
     doc.setTextColor(255, 255, 255);
     doc.setFont('times', 'bold');
-    doc.setFontSize(14);
-    doc.text(company.name.toUpperCase(), 20, 22);
+    doc.setFontSize(13);
+    doc.text(company.name.toUpperCase(), 34, 21);
 
     doc.setFontSize(8.5);
     doc.setFont('times', 'normal');
-    doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 20, 28);
-    doc.text(`RAPPORT DE SUIVI MÉDICAL HOSPITALIER (RDC)`, 20, 33);
+    doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 34, 27);
+    doc.text(`RAPPORT DE SUIVI MÉDICAL HOSPITALIER (RDC)`, 34, 32);
 
     // Title Report Box
     doc.setFillColor(243, 244, 246);
@@ -416,18 +426,28 @@ export const MedicalModule: React.FC = () => {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const pColor = company.primaryColor || '#1F3864';
 
-    // Header Company Box
+    // Header Company Box with NovarisPay Emblem Logo
     doc.setFillColor(31, 56, 100);
     doc.rect(15, 12, 180, 24, 'F');
+
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(20, 15, 10, 10, 1.5, 1.5, 'F');
+    doc.setFillColor(191, 144, 0);
+    doc.rect(26, 17, 2.5, 5, 'F');
+    doc.setTextColor(31, 56, 100);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(7.5);
+    doc.text('N', 21.5, 22);
+
     doc.setTextColor(255, 255, 255);
     doc.setFont('times', 'bold');
-    doc.setFontSize(14);
-    doc.text(company.name.toUpperCase(), 20, 22);
+    doc.setFontSize(13);
+    doc.text(company.name.toUpperCase(), 34, 21);
 
     doc.setFontSize(8.5);
     doc.setFont('times', 'normal');
-    doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 20, 28);
-    doc.text(`SERVICE DE SANTÉ & PRÉVENTION MÉDICALE AU TRAVAIL (CODE RDC ART. 177)`, 20, 33);
+    doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 34, 27);
+    doc.text(`SERVICE DE SANTÉ & PRÉVENTION MÉDICALE AU TRAVAIL (CODE RDC ART. 177)`, 34, 32);
 
     // Title Voucher Box
     doc.setFillColor(243, 244, 246);
@@ -1196,7 +1216,7 @@ export const MedicalModule: React.FC = () => {
                       <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                         <span className="font-bold text-emerald-900 block text-[11px]">Facturation Hospitalière :</span>
                         <div className="text-lg font-black text-emerald-700 mt-1">
-                          {selectedReport.hospitalCostCDF.toLocaleString()} CDF
+                          {formatCDF(selectedReport.hospitalCostCDF)}
                         </div>
                         <div className="text-[10px] text-emerald-800">Facture transmise au service RH/Finance</div>
                       </div>

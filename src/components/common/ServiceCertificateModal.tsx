@@ -137,11 +137,20 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       doc.text('RÉPUBLIQUE DÉMOCRATIQUE DU CONGO — ERP RH NOVARISPAY', 15, 9);
       doc.text('DOCUMENT OFFICIEL CONFORME CODE DU TRAVAIL', pageWidth - 15, 9, { align: 'right' });
 
-      // Information Entreprise Header
-      doc.setTextColor(31, 56, 100);
-      doc.setFontSize(16);
+      // Information Entreprise Header with NovarisPay Emblem Logo
+      doc.setFillColor(31, 56, 100);
+      doc.roundedRect(15, 20, 10, 10, 1.5, 1.5, 'F');
+      doc.setFillColor(191, 144, 0);
+      doc.rect(21, 22, 2.5, 5, 'F');
+      doc.setTextColor(255, 255, 255);
       doc.setFont('times', 'bold');
-      doc.text(company.name.toUpperCase(), 15, 28);
+      doc.setFontSize(7.5);
+      doc.text('N', 16.5, 27);
+
+      doc.setTextColor(31, 56, 100);
+      doc.setFontSize(15);
+      doc.setFont('times', 'bold');
+      doc.text(company.name.toUpperCase(), 29, 27);
 
       // Add Barcode image top right
       if (barcodeDataUrl) {
