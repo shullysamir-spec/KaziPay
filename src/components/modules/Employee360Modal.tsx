@@ -18,11 +18,12 @@ import {
   deriveEmployeeStatus,
   updateEmployee,
 } from '../../services/employeeService';
-import { getPayslipsForEmployee, getSoldeDeToutCompteHistory, saveSoldeDeToutCompte } from '../../services/payrollService';
+import { getPayslipsForEmployee, getSoldeDeToutCompteHistory, saveSoldeDeToutCompte, updateSoldeDeToutCompte } from '../../services/payrollService';
 import { calculateSoldeDeToutCompte } from '../../payroll/engine';
 import { getAuditLogs, AuditLogEntry, logAuditEvent } from '../../services/auditService';
 import { ServiceCertificateModal } from '../common/ServiceCertificateModal';
 import { EmployeePhotoModal } from '../common/EmployeePhotoModal';
+import { formatCDF, formatUSD, formatDateFR } from '../../utils/documentFormatter';
 import {
   User,
   X,
@@ -38,10 +39,12 @@ import {
   Award,
   Folder,
   History,
+  Printer,
+  Download,
   CheckCircle,
   AlertTriangle,
-  Download,
   RotateCcw,
+  Edit3,
   Plus,
   Lock,
   Eye,
@@ -127,7 +130,66 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [isServiceCertOpen, setIsServiceCertOpen] = useState(false);
 
-  // Camera & Photo Modal States
+  // STC Edit States
+  const [editingStc, setEditingStc] = useState<SoldeDeToutCompte | null>(null);
+  const [stcForm, setStcForm] = useState({
+    proratedSalaryCDF: 0,
+    unusedLeaveDays: 0,
+    unusedLeaveIndemnityCDF: 0,
+    noticePeriodDays: 0,
+    noticeIndemnityCDF: 0,
+    severanceIndemnityCDF: 0,
+    pendingPrimesCDF: 0,
+    remainingLoanBalanceCDF: 0,
+    remarks: '',
+  });
+
+  const handleOpenStcEdit = (stc: SoldeDeToutCompte) => {
+    setEditingStc(stc);
+    setStcForm({
+      proratedSalaryCDF: stc.proratedSalaryCDF || 0,
+      unusedLeaveDays: stc.unusedLeaveDays || 0,
+      unusedLeaveIndemnityCDF: stc.unusedLeaveIndemnityCDF || 0,
+      noticePeriodDays: stc.noticePeriodDays || 0,
+      noticeIndemnityCDF: stc.noticeIndemnityCDF || 0,
+      severanceIndemnityCDF: stc.severanceIndemnityCDF || 0,
+      pendingPrimesCDF: stc.pendingPrimesCDF || 0,
+      remainingLoanBalanceCDF: stc.remainingLoanBalanceCDF || 0,
+      remarks: stc.remarks || '',
+    });
+  };
+
+  const handleSaveStcEdit = async () => {
+    if (!editingStc || !editingStc.id) return;
+    try {
+      const rate = editingStc.exchangeRate || 2850;
+      const gross =
+        stcForm.proratedSalaryCDF +
+        stcForm.unusedLeaveIndemnityCDF +
+        stcForm.noticeIndemnityCDF +
+        stcForm.severanceIndemnityCDF +
+        stcForm.pendingPrimesCDF;
+      const netCDF = Math.max(0, gross - stcForm.remainingLoanBalanceCDF);
+      const netUSD = Number((netCDF / rate).toFixed(2));
+
+      await updateSoldeDeToutCompte(
+        editingStc.id,
+        {
+          ...stcForm,
+          totalGrossCDF: gross,
+          netPayableCDF: netCDF,
+          netPayableUSD: netUSD,
+        },
+        currentUser?.email || 'admin@novarispay.cd'
+      );
+
+      const soldes = await getSoldeDeToutCompteHistory();
+      setSoldeDeToutCompteList(soldes.filter((s) => s.employeeId === employee.id));
+      setEditingStc(null);
+    } catch (err: any) {
+      alert('Erreur modification STC: ' + err.message);
+    }
+  };
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [cameraDevices, setCameraDevices] = useState<MediaDeviceInfo[]>([]);
@@ -426,6 +488,250 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
     }
   };
 
+  // ---------------- PRINT / EXPORT 360° PDF ----------------
+  const handlePrint360PDF = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Veuillez autoriser les fenêtres surgissantes (pop-ups) pour imprimer le PDF.');
+      return;
+    }
+
+    const contractCurrency = employee.currentContract?.currency || 'CDF';
+    const formatMoney = (amount: number) =>
+      contractCurrency === 'USD' ? formatUSD(amount) : formatCDF(amount);
+
+    const baseSalary = employee.currentContract?.baseSalary || 0;
+    const cnssPatronal = Math.round(baseSalary * 0.13);
+    const inppPatronal = Math.round(baseSalary * 0.03);
+    const onemPatronal = Math.round(baseSalary * 0.002);
+    const chargesPatronales = cnssPatronal + inppPatronal + onemPatronal;
+    const medicalCost = contractCurrency === 'USD' ? 45 : 128250;
+    const travelCost = contractCurrency === 'USD' ? 120 : 342000;
+    const totalEmployerCost = baseSalary + chargesPatronales + medicalCost + travelCost;
+
+    const todayDate = formatDateFR(new Date().toISOString().split('T')[0]);
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <title>Fiche_360_${employee.matricule}_${employee.lastName}.pdf</title>
+        <style>
+          @page { size: A4 portrait; margin: 12mm 15mm; }
+          body { font-family: Arial, sans-serif; font-size: 11px; color: #1e293b; line-height: 1.4; margin: 0; padding: 0; background: #fff; text-align: left; letter-spacing: normal; }
+          .header-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border-bottom: 2px solid #1F3864; padding-bottom: 10px; }
+          .header-title { font-size: 18px; font-weight: bold; color: #1F3864; margin: 0; }
+          .header-subtitle { font-size: 10px; color: #64748b; margin-top: 3px; }
+          .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+          .badge-active { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+          .photo-box { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; border: 2px solid #1F3864; }
+          .avatar-box { width: 80px; height: 80px; border-radius: 8px; background: #1F3864; color: #fff; font-size: 24px; font-weight: bold; display: flex; align-items: center; justify-center: center; text-align: center; line-height: 80px; }
+          
+          .section-title { font-size: 12px; font-weight: bold; color: #1F3864; background: #f1f5f9; padding: 6px 10px; border-left: 4px solid #BF9000; margin-top: 15px; margin-bottom: 10px; text-transform: uppercase; }
+          
+          .grid-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+          .grid-table td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+          .label { font-weight: bold; color: #475569; width: 35%; }
+          .val { color: #0f172a; font-weight: 500; }
+          
+          .data-table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 12px; }
+          .data-table th { background: #1F3864; color: #ffffff; padding: 6px 8px; text-align: left; font-size: 10px; font-weight: bold; }
+          .data-table td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 10.5px; }
+          .data-table tr:nth-child(even) { background: #f8fafc; }
+          .amount { font-family: monospace; font-weight: bold; text-align: right; }
+          
+          .footer { margin-top: 30px; border-top: 1px solid #cbd5e1; pt: 10px; font-size: 9px; color: #64748b; display: flex; justify-content: space-between; }
+        </style>
+      </head>
+      <body>
+        <table class="header-table">
+          <tr>
+            <td style="width: 75%;">
+              <div class="header-title">NOVARISPAY ERP - FICHE SALARIÉ 360°</div>
+              <div class="header-subtitle">Récapitulatif Officiel Dossier RH & Coût Employeur (RDC) • Généré le ${todayDate}</div>
+            </td>
+            <td style="width: 25%; text-align: right;">
+              ${
+                employee.photoUrl
+                  ? `<img src="${employee.photoUrl}" class="photo-box" alt="Photo" />`
+                  : `<div class="avatar-box">${(employee.firstName[0] || 'E') + (employee.lastName[0] || '')}</div>`
+              }
+            </td>
+          </tr>
+        </table>
+
+        <!-- IDENTITÉ -->
+        <div class="section-title">1. Identité & Informations Générales</div>
+        <table class="grid-table">
+          <tr>
+            <td class="label">Nom complet :</td>
+            <td class="val">${employee.lastName.toUpperCase()} ${employee.firstName}</td>
+            <td class="label">Matricule :</td>
+            <td class="val"><strong>${employee.matricule}</strong></td>
+          </tr>
+          <tr>
+            <td class="label">Département & Poste :</td>
+            <td class="val">${employee.department} — ${employee.position}</td>
+            <td class="label">Site d'affectation :</td>
+            <td class="val">${employee.site || 'Kinshasa HQ'}</td>
+          </tr>
+          <tr>
+            <td class="label">Statut Actuel :</td>
+            <td class="val"><span class="badge badge-active">${currentStatus}</span></td>
+            <td class="label">Date d'embauche :</td>
+            <td class="val">${employee.hireDate ? formatDateFR(employee.hireDate) : '—'} (${employee.seniorityYears} ans)</td>
+          </tr>
+          <tr>
+            <td class="label">Numéro Impôt (NIF) :</td>
+            <td class="val">${employee.nif || 'Non renseigné'}</td>
+            <td class="label">Numéro CNSS RDC :</td>
+            <td class="val">${employee.cnss || 'Non renseigné'}</td>
+          </tr>
+          <tr>
+            <td class="label">Téléphone & Email :</td>
+            <td class="val">${employee.phone || '—'} / ${employee.email || '—'}</td>
+            <td class="label">Genre & Adresse :</td>
+            <td class="val">${employee.gender === 'F' ? 'Féminin' : 'Masculin'} — ${employee.address || '—'}</td>
+          </tr>
+        </table>
+
+        <!-- CONTRAT -->
+        <div class="section-title">2. Contrat de Travail & Rémunération</div>
+        <table class="grid-table">
+          <tr>
+            <td class="label">Type de Contrat :</td>
+            <td class="val"><strong>${employee.currentContract?.type || 'CDI'}</strong></td>
+            <td class="label">Devise Salariale :</td>
+            <td class="val"><strong>${contractCurrency}</strong></td>
+          </tr>
+          <tr>
+            <td class="label">Salaire de Base Mensuel :</td>
+            <td class="val" style="color: #166534; font-weight: bold;">${formatMoney(baseSalary)}</td>
+            <td class="label">Période du Contrat :</td>
+            <td class="val">Début: ${employee.currentContract?.startDate ? formatDateFR(employee.currentContract.startDate) : '—'}</td>
+          </tr>
+        </table>
+
+        <!-- COÛT EMPLOYEUR -->
+        <div class="section-title">3. Ventilation du Coût Employeur (${contractCurrency})</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Composante de Coût</th>
+              <th>Base & Taux Calcul</th>
+              <th style="text-align: right;">Montant Mensuel Estimé</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Salaire de Base Mensuel</strong></td>
+              <td>Contrat en vigueur (${contractCurrency})</td>
+              <td class="amount">${formatMoney(baseSalary)}</td>
+            </tr>
+            <tr>
+              <td>Cotisation CNSS Patronale (13.0%)</td>
+              <td>Brut Plafonné RDC</td>
+              <td class="amount">${formatMoney(cnssPatronal)}</td>
+            </tr>
+            <tr>
+              <td>Cotisation INPP Patronale (3.0%)</td>
+              <td>Masse Salariale Brute</td>
+              <td class="amount">${formatMoney(inppPatronal)}</td>
+            </tr>
+            <tr>
+              <td>Taxe ONEM Patronale (0.2%)</td>
+              <td>Masse Salariale Brute</td>
+              <td class="amount">${formatMoney(onemPatronal)}</td>
+            </tr>
+            <tr>
+              <td>Prise en Charge Médicale (Est.)</td>
+              <td>Forfait Mutuelle / Factures</td>
+              <td class="amount">${formatMoney(medicalCost)}</td>
+            </tr>
+            <tr>
+              <td>Notes de Frais / Transport (Moy.)</td>
+              <td>Remboursements sur pièces</td>
+              <td class="amount">${formatMoney(travelCost)}</td>
+            </tr>
+            <tr style="background: #f1f5f9; font-weight: bold;">
+              <td><strong>TOTAL COÛT EMPLOYEUR MENSUEL</strong></td>
+              <td><strong>Charges Globales Société</strong></td>
+              <td class="amount" style="color: #166534; font-size: 11.5px;">${formatMoney(totalEmployerCost)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- COORDONNEES BANCAIRES -->
+        <div class="section-title">4. Coordonnées Bancaires & Paiement</div>
+        <table class="grid-table">
+          <tr>
+            <td class="label">Banque Commerciale :</td>
+            <td class="val">${employee.bankName || 'Non configurée'}</td>
+            <td class="label">Compte / IBAN :</td>
+            <td class="val">${employee.bankAccount || 'Non configuré'}</td>
+          </tr>
+          <tr>
+            <td class="label">Mobile Money Provider :</td>
+            <td class="val">${employee.mobileMoneyProvider || '—'}</td>
+            <td class="label">Numéro Mobile Money :</td>
+            <td class="val">${employee.mobileMoneyNumber || '—'}</td>
+          </tr>
+        </table>
+
+        <!-- ENFANTS A CHARGE -->
+        <div class="section-title">5. Ayants Droit & Personnes à Charge (${employee.dependents?.length || 0})</div>
+        ${
+          employee.dependents && employee.dependents.length > 0
+            ? `<table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Nom & Prénom</th>
+                    <th>Lien de Parenté</th>
+                    <th>Date de Naissance</th>
+                    <th>Statut Scolaire / Age</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${employee.dependents
+                    .map(
+                      (d) => `
+                    <tr>
+                      <td>${d.name}</td>
+                      <td>${d.relationship || 'Enfant'}</td>
+                      <td>${d.birthDate ? formatDateFR(d.birthDate) : '—'}</td>
+                      <td>${d.isStudent ? 'Scolarisé(e)' : 'Enfant à charge'}</td>
+                    </tr>
+                  `
+                    )
+                    .join('')}
+                </tbody>
+              </table>`
+            : `<p style="font-size: 10px; color: #64748b; margin: 5px 0;">Aucun enfant ou ayant droit enregistré dans le dossier.</p>`
+        }
+
+        <div style="margin-top: 30px; width: 100%; border-top: 1px border #cbd5e1; padding-top: 10px; font-size: 9px; color: #64748b;">
+          <table style="width: 100%;">
+            <tr>
+              <td>Document officiel généré par NovarisPay ERP RH • Traçabilité RBAC & Sécurité Auditée</td>
+              <td style="text-align: right;">Page 1 / 1</td>
+            </tr>
+          </table>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   // ---------------- REINTEGRATION ----------------
   const handleReintegrate = async () => {
     if (!reintegrateReason.trim() || !employee.id) {
@@ -530,6 +836,15 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
 
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-2 self-stretch md:self-auto justify-end">
+            <button
+              onClick={handlePrint360PDF}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow flex items-center space-x-1.5 transition"
+              title="Générer et imprimer la fiche 360° en PDF"
+            >
+              <Printer className="w-4 h-4 text-white" />
+              <span>Imprimer / Exporter PDF</span>
+            </button>
+
             {canEditEmployee && (
               <>
                 <button
@@ -1059,94 +1374,113 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
-                  <span className="text-slate-500 font-bold text-[11px]">1. Salaire Brut Mensuel</span>
-                  <div className="text-lg font-black text-[#1F3864] font-mono">
-                    {(employee.currentContract?.baseSalary || 1500).toLocaleString('fr-FR')} {employee.currentContract?.currency || 'USD'}
-                  </div>
-                </div>
+              {(() => {
+                const contractCurrency = employee.currentContract?.currency || 'CDF';
+                const baseSal = employee.currentContract?.baseSalary || 0;
+                const cnssPatronal = Math.round(baseSal * 0.13);
+                const inppPatronal = Math.round(baseSal * 0.03);
+                const onemPatronal = Math.round(baseSal * 0.002);
+                const chargesPatronales = cnssPatronal + inppPatronal + onemPatronal;
+                const medicalCost = contractCurrency === 'USD' ? 45 : 128250;
+                const travelCost = contractCurrency === 'USD' ? 120 : 342000;
+                const totalCost = baseSal + chargesPatronales + medicalCost + travelCost;
 
-                <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
-                  <span className="text-slate-500 font-bold text-[11px]">2. Charges Patronales (+16.2%)</span>
-                  <div className="text-lg font-black text-amber-700 font-mono">
-                    {Math.round((employee.currentContract?.baseSalary || 1500) * 0.162).toLocaleString('fr-FR')} {employee.currentContract?.currency || 'USD'}
-                  </div>
-                </div>
+                const fmt = (val: number) =>
+                  contractCurrency === 'USD' ? formatUSD(val) : formatCDF(val);
 
-                <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
-                  <span className="text-slate-500 font-bold text-[11px]">3. Forfait Santé / Mutuelle</span>
-                  <div className="text-lg font-black text-blue-700 font-mono">
-                    45 USD / mois
-                  </div>
-                </div>
+                return (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+                        <span className="text-slate-500 font-bold text-[11px]">1. Salaire Brut Mensuel</span>
+                        <div className="text-base font-black text-[#1F3864] font-mono">
+                          {fmt(baseSal)}
+                        </div>
+                      </div>
 
-                <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
-                  <span className="text-slate-500 font-bold text-[11px]">4. Notes de Frais Remboursées</span>
-                  <div className="text-lg font-black text-emerald-700 font-mono">
-                    120 USD (Moyenne)
-                  </div>
-                </div>
-              </div>
+                      <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+                        <span className="text-slate-500 font-bold text-[11px]">2. Charges Patronales (+16.2%)</span>
+                        <div className="text-base font-black text-amber-700 font-mono">
+                          {fmt(chargesPatronales)}
+                        </div>
+                      </div>
 
-              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-                <h4 className="font-bold text-sm text-[#1F3864]">Détail & Ventilation du Coût Employeur (Conforme RDC)</h4>
-                <table className="w-full text-left text-xs divide-y divide-slate-100">
-                  <thead className="bg-slate-100 font-bold text-slate-700 uppercase text-[10px]">
-                    <tr>
-                      <th className="p-3">Composante de Coût</th>
-                      <th className="p-3">Base de Calcul</th>
-                      <th className="p-3">Taux / Formule</th>
-                      <th className="p-3 text-right">Montant Mensuel Estimé</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
-                    <tr>
-                      <td className="p-3 font-bold text-slate-900">Salaire de Base + Primes</td>
-                      <td className="p-3">Contrat en vigueur</td>
-                      <td className="p-3">Fixe mensuel</td>
-                      <td className="p-3 text-right font-mono font-bold">{(employee.currentContract?.baseSalary || 1500).toLocaleString()} USD</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 text-amber-900 font-bold">Cotisation CNSS Patronale</td>
-                      <td className="p-3">Salaire Brut (Plafonné RDC)</td>
-                      <td className="p-3">13.0% (Cotisation Employeur)</td>
-                      <td className="p-3 text-right font-mono">{Math.round((employee.currentContract?.baseSalary || 1500) * 0.13).toLocaleString()} USD</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 text-amber-900 font-bold">Cotisation INPP Patronale</td>
-                      <td className="p-3">Masse Salariale Brute</td>
-                      <td className="p-3">3.0% (Entreprise &gt; 50 sal)</td>
-                      <td className="p-3 text-right font-mono">{Math.round((employee.currentContract?.baseSalary || 1500) * 0.03).toLocaleString()} USD</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 text-amber-900 font-bold">Taxe ONEM Patronale</td>
-                      <td className="p-3">Masse Salariale Brute</td>
-                      <td className="p-3">0.2% (Office National de l'Emploi)</td>
-                      <td className="p-3 text-right font-mono">{Math.round((employee.currentContract?.baseSalary || 1500) * 0.002).toLocaleString()} USD</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 text-blue-900 font-bold">Prise en Charge Médicale & Hôpital</td>
-                      <td className="p-3">Couverture Santé Société</td>
-                      <td className="p-3">Convention / Factures à l'acte</td>
-                      <td className="p-3 text-right font-mono">45 USD</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 text-emerald-900 font-bold">Moyenne Notes de Frais Remboursées</td>
-                      <td className="p-3">Déplacements & Missions</td>
-                      <td className="p-3">Remboursement sur pièces justificatives</td>
-                      <td className="p-3 text-right font-mono">120 USD</td>
-                    </tr>
-                    <tr className="bg-slate-50 font-black text-[#1F3864]">
-                      <td className="p-3 text-sm">TOTAL COÛT EMPLOYEUR MENSUEL</td>
-                      <td className="p-3" colSpan={2}>Remarque: Les avances et prêts sont exclus car récupérables.</td>
-                      <td className="p-3 text-right font-mono text-sm text-emerald-700">
-                        {Math.round((employee.currentContract?.baseSalary || 1500) * 1.162 + 165).toLocaleString()} USD
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+                      <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+                        <span className="text-slate-500 font-bold text-[11px]">3. Forfait Santé / Mutuelle</span>
+                        <div className="text-base font-black text-blue-700 font-mono">
+                          {fmt(medicalCost)}
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+                        <span className="text-slate-500 font-bold text-[11px]">4. Notes de Frais Remboursées</span>
+                        <div className="text-base font-black text-emerald-700 font-mono">
+                          {fmt(travelCost)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                      <h4 className="font-bold text-sm text-[#1F3864]">Détail & Ventilation du Coût Employeur (Conforme RDC)</h4>
+                      <table className="w-full text-left text-xs divide-y divide-slate-100">
+                        <thead className="bg-slate-100 font-bold text-slate-700 uppercase text-[10px]">
+                          <tr>
+                            <th className="p-3">Composante de Coût</th>
+                            <th className="p-3">Base de Calcul</th>
+                            <th className="p-3">Taux / Formule</th>
+                            <th className="p-3 text-right">Montant Mensuel Estimé ({contractCurrency})</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-medium">
+                          <tr>
+                            <td className="p-3 font-bold text-slate-900">Salaire de Base + Primes</td>
+                            <td className="p-3">Contrat en vigueur</td>
+                            <td className="p-3">Fixe mensuel</td>
+                            <td className="p-3 text-right font-mono font-bold text-slate-900">{fmt(baseSal)}</td>
+                          </tr>
+                          <tr>
+                            <td className="p-3 text-amber-900 font-bold">Cotisation CNSS Patronale</td>
+                            <td className="p-3">Salaire Brut (Plafonné RDC)</td>
+                            <td className="p-3">13.0% (Cotisation Employeur)</td>
+                            <td className="p-3 text-right font-mono text-amber-900">{fmt(cnssPatronal)}</td>
+                          </tr>
+                          <tr>
+                            <td className="p-3 text-amber-900 font-bold">Cotisation INPP Patronale</td>
+                            <td className="p-3">Masse Salariale Brute</td>
+                            <td className="p-3">3.0% (Entreprise &gt; 50 sal)</td>
+                            <td className="p-3 text-right font-mono text-amber-900">{fmt(inppPatronal)}</td>
+                          </tr>
+                          <tr>
+                            <td className="p-3 text-amber-900 font-bold">Taxe ONEM Patronale</td>
+                            <td className="p-3">Masse Salariale Brute</td>
+                            <td className="p-3">0.2% (Office National de l'Emploi)</td>
+                            <td className="p-3 text-right font-mono text-amber-900">{fmt(onemPatronal)}</td>
+                          </tr>
+                          <tr>
+                            <td className="p-3 text-blue-900 font-bold">Prise en Charge Médicale & Hôpital</td>
+                            <td className="p-3">Couverture Santé Société</td>
+                            <td className="p-3">Convention / Factures à l'acte</td>
+                            <td className="p-3 text-right font-mono text-blue-900">{fmt(medicalCost)}</td>
+                          </tr>
+                          <tr>
+                            <td className="p-3 text-emerald-900 font-bold">Moyenne Notes de Frais Remboursées</td>
+                            <td className="p-3">Déplacements & Missions</td>
+                            <td className="p-3">Remboursement sur pièces justificatives</td>
+                            <td className="p-3 text-right font-mono text-emerald-900">{fmt(travelCost)}</td>
+                          </tr>
+                          <tr className="bg-slate-50 font-black text-[#1F3864]">
+                            <td className="p-3 text-sm">TOTAL COÛT EMPLOYEUR MENSUEL</td>
+                            <td className="p-3" colSpan={2}>Remarque: Les avances et prêts sont exclus car récupérables.</td>
+                            <td className="p-3 text-right font-mono text-sm text-emerald-700">
+                              {fmt(totalCost)}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 
@@ -1500,8 +1834,20 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
                         <span className="font-bold text-sm text-[#1F3864]">Solde de Tout Compte — {stc.terminationReason}</span>
                         <div className="text-[11px] text-slate-500 font-mono">Date d'effet: {stc.terminationDate} | Établi le: {stc.createdAt.split('T')[0]}</div>
                       </div>
-                      <button
-                        onClick={() => {
+                      <div className="flex items-center space-x-2">
+                        {canEditEmployee && (
+                          <button
+                            onClick={() => handleOpenStcEdit(stc)}
+                            className="bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg font-bold hover:bg-amber-200 text-xs flex items-center space-x-1"
+                            title="Modifier les montants et éléments du solde de tout compte"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-amber-800" />
+                            <span>Éditer STC</span>
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => {
                           const win = window.open('', '_blank');
                           if (win) {
                             win.document.write(`
@@ -1552,6 +1898,7 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
                         <Download className="w-4 h-4" />
                         <span>Imprimer Reçu STC PDF</span>
                       </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
@@ -1926,6 +2273,128 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
           }
         }}
       />
+
+      {/* Modal d'édition du Solde de Tout Compte */}
+      {editingStc && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="text-base font-black text-[#1F3864]">Édition du Solde de Tout Compte</h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  {editingStc.employeeName} ({editingStc.employeeMatricule}) — Motif: {editingStc.terminationReason}
+                </p>
+              </div>
+              <button
+                onClick={() => setEditingStc(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs max-h-[60vh] overflow-y-auto pr-1">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Salaire au prorata (FC)</label>
+                <input
+                  type="number"
+                  value={stcForm.proratedSalaryCDF}
+                  onChange={(e) => setStcForm({ ...stcForm, proratedSalaryCDF: parseFloat(e.target.value) || 0 })}
+                  className="w-full border border-slate-300 rounded-lg p-2 font-mono text-slate-900 focus:ring-2 focus:ring-[#1F3864]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Jours Congé Non Pris</label>
+                  <input
+                    type="number"
+                    value={stcForm.unusedLeaveDays}
+                    onChange={(e) => setStcForm({ ...stcForm, unusedLeaveDays: parseFloat(e.target.value) || 0 })}
+                    className="w-full border border-slate-300 rounded-lg p-2 font-mono text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Indemnité Congé (FC)</label>
+                  <input
+                    type="number"
+                    value={stcForm.unusedLeaveIndemnityCDF}
+                    onChange={(e) => setStcForm({ ...stcForm, unusedLeaveIndemnityCDF: parseFloat(e.target.value) || 0 })}
+                    className="w-full border border-slate-300 rounded-lg p-2 font-mono text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Indemnité Préavis (FC)</label>
+                  <input
+                    type="number"
+                    value={stcForm.noticeIndemnityCDF}
+                    onChange={(e) => setStcForm({ ...stcForm, noticeIndemnityCDF: parseFloat(e.target.value) || 0 })}
+                    className="w-full border border-slate-300 rounded-lg p-2 font-mono text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Indemnité Licenciement / Gratification (FC)</label>
+                  <input
+                    type="number"
+                    value={stcForm.severanceIndemnityCDF}
+                    onChange={(e) => setStcForm({ ...stcForm, severanceIndemnityCDF: parseFloat(e.target.value) || 0 })}
+                    className="w-full border border-slate-300 rounded-lg p-2 font-mono text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Primes & Rappels Dus (FC)</label>
+                  <input
+                    type="number"
+                    value={stcForm.pendingPrimesCDF}
+                    onChange={(e) => setStcForm({ ...stcForm, pendingPrimesCDF: parseFloat(e.target.value) || 0 })}
+                    className="w-full border border-slate-300 rounded-lg p-2 font-mono text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Déduction Solde Prêt (FC)</label>
+                  <input
+                    type="number"
+                    value={stcForm.remainingLoanBalanceCDF}
+                    onChange={(e) => setStcForm({ ...stcForm, remainingLoanBalanceCDF: parseFloat(e.target.value) || 0 })}
+                    className="w-full border border-slate-300 rounded-lg p-2 font-mono text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Remarques / Mentions particulières</label>
+                <textarea
+                  rows={2}
+                  value={stcForm.remarks}
+                  onChange={(e) => setStcForm({ ...stcForm, remarks: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg p-2 text-slate-800"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-2 border-t pt-3">
+              <button
+                onClick={() => setEditingStc(null)}
+                className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveStcEdit}
+                className="px-4 py-2 rounded-lg bg-[#1F3864] text-white font-bold text-xs hover:bg-[#152747] shadow"
+              >
+                Enregistrer Modifs STC
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

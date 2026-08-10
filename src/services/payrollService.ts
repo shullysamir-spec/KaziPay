@@ -420,6 +420,25 @@ export async function saveSoldeDeToutCompte(solde: SoldeDeToutCompte): Promise<s
 }
 
 /**
+ * Mettre à jour un Solde de Tout Compte existant
+ */
+export async function updateSoldeDeToutCompte(
+  id: string,
+  updatedData: Partial<SoldeDeToutCompte>,
+  userEmail: string
+): Promise<void> {
+  const ref = doc(db, 'soldesDeToutCompte', id);
+  await updateDoc(ref, sanitizeData(updatedData));
+  await logAuditEvent(
+    'UPDATE_STC',
+    'PAYROLL',
+    `Modification du Solde de Tout Compte ${id} pour ${updatedData.employeeName || 'Employé'}`,
+    userEmail,
+    'GESTIONNAIRE_RH'
+  );
+}
+
+/**
  * Récupérer l'historique des Soldes de Tout Compte
  */
 export async function getSoldeDeToutCompteHistory(): Promise<SoldeDeToutCompte[]> {
@@ -432,5 +451,173 @@ export async function getSoldeDeToutCompteHistory(): Promise<SoldeDeToutCompte[]
     console.error('Erreur getSoldeDeToutCompteHistory:', err);
     return [];
   }
+}
+
+/**
+ * Archiver un bulletin individuel (masque le bulletin sans suppression physique)
+ */
+export async function archivePayslip(
+  runId: string,
+  employeeId: string,
+  authorEmail: string,
+  reason: string = 'Archivage manuel bulletin erroné'
+): Promise<void> {
+  const payslipDocId = `${runId}_${employeeId}`;
+  const payslipRef = doc(db, 'payslips', payslipDocId);
+  const snap = await getDoc(payslipRef);
+
+  if (!snap.exists()) {
+    throw new Error('Bulletin de paie introuvable.');
+  }
+
+  const currentPayslip = snap.data() as Payslip;
+
+  await updateDoc(payslipRef, sanitizeData({
+    isArchived: true,
+    archivedAt: new Date().toISOString(),
+    archivedBy: authorEmail,
+  }));
+
+  await logAuditEvent(
+    'ARCHIVE_PAYSLIP',
+    'PAYROLL',
+    `Archivage du bulletin ${currentPayslip.payslipRef || payslipDocId} de ${currentPayslip.employeeName} (${reason})`,
+    authorEmail,
+    'GESTIONNAIRE_RH',
+    payslipDocId,
+    { isArchived: false },
+    { isArchived: true, reason }
+  );
+}
+
+/**
+ * Reprendre à zéro (recalculer) un bulletin individuel à partir du contrat et des variables actuelles
+ */
+export async function recalculateSinglePayslip(
+  runId: string,
+  employeeId: string,
+  authorEmail: string
+): Promise<Payslip> {
+  const runDoc = await getDoc(doc(db, 'payrollRuns', runId));
+  if (!runDoc.exists()) throw new Error('Traitement de paie introuvable.');
+
+  const run = runDoc.data() as PayrollRun;
+  const statutoryParams = await getStatutoryParamsForDate(run.period);
+  const employees = await getEmployees();
+  const emp = employees.find((e) => e.id === employeeId);
+
+  if (!emp || !emp.currentContract || !emp.currentContract.baseSalary) {
+    throw new Error('Employé ou contrat valide introuvable pour ce recalcul.');
+  }
+
+  const attendances = await getAttendanceByPeriod(run.period);
+  const loans = await getLoans();
+  const att = attendances.find((a) => a.employeeId === emp.id);
+  const activeLoan = loans.find((l) => l.employeeId === emp.id && l.status === 'EN_COURS' && l.remainingBalance > 0);
+
+  const contract = emp.currentContract;
+
+  const payslip = calculatePayslip({
+    employeeId: emp.id || '',
+    employeeMatricule: emp.matricule,
+    employeeName: `${emp.lastName} ${emp.firstName}`,
+    department: emp.department,
+    position: emp.position,
+    period: run.period,
+    contractType: contract.type,
+    hireDate: emp.hireDate,
+    costCenter: emp.site || 'Siège Kinshasa',
+    nationality: emp.nationality || 'Congolaise (RDC)',
+    cnssNumber: emp.cnss,
+    nif: emp.nif,
+    bankName: emp.bankName,
+    bankAccount: emp.bankAccount,
+    paymentMethod: emp.mobileMoneyNumber ? `Mobile Money (${emp.mobileMoneyProvider || 'M-Pesa'})` : 'Virement Bancaire',
+    baseSalary: contract.baseSalary,
+    currency: contract.currency,
+    exchangeRate: run.exchangeRate,
+    daysWorked: att ? att.daysWorked : 26,
+    overtime130Hours: att?.overtime130,
+    overtime160Hours: att?.overtime160,
+    overtime200Hours: att?.overtime200,
+    dependentsCount: emp.dependents ? emp.dependents.length : 0,
+    activeLoanMonthlyDeduction: activeLoan ? activeLoan.monthlyDeduction : 0,
+    companyEmployeeCount: employees.length,
+    statutoryParams: statutoryParams,
+  });
+
+  payslip.runId = runId;
+  payslip.isArchived = false;
+  payslip.hasError = false;
+  payslip.errorMessage = undefined;
+
+  const payslipDocId = `${runId}_${employeeId}`;
+  await setDoc(doc(db, 'payslips', payslipDocId), sanitizeData(payslip));
+
+  await logAuditEvent(
+    'RECALCULATE_PAYSLIP',
+    'PAYROLL',
+    `Reprise à zéro / Recalcul complet du bulletin de ${payslip.employeeName} pour la période ${run.period}`,
+    authorEmail,
+    'GESTIONNAIRE_RH',
+    payslipDocId
+  );
+
+  return payslip;
+}
+
+/**
+ * Modifier les éléments d'un bulletin si la période n'est pas clôturée (avec traçabilité audit)
+ */
+export async function updatePayslipDetails(
+  runId: string,
+  employeeId: string,
+  updatedData: Partial<Payslip>,
+  authorEmail: string,
+  userRole: string = 'GESTIONNAIRE_RH',
+  editReason: string = 'Correction manuelle d\'élément de paie'
+): Promise<void> {
+  const runDoc = await getDoc(doc(db, 'payrollRuns', runId));
+  if (!runDoc.exists()) throw new Error('Traitement de paie introuvable.');
+
+  const run = runDoc.data() as PayrollRun;
+  if (run.status === 'CLOSED') {
+    throw new Error('Impossible de modifier un bulletin : la période de paie est déjà clôturée.');
+  }
+
+  const payslipDocId = `${runId}_${employeeId}`;
+  const payslipRef = doc(db, 'payslips', payslipDocId);
+  const snap = await getDoc(payslipRef);
+
+  if (!snap.exists()) {
+    throw new Error('Bulletin introuvable.');
+  }
+
+  const oldPayslip = snap.data() as Payslip;
+
+  // Si le salaire de base ou primes ont changé, recalculer les cotisations et nets
+  let newNetCDF = updatedData.netSalaryCDF ?? oldPayslip.netSalaryCDF;
+  let newGrossCDF = updatedData.grossSalaryCDF ?? oldPayslip.grossSalaryCDF;
+
+  const merged = {
+    ...oldPayslip,
+    ...updatedData,
+    grossSalaryCDF: newGrossCDF,
+    netSalaryCDF: newNetCDF,
+    netSalaryUSD: Number((newNetCDF / oldPayslip.exchangeRate).toFixed(2)),
+  };
+
+  await updateDoc(payslipRef, sanitizeData(merged));
+
+  await logAuditEvent(
+    'UPDATE_PAYSLIP',
+    'PAYROLL',
+    `Modification manuelle du bulletin de ${oldPayslip.employeeName} (${editReason})`,
+    authorEmail,
+    userRole,
+    payslipDocId,
+    { grossSalaryCDF: oldPayslip.grossSalaryCDF, netSalaryCDF: oldPayslip.netSalaryCDF },
+    { grossSalaryCDF: newGrossCDF, netSalaryCDF: newNetCDF, editReason }
+  );
 }
 

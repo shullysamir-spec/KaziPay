@@ -300,23 +300,23 @@ export function validateEmployeeData(emp: Partial<Employee>): string[] {
   if (!emp.hireDate) errors.push('La date d\'embauche est obligatoire.');
   if (!emp.department?.trim()) errors.push('Le département est obligatoire.');
 
-  // Validation NIF (Numéro d'Impôt RDC - 9 à 11 caractères alphanumériques)
-  if (emp.nif && !/^[A-Za-z0-9]{8,12}$/.test(emp.nif.replace(/\s/g, ''))) {
+  // Validation NIF Optionnelle (Numéro d'Impôt RDC - 8 à 12 caractères alphanumériques si renseigné)
+  if (emp.nif && emp.nif.trim().length > 0 && !/^[A-Za-z0-9]{8,12}$/.test(emp.nif.replace(/\s/g, ''))) {
     errors.push('Le NIF (Numéro d\'Impôt) doit comporter entre 8 et 12 caractères alphanumériques.');
   }
 
-  // Validation CNSS RDC (ex: 10 chiffres ou format employeur-C)
-  if (emp.cnss && emp.cnss.trim().length < 6) {
-    errors.push('Le numéro CNSS est invalide.');
+  // Validation CNSS RDC Optionnelle (si renseigné)
+  if (emp.cnss && emp.cnss.trim().length > 0 && emp.cnss.trim().length < 6) {
+    errors.push('Le numéro CNSS est invalide (doit comporter au moins 6 caractères).');
   }
 
-  // Validation Téléphone RDC (+243...)
-  if (emp.phone && !/^(\+243|0)[0-9]{9}$/.test(emp.phone.replace(/[\s-]/g, ''))) {
+  // Validation Téléphone RDC (+243...) Optionnelle
+  if (emp.phone && emp.phone.trim().length > 0 && !/^(\+243|0)[0-9]{9}$/.test(emp.phone.replace(/[\s-]/g, ''))) {
     errors.push('Le numéro de téléphone doit être au format RDC (+243... ou 081/082/099...).');
   }
 
-  // Validation Email
-  if (emp.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emp.email)) {
+  // Validation Email Optionnelle
+  if (emp.email && emp.email.trim().length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emp.email.trim())) {
     errors.push('L\'adresse email est au format invalide.');
   }
 

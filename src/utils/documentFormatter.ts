@@ -54,6 +54,18 @@ export function formatNumber(amount: any, decimals = 0): string {
 }
 
 /**
+ * Formats an ISO date string (YYYY-MM-DD) to French format DD/MM/YYYY
+ */
+export function formatDateFR(dateStr?: string): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('T')[0].split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateStr;
+}
+
+/**
  * Configures jsPDF to use Times New Roman font ('times') in normal/bold/italic.
  */
 export function applyDocFont(

@@ -21,6 +21,8 @@ import { Payslip } from '../../types/payroll';
 import { checkPermission } from '../../services/rbacEngine';
 import { Employee360Modal } from './Employee360Modal';
 import { ServiceCertificateModal } from '../common/ServiceCertificateModal';
+import { EmployeePhotoModal } from '../common/EmployeePhotoModal';
+import { formatCDF, formatUSD } from '../../utils/documentFormatter';
 import {
   Users,
   Plus,
@@ -39,7 +41,9 @@ import {
   Download,
   Award,
   Check,
-  FileText
+  FileText,
+  Camera,
+  Loader2,
 } from 'lucide-react';
 
 interface EmployeesModuleProps {
@@ -61,6 +65,8 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [certEmployeeId, setCertEmployeeId] = useState<string>('');
   const [isSelfServiceOpen, setIsSelfServiceOpen] = useState(false);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [savingEmployee, setSavingEmployee] = useState(false);
   const [employeePayslips, setEmployeePayslips] = useState<Payslip[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithContract | null>(null);
   const [activeTab, setActiveTab] = useState<'IDENTITY' | 'CONTRACT' | 'DEPENDENTS' | 'DOCUMENTS'>('IDENTITY');
@@ -209,6 +215,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
       return;
     }
 
+    setSavingEmployee(true);
     try {
       if (selectedEmployee && selectedEmployee.id) {
         await updateEmployee(selectedEmployee.id, formData);
@@ -222,6 +229,8 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
       loadData();
     } catch (err: any) {
       setFormErrors([err.message || 'Erreur d\'enregistrement']);
+    } finally {
+      setSavingEmployee(false);
     }
   };
 
@@ -563,6 +572,40 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
 
               {activeTab === 'IDENTITY' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  {/* Photo Profile Card */}
+                  <div className="col-span-1 sm:col-span-2 p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-4">
+                    <div className="flex items-center space-x-3">
+                      {formData.photoUrl ? (
+                        <img
+                          src={formData.photoUrl}
+                          alt="Photo Employé"
+                          className="w-14 h-14 rounded-full object-cover border-2 border-[#1F3864] shadow-sm"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-[#1F3864] text-white flex items-center justify-center font-bold text-base shadow-sm">
+                          {((formData.firstName?.[0] || 'E') + (formData.lastName?.[0] || '')).toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-bold text-xs text-slate-800">Photo de Profil Salarié</div>
+                        <div className="text-[11px] text-slate-500">
+                          {formData.photoUrl ? 'Photo enregistrée pour la fiche 360°' : 'Aucune photo enregistrée (Avatar par défaut)'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsPhotoModalOpen(true)}
+                        className="bg-[#1F3864] hover:bg-[#152747] text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1.5 shadow transition"
+                      >
+                        <Camera className="w-3.5 h-3.5 text-[#BF9000]" />
+                        <span>Prendre / Importer Photo</span>
+                      </button>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block font-bold mb-1">Matricule *</label>
                     <input
@@ -605,7 +648,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                     </select>
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">NIF (Numéro Impôt RDC)</label>
+                    <label className="block font-bold mb-1">NIF (Numéro Impôt RDC) <span className="text-slate-400 font-normal">(Optionnel)</span></label>
                     <input
                       type="text"
                       value={formData.nif || ''}
@@ -615,7 +658,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                     />
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Numéro CNSS RDC</label>
+                    <label className="block font-bold mb-1">Numéro CNSS RDC <span className="text-slate-400 font-normal">(Optionnel)</span></label>
                     <input
                       type="text"
                       value={formData.cnss || ''}
@@ -635,7 +678,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                     />
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Email</label>
+                    <label className="block font-bold mb-1">Email <span className="text-slate-400 font-normal">(Optionnel)</span></label>
                     <input
                       type="email"
                       value={formData.email || ''}
@@ -748,6 +791,14 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                       className="w-full p-2 border rounded font-bold text-sm"
                       required
                     />
+                    <div className="mt-1 text-xs font-mono font-bold text-[#1F3864]">
+                      Aperçu formaté ({contractData.currency || 'CDF'}) :{' '}
+                      <span className="text-emerald-700 font-extrabold">
+                        {contractData.currency === 'USD'
+                          ? formatUSD(contractData.baseSalary || 0)
+                          : formatCDF(contractData.baseSalary || 0)}
+                      </span>
+                    </div>
                   </div>
                   <div>
                     <label className="block font-bold mb-1">Date de début *</label>
@@ -880,21 +931,42 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border rounded text-xs font-bold"
+                  disabled={savingEmployee}
+                  className="px-4 py-2 border rounded text-xs font-bold disabled:opacity-50"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#1F3864] text-white rounded text-xs font-bold shadow"
+                  disabled={savingEmployee}
+                  className="px-5 py-2 bg-[#1F3864] hover:bg-[#152747] text-white rounded text-xs font-bold shadow flex items-center space-x-1.5 disabled:opacity-50"
                 >
-                  Enregistrer
+                  {savingEmployee ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Enregistrement...</span>
+                    </>
+                  ) : (
+                    <span>Enregistrer Salarié</span>
+                  )}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Employee Photo Capture / Upload Modal */}
+      <EmployeePhotoModal
+        isOpen={isPhotoModalOpen}
+        onClose={() => setIsPhotoModalOpen(false)}
+        employeeName={`${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Employé'}
+        currentPhotoUrl={formData.photoUrl}
+        onPhotoSelected={(photoUrl) => {
+          setFormData((prev) => ({ ...prev, photoUrl }));
+          setIsPhotoModalOpen(false);
+        }}
+      />
 
       {/* CSV Import Modal */}
       {isCSVModalOpen && (

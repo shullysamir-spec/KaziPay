@@ -6,10 +6,10 @@
  */
 
 import React, { useState } from 'react';
-import { TEST_ACCOUNTS, resetDemoData } from '../../services/seedService';
+import { TEST_ACCOUNTS, resetDemoData, clearAllDemoData } from '../../services/seedService';
 import { UserProfile, RoleCode } from '../../types/auth';
 import { loginUser } from '../../services/authService';
-import { RefreshCw, ShieldAlert, Key, Users, Check, Sparkles } from 'lucide-react';
+import { RefreshCw, ShieldAlert, Key, Users, Check, Trash2, Database } from 'lucide-react';
 
 interface TestModeBannerProps {
   currentUser: UserProfile | null;
@@ -19,7 +19,8 @@ interface TestModeBannerProps {
 export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onUserSwitched }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [resetType, setResetType] = useState<'PURGE_EMPTY' | 'SEED_DEMO' | null>(null);
   const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
 
   const handleSwitchAccount = async (account: typeof TEST_ACCOUNTS[0]) => {
@@ -37,17 +38,23 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
     setTimeout(() => setCopiedAccount(null), 2000);
   };
 
-  const handleRunReset = async () => {
+  const handleRunPurgeOrReset = async () => {
+    if (!resetType) return;
     setIsResetting(true);
     try {
-      await resetDemoData();
+      if (resetType === 'PURGE_EMPTY') {
+        await clearAllDemoData();
+      } else {
+        await resetDemoData();
+      }
       window.location.reload();
     } catch (err) {
-      console.error('Erreur reset demo data:', err);
-      alert('Erreur lors de la réinitialisation des données.');
+      console.error('Erreur lors de l\'opération sur les données:', err);
+      alert('Erreur lors de l\'exécution.');
     } finally {
       setIsResetting(false);
-      setConfirmResetOpen(false);
+      setResetType(null);
+      setConfirmModalOpen(false);
     }
   };
 
@@ -63,7 +70,7 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
           <span className="font-black text-amber-400 tracking-wide uppercase text-[11px]">MODE TEST & AUDIT DÉMO</span>
           <span className="hidden md:inline text-slate-400">|</span>
           <span className="hidden md:inline text-slate-300">
-            Jeu de test RH RDC complet : 20 Salariés, 3 Paies, Barèmes 2026, Quotas & Multi-Rôles
+            Gestion de Données : Purge Vierge ou Jeu de Test RDC (Barèmes 2026)
           </span>
         </div>
 
@@ -78,15 +85,15 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
             <span>Changer de Rôle ({TEST_ACCOUNTS.length})</span>
           </button>
 
-          {/* Reset Demo Data Button */}
+          {/* Reset/Purge Data Button */}
           {currentUser?.roles.includes(RoleCode.SUPERADMIN) && (
             <button
-              onClick={() => setConfirmResetOpen(true)}
+              onClick={() => setConfirmModalOpen(true)}
               disabled={isResetting}
               className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-3 py-1 rounded-md transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
-              <span>Réinitialiser les Données</span>
+              <span>Gestion des Données (Purger / Réinit.)</span>
             </button>
           )}
         </div>
@@ -145,33 +152,73 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
         </div>
       )}
 
-      {/* Confirmation Modal Reset */}
-      {confirmResetOpen && (
+      {/* Confirmation Modal Purge / Reset */}
+      {confirmModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4 text-slate-900 dark:text-slate-100">
-            <div className="flex items-center gap-3 text-amber-600">
+          <div className="bg-white text-slate-900 border border-slate-200 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-amber-600 border-b pb-3">
               <ShieldAlert className="w-6 h-6 shrink-0" />
-              <h3 className="text-base font-bold">Réinitialiser le Jeu de Données RH</h3>
+              <div>
+                <h3 className="text-base font-black text-[#1F3864]">Gestion de la Base de Données</h3>
+                <p className="text-xs text-slate-500 font-medium">Choisissez l'action à exécuter sur Firestore</p>
+              </div>
             </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Cette action va régénérer la base Firestore avec les <strong>20 salariés de démonstration</strong>, leurs contrats RDC 2026, 3 traitements de paie, les présences et les prêts.
-            </p>
+            <div className="space-y-3">
+              {/* Choice 1: Purge Complete */}
+              <div
+                onClick={() => setResetType('PURGE_EMPTY')}
+                className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-start gap-3 ${
+                  resetType === 'PURGE_EMPTY'
+                    ? 'border-red-600 bg-red-50 text-red-950'
+                    : 'border-slate-200 hover:border-slate-300 bg-slate-50'
+                }`}
+              >
+                <Trash2 className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-xs text-red-900">Purger à zéro (Base Vierge pour simulation)</div>
+                  <div className="text-[11px] text-slate-600 mt-0.5">
+                    Efface tous les salariés, contrats, paies, prêts, présences et bons médicaux. Vous démarrez avec une base entièrement vide pour créer vos propres données.
+                  </div>
+                </div>
+              </div>
 
-            <div className="flex justify-end gap-3 pt-2">
+              {/* Choice 2: Seed Demo */}
+              <div
+                onClick={() => setResetType('SEED_DEMO')}
+                className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-start gap-3 ${
+                  resetType === 'SEED_DEMO'
+                    ? 'border-amber-500 bg-amber-50 text-amber-950'
+                    : 'border-slate-200 hover:border-slate-300 bg-slate-50'
+                }`}
+              >
+                <Database className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-xs text-amber-900">Régénérer le Jeu de Démo RDC</div>
+                  <div className="text-[11px] text-slate-600 mt-0.5">
+                    Efface les données actuelles et ré-injecte le jeu de test complet (20 salariés de démonstration, contrats 2026, bulletins de paie et historiques).
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t">
               <button
-                onClick={() => setConfirmResetOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+                onClick={() => {
+                  setConfirmModalOpen(false);
+                  setResetType(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition"
               >
                 Annuler
               </button>
               <button
-                onClick={handleRunReset}
-                disabled={isResetting}
-                className="px-4 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg transition flex items-center gap-2 shadow-sm"
+                onClick={handleRunPurgeOrReset}
+                disabled={!resetType || isResetting}
+                className="px-5 py-2 text-xs font-bold bg-[#1F3864] hover:bg-[#152747] text-white rounded-lg transition flex items-center gap-2 shadow-md disabled:opacity-40"
               >
-                {isResetting && <RefreshCw className="w-4 h-4 animate-spin" />}
-                <span>Confirmer la réinitialisation</span>
+                {isResetting && <RefreshCw className="w-4 h-4 animate-spin text-amber-400" />}
+                <span>{resetType === 'PURGE_EMPTY' ? 'Confirmer la Purge Vierge' : resetType === 'SEED_DEMO' ? 'Confirmer la Réinitialisation Démo' : 'Sélectionner une option'}</span>
               </button>
             </div>
           </div>

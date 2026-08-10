@@ -172,12 +172,17 @@ export interface Payslip {
   totalEmployerChargesCDF: number;
   totalEmployerCostCDF?: number; // Brut + Charges patronales
 
-  // Données de contrôle
+  // Données de contrôle & Archivage
   dependentsCount: number;
   overtimeWarning?: string;
   hasOvertimeDerogation?: boolean;
   payslipRef?: string;
   barcodeId?: string;
+  hasError?: boolean;
+  errorMessage?: string;
+  isArchived?: boolean;
+  archivedAt?: string;
+  archivedBy?: string;
   lines: PayslipLine[];
   createdAt: string;
 }

@@ -95,9 +95,13 @@ export async function bootstrapSystemData(): Promise<void> {
       await setDoc(statutoryRef, DEFAULT_STATUTORY_PARAMS_2026);
     }
 
-    // 4. Initialiser des employés et jeux complets de démonstration si vides
+    // 4. Initialiser des employés et jeux complets de démonstration si vides et non purgés par l'utilisateur
+    const sysConfigRef = doc(db, 'systemConfig', 'status');
+    const sysConfigSnap = await getDoc(sysConfigRef);
+    const isUserPurged = sysConfigSnap.exists() && sysConfigSnap.data()?.userPurged === true;
+
     const empSnap = await getDocs(collection(db, 'employees'));
-    if (empSnap.empty) {
+    if (empSnap.empty && !isUserPurged) {
       await seedFullDemoDataset();
     }
   } catch (error) {
@@ -105,7 +109,10 @@ export async function bootstrapSystemData(): Promise<void> {
   }
 }
 
-export async function resetDemoData(): Promise<void> {
+/**
+ * Purge complète de toutes les données opérationnelles (pour simulation vierge)
+ */
+export async function clearAllDemoData(): Promise<void> {
   const collectionsToClear = [
     'employees',
     'contracts',
@@ -117,6 +124,10 @@ export async function resetDemoData(): Promise<void> {
     'payslips',
     'soldesDeToutCompte',
     'auditLogs',
+    'payrollRectificatifs',
+    'medicalVouchers',
+    'hospitalReports',
+    'barcodes',
   ];
 
   for (const colName of collectionsToClear) {
@@ -130,6 +141,14 @@ export async function resetDemoData(): Promise<void> {
     }
   }
 
+  // Activer le flag de purge utilisateur pour éviter le ré-ensemencement automatique
+  await setDoc(doc(db, 'systemConfig', 'status'), { userPurged: true, updatedAt: new Date().toISOString() });
+}
+
+export async function resetDemoData(): Promise<void> {
+  await clearAllDemoData();
+  // Réinitialiser le flag userPurged et générer le jeu de démo
+  await setDoc(doc(db, 'systemConfig', 'status'), { userPurged: false, updatedAt: new Date().toISOString() });
   await seedFullDemoDataset();
 }
 

@@ -36,6 +36,13 @@ export interface Beneficiary {
   birthDate?: string;
 }
 
+export type CoverageType = 
+  | 'PRISE_EN_CHARGE_100'
+  | 'TICKET_MODERATEUR_80_20'
+  | 'TIERS_PAYANT_DIRECT'
+  | 'PLAFONNEE'
+  | 'REMBOURSEMENT_SUR_FACTURE';
+
 export interface MedicalVoucher {
   id: string; // e.g. BON-MED-2026-001
   employeeMatricule: string;
@@ -45,12 +52,15 @@ export interface MedicalVoucher {
   beneficiaryType: 'Salarié Titulaire' | 'Conjoint(e)' | 'Enfant à Charge';
   medicalCenterName: string; // e.g. HJ Hospitals, Hôpital du Cinquantenaire, Centre Médical de la Gombe, Monkole
   careCategory: 'Consultation Générale' | 'Spécialiste' | 'Hospitalisation' | 'Laboratoire & Biologie' | 'Pharmacie' | 'Maternité';
+  coverageType?: CoverageType;
   issueDate: string;
   expiryDate: string;
   coverageRate: number; // e.g. 100 or 80
   reasonNotes: string;
   status: 'ISSUED' | 'USED' | 'EXPIRED' | 'CANCELLED';
   issuedBy: string;
+  attachmentUrl?: string;
+  attachmentName?: string;
 }
 
 export interface MedicalRecord {
@@ -64,6 +74,20 @@ export interface MedicalRecord {
   fitnessStatus: 'APT_TOTAL' | 'APT_AVEC_RESERVE' | 'INAPT_TEMPORAIRE';
   primaryClinic: string;
   dependents: Beneficiary[];
+}
+
+export interface MedicalHospital {
+  id: string;
+  name: string;
+  city: string;
+  phone: string;
+  email: string;
+  mode: 'PAR FACTURE' | 'PAR CONTRAT FORFAITAIRE';
+  monthlyCostPerEmployee?: string;
+  coverageScope?: string;
+  annualCeiling?: string;
+  rate: string;
+  contractFileUrl?: string;
 }
 
 export interface HospitalReport {
@@ -82,6 +106,8 @@ export interface HospitalReport {
   hospitalCostCDF: number;
   status: 'VALIDATED' | 'FOLLOW_UP_REQUIRED' | 'CLOSED';
   notes?: string;
+  attachmentUrl?: string;
+  attachmentName?: string;
 }
 
 export const MedicalModule: React.FC = () => {
@@ -201,7 +227,95 @@ export const MedicalModule: React.FC = () => {
   const [selectedReport, setSelectedReport] = useState<HospitalReport | null>(hospitalReports[0]);
   const [isNewVoucherModalOpen, setIsNewVoucherModalOpen] = useState(false);
   const [isNewReportModalOpen, setIsNewReportModalOpen] = useState(false);
+  const [isNewHospitalModalOpen, setIsNewHospitalModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Hospital Providers State
+  const [hospitals, setHospitals] = useState<MedicalHospital[]>([
+    {
+      id: 'HOSP-001',
+      name: 'HJ Hospitals Kinshasa',
+      city: 'Kinshasa / Limete',
+      phone: '+243 818 000 000',
+      email: 'contact@hjhospitals.cd',
+      mode: 'PAR FACTURE',
+      coverageScope: 'Consultations, Examens, Maternité & Chirurgie',
+      rate: '80% - 100%',
+    },
+    {
+      id: 'HOSP-002',
+      name: 'Centre Médical de la Gombe (CMG)',
+      city: 'Kinshasa / Gombe',
+      phone: '+243 890 000 000',
+      email: 'admission@cmg.cd',
+      mode: 'PAR CONTRAT FORFAITAIRE',
+      monthlyCostPerEmployee: '45 USD / employé / mois',
+      coverageScope: 'Consultations, Pharmacie 100%, Maternité & Urgences (Dépendants inclus)',
+      annualCeiling: '3,000 USD / an / famille',
+      rate: '100% Forfait',
+    },
+    {
+      id: 'HOSP-003',
+      name: 'Hôpital du Cinquantenaire',
+      city: 'Kinshasa / Lingwala',
+      phone: '+243 811 111 222',
+      email: 'facturation@cinquantenaire.cd',
+      mode: 'PAR FACTURE',
+      coverageScope: 'Hospitalisations, Urologie & Traumatologie',
+      rate: '80%',
+    },
+    {
+      id: 'HOSP-004',
+      name: 'Centre Hospitalier Monkole',
+      city: 'Kinshasa / Mont-Ngafula',
+      phone: '+243 999 888 777',
+      email: 'soins@monkole.cd',
+      mode: 'PAR CONTRAT FORFAITAIRE',
+      monthlyCostPerEmployee: '30 USD / employé / mois',
+      coverageScope: 'Soins de santé primaires, Pédiatrie & Biologie',
+      annualCeiling: '1,500 USD / an / salarié',
+      rate: '100% Forfait',
+    },
+  ]);
+
+  const [newHospitalForm, setNewHospitalForm] = useState<Partial<MedicalHospital>>({
+    name: '',
+    city: 'Kinshasa',
+    phone: '',
+    email: '',
+    mode: 'PAR FACTURE',
+    rate: '100%',
+    monthlyCostPerEmployee: '',
+    coverageScope: '',
+    annualCeiling: '',
+  });
+
+  const handleCreateHospital = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newHospitalForm.name) return;
+    const h: MedicalHospital = {
+      id: `HOSP-00${hospitals.length + 1}`,
+      name: newHospitalForm.name,
+      city: newHospitalForm.city || 'Kinshasa',
+      phone: newHospitalForm.phone || '+243 000 000 000',
+      email: newHospitalForm.email || 'contact@hospital.cd',
+      mode: newHospitalForm.mode || 'PAR FACTURE',
+      monthlyCostPerEmployee: newHospitalForm.monthlyCostPerEmployee,
+      coverageScope: newHospitalForm.coverageScope || 'Consultations & Soins Généraux',
+      annualCeiling: newHospitalForm.annualCeiling,
+      rate: newHospitalForm.rate || '100%',
+    };
+    setHospitals([...hospitals, h]);
+    setIsNewHospitalModalOpen(false);
+    logAuditEvent(
+      'CREATE_HOSPITAL',
+      'MEDICAL',
+      `Ajout du prestataires médical ${h.name} (${h.mode})`,
+      'rh@novarispay.cd',
+      'RESPONSABLE_RH',
+      h.id
+    );
+  };
 
   // Form State for new Hospital Report
   const [newReportForm, setNewReportForm] = useState<Partial<HospitalReport>>({
@@ -909,57 +1023,20 @@ export const MedicalModule: React.FC = () => {
               </div>
 
               <div className="flex items-center space-x-2">
-                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">
-                  2 Modes Agréés (Facture & Contrat)
-                </span>
+                <button
+                  onClick={() => setIsNewHospitalModalOpen(true)}
+                  className="bg-[#1F3864] hover:bg-[#152747] text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center space-x-1.5 shadow"
+                >
+                  <Plus className="w-4 h-4 text-yellow-400" />
+                  <span>Ajouter un Hôpital / Prestataire</span>
+                </button>
               </div>
             </div>
 
             {/* Hospital Cards Grid with Coverage Modes */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[
-                {
-                  name: 'HJ Hospitals Kinshasa',
-                  city: 'Kinshasa / Limete',
-                  phone: '+243 818 000 000',
-                  email: 'contact@hjhospitals.cd',
-                  mode: 'PAR FACTURE',
-                  details: 'Facturation directe des soins à l\'acte avec répartition (80% Employeur / 20% Employé).',
-                  rate: '80% - 100%',
-                },
-                {
-                  name: 'Centre Médical de la Gombe (CMG)',
-                  city: 'Kinshasa / Gombe',
-                  phone: '+243 890 000 000',
-                  email: 'admission@cmg.cd',
-                  mode: 'PAR CONTRAT FORFAITAIRE',
-                  monthlyCostPerEmployee: '45 USD / employé / mois',
-                  coverageScope: 'Consultations, Pharmacie 100%, Maternité & Urgences (Dépendants inclus)',
-                  annualCeiling: '3,000 USD / an / famille',
-                  rate: '100% Forfait',
-                },
-                {
-                  name: 'Hôpital du Cinquantenaire',
-                  city: 'Kinshasa / Lingwala',
-                  phone: '+243 811 111 222',
-                  email: 'facturation@cinquantenaire.cd',
-                  mode: 'PAR FACTURE',
-                  details: 'Facturation médicale mensuelle consolidée. Validation préalable du bon de soins RH obligatoire.',
-                  rate: '80%',
-                },
-                {
-                  name: 'Centre Hospitalier Monkole',
-                  city: 'Kinshasa / Mont-Ngafula',
-                  phone: '+243 999 888 777',
-                  email: 'soins@monkole.cd',
-                  mode: 'PAR CONTRAT FORFAITAIRE',
-                  monthlyCostPerEmployee: '30 USD / employé / mois',
-                  coverageScope: 'Soins de santé primaires, Pédiatrie & Biologie',
-                  annualCeiling: '1,500 USD / an / salarié',
-                  rate: '100% Forfait',
-                },
-              ].map((c, i) => (
-                <div key={i} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 shadow-sm hover:border-[#1F3864] transition">
+              {hospitals.map((c) => (
+                <div key={c.id} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 shadow-sm hover:border-[#1F3864] transition">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-2 text-[#1F3864]">
                       <Building2 className="w-5 h-5 text-blue-600 shrink-0" />
@@ -978,14 +1055,14 @@ export const MedicalModule: React.FC = () => {
 
                   {c.mode.includes('CONTRAT') ? (
                     <div className="bg-purple-50 p-3 rounded-xl border border-purple-200 text-xs space-y-1">
-                      <div className="font-bold text-purple-950">Coût Forfaitaire : <span className="text-purple-700 font-mono font-black">{c.monthlyCostPerEmployee}</span></div>
-                      <div className="text-[11px] text-purple-900">Couverture : {c.coverageScope}</div>
-                      <div className="text-[10px] text-purple-800 font-mono">Plafond : {c.annualCeiling}</div>
+                      <div className="font-bold text-purple-950">Coût Forfaitaire : <span className="text-purple-700 font-mono font-black">{c.monthlyCostPerEmployee || '35 USD / mois'}</span></div>
+                      <div className="text-[11px] text-purple-900">Couverture : {c.coverageScope || 'Soins généraux & Urgences'}</div>
+                      <div className="text-[10px] text-purple-800 font-mono">Plafond : {c.annualCeiling || 'Sans plafond'}</div>
                     </div>
                   ) : (
                     <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 text-xs space-y-1">
                       <div className="font-bold text-blue-950">Mode Facturation à l'acte</div>
-                      <div className="text-[11px] text-blue-900">{c.details}</div>
+                      <div className="text-[11px] text-blue-900">{c.coverageScope || 'Facturation directe des soins avec bon de prise en charge entreprise.'}</div>
                     </div>
                   )}
 
@@ -1332,17 +1409,61 @@ export const MedicalModule: React.FC = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold mb-1">Type de Prise en Charge *</label>
+                  <select
+                    value={newVoucherForm.coverageType || 'PRISE_EN_CHARGE_100'}
+                    onChange={(e) => setNewVoucherForm({ ...newVoucherForm, coverageType: e.target.value as any })}
+                    className="w-full p-2 border rounded font-bold text-slate-800"
+                  >
+                    <option value="PRISE_EN_CHARGE_100">Prise en Charge à 100% (Employeur)</option>
+                    <option value="TICKET_MODERATEUR_80_20">Ticket Modérateur (80% Employeur / 20% Employé)</option>
+                    <option value="TIERS_PAYANT_DIRECT">Tiers-Payant Direct (Centre Agréé)</option>
+                    <option value="PLAFONNEE">Plafonnée (Plafond Annuel Entreprise)</option>
+                    <option value="REMBOURSEMENT_SUR_FACTURE">Remboursement Direct sur Facture</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Taux de Prise en Charge (%)</label>
+                  <select
+                    value={newVoucherForm.coverageRate}
+                    onChange={(e) => setNewVoucherForm({ ...newVoucherForm, coverageRate: parseInt(e.target.value) })}
+                    className="w-full p-2 border rounded font-bold"
+                  >
+                    <option value={100}>100% (Prise en charge totale)</option>
+                    <option value={80}>80% (Prise en charge partielle 80/20)</option>
+                    <option value={50}>50% (Co-paiement 50/50)</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="block font-bold mb-1">Taux de Prise en Charge (%)</label>
-                <select
-                  value={newVoucherForm.coverageRate}
-                  onChange={(e) => setNewVoucherForm({ ...newVoucherForm, coverageRate: parseInt(e.target.value) })}
-                  className="w-full p-2 border rounded font-bold"
-                >
-                  <option value={100}>100% (Prise en charge totale)</option>
-                  <option value={80}>80% (Prise en charge partielle 80/20)</option>
-                  <option value={50}>50% (Co-paiement 50/50)</option>
-                </select>
+                <label className="block font-bold mb-1">Joindre un Document / Ordonnance (PDF ou Image)</label>
+                <input
+                  type="file"
+                  accept=".pdf,image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        setNewVoucherForm({
+                          ...newVoucherForm,
+                          attachmentUrl: ev.target?.result as string,
+                          attachmentName: file.name,
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="w-full p-1.5 border rounded text-xs bg-slate-50"
+                />
+                {newVoucherForm.attachmentName && (
+                  <div className="text-[10px] text-emerald-700 font-bold mt-1">
+                    Document joint : {newVoucherForm.attachmentName}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -1351,7 +1472,7 @@ export const MedicalModule: React.FC = () => {
                   value={newVoucherForm.reasonNotes || ''}
                   onChange={(e) => setNewVoucherForm({ ...newVoucherForm, reasonNotes: e.target.value })}
                   className="w-full p-2 border rounded h-16 text-xs"
-                  placeholder="Precisions utiles pour le centre medical..."
+                  placeholder="Précisions utiles pour le centre médical..."
                 />
               </div>
 
@@ -1475,6 +1596,34 @@ export const MedicalModule: React.FC = () => {
               </div>
 
               <div>
+                <label className="block font-bold mb-1">Joindre Document / Facture Scannée (PDF / Image)</label>
+                <input
+                  type="file"
+                  accept=".pdf,image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        setNewReportForm({
+                          ...newReportForm,
+                          attachmentUrl: ev.target?.result as string,
+                          attachmentName: file.name,
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="w-full p-1.5 border rounded text-xs bg-slate-50"
+                />
+                {newReportForm.attachmentName && (
+                  <div className="text-[10px] text-emerald-700 font-bold mt-1">
+                    Document joint : {newReportForm.attachmentName}
+                  </div>
+                )}
+              </div>
+
+              <div>
                 <label className="block font-bold mb-1">Remarques RH / Suivi</label>
                 <input
                   type="text"
@@ -1495,6 +1644,134 @@ export const MedicalModule: React.FC = () => {
                 </button>
                 <button type="submit" className="px-5 py-2 bg-[#1F3864] text-white rounded-lg font-bold">
                   Enregistrer le Rapport
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL NEW HOSPITAL / PRESTATAIRE */}
+      {isNewHospitalModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 space-y-4 text-xs">
+            <h2 className="text-base font-black text-[#1F3864]">Ajouter un Hôpital / Prestataire Médical</h2>
+            <form onSubmit={handleCreateHospital} className="space-y-3">
+              <div>
+                <label className="block font-bold mb-1">Nom du Centre Médical / Hôpital *</label>
+                <input
+                  type="text"
+                  required
+                  value={newHospitalForm.name}
+                  onChange={(e) => setNewHospitalForm({ ...newHospitalForm, name: e.target.value })}
+                  placeholder="Ex: Centre Médical Munganga Kinshasa"
+                  className="w-full p-2 border rounded font-bold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold mb-1">Ville / Commune *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newHospitalForm.city}
+                    onChange={(e) => setNewHospitalForm({ ...newHospitalForm, city: e.target.value })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Téléphone de contact</label>
+                  <input
+                    type="text"
+                    value={newHospitalForm.phone}
+                    onChange={(e) => setNewHospitalForm({ ...newHospitalForm, phone: e.target.value })}
+                    placeholder="+243..."
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold mb-1">Email Réception / Facturation</label>
+                  <input
+                    type="email"
+                    value={newHospitalForm.email}
+                    onChange={(e) => setNewHospitalForm({ ...newHospitalForm, email: e.target.value })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Mode de Gestion Convention *</label>
+                  <select
+                    value={newHospitalForm.mode}
+                    onChange={(e) => setNewHospitalForm({ ...newHospitalForm, mode: e.target.value as any })}
+                    className="w-full p-2 border rounded font-bold text-slate-800"
+                  >
+                    <option value="PAR FACTURE">PAR FACTURE (A l'acte / Mensuel)</option>
+                    <option value="PAR CONTRAT FORFAITAIRE">PAR CONTRAT FORFAITAIRE (Abonnement)</option>
+                  </select>
+                </div>
+              </div>
+
+              {newHospitalForm.mode === 'PAR CONTRAT FORFAITAIRE' ? (
+                <div className="grid grid-cols-2 gap-2 bg-purple-50 p-3 rounded-xl border border-purple-200">
+                  <div>
+                    <label className="block font-bold mb-1 text-purple-950">Coût Mensuel / Salarié</label>
+                    <input
+                      type="text"
+                      value={newHospitalForm.monthlyCostPerEmployee}
+                      onChange={(e) => setNewHospitalForm({ ...newHospitalForm, monthlyCostPerEmployee: e.target.value })}
+                      placeholder="Ex: 35 USD / mois"
+                      className="w-full p-2 border rounded text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1 text-purple-950">Plafond Annuel</label>
+                    <input
+                      type="text"
+                      value={newHospitalForm.annualCeiling}
+                      onChange={(e) => setNewHospitalForm({ ...newHospitalForm, annualCeiling: e.target.value })}
+                      placeholder="Ex: 2,500 USD / an"
+                      className="w-full p-2 border rounded text-xs"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block font-bold mb-1">Taux de Prise en Charge Légale / Conventionnel</label>
+                  <input
+                    type="text"
+                    value={newHospitalForm.rate}
+                    onChange={(e) => setNewHospitalForm({ ...newHospitalForm, rate: e.target.value })}
+                    placeholder="Ex: 80% - 100%"
+                    className="w-full p-2 border rounded font-bold"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block font-bold mb-1">Périmètre des Soins Couverts</label>
+                <textarea
+                  rows={2}
+                  value={newHospitalForm.coverageScope}
+                  onChange={(e) => setNewHospitalForm({ ...newHospitalForm, coverageScope: e.target.value })}
+                  placeholder="Consultations, Maternité, Examens de labo, Pharmacie..."
+                  className="w-full p-2 border rounded text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setIsNewHospitalModalOpen(false)}
+                  className="px-4 py-2 border rounded-lg font-bold"
+                >
+                  Annuler
+                </button>
+                <button type="submit" className="px-5 py-2 bg-[#1F3864] text-white rounded-lg font-bold shadow">
+                  Enregistrer l'Hôpital
                 </button>
               </div>
             </form>
