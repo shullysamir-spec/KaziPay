@@ -13,7 +13,7 @@
     /* Neutrals */
     --color-bg: #F6F8FC;
     --color-card: #FFFFFF;
-    --color-[#0F172A]: #0F172A;
+    --color-primary-text: #0F172A;
     --color-secondary: #64748B;
     --color-muted: #94A3B8;
     --color-border: #E2E8F0;
@@ -29,7 +29,7 @@
   body {
     font-family: var(--font-sans);
     background-color: var(--color-bg);
-    color: var(--color-[#0F172A]);
+    color: var(--color-primary-text);
     margin: 0;
     padding: 0;
   }

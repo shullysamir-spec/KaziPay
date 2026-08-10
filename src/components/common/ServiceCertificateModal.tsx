@@ -132,7 +132,7 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       doc.rect(0, 0, pageWidth, 14, 'F');
 
       doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.setFontSize(9);
       doc.text('RÉPUBLIQUE DÉMOCRATIQUE DU CONGO — ERP RH NOVARISPAY', 15, 9);
       doc.text('DOCUMENT OFFICIEL CONFORME CODE DU TRAVAIL', pageWidth - 15, 9, { align: 'right' });
@@ -140,7 +140,7 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       // Information Entreprise Header
       doc.setTextColor(31, 56, 100);
       doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.text(company.name.toUpperCase(), 15, 28);
 
       // Add Barcode image top right
@@ -152,8 +152,8 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
         }
       }
 
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setFont('times', 'normal');
       doc.setTextColor(71, 85, 105);
       doc.text(`${company.address} — N° RCCM: ${company.rccm || 'CD/KIN/RCCM/14-B-0123'} | N° ID.NAT: ${company.idNat || '01-93-N45100P'}`, 15, 34);
       doc.text(`N° CNSS Employeur: ${company.cnssEmployerNumber || '1014850021'} | Tél: ${company.phone} | Email: ${company.email}`, 15, 39);
@@ -168,19 +168,19 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
 
       doc.setTextColor(31, 56, 100);
       doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.text('ATTESTATION DE FIN DE SERVICE', pageWidth / 2, 60, { align: 'center' });
 
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setFont('times', 'bold');
       doc.setTextColor(191, 144, 0); // Gold
       doc.text('(CERTIFICAT DE TRAVAIL CONFORME À L\'ARTICLE 168 DU CODE DU TRAVAIL RDC)', pageWidth / 2, 67, { align: 'center' });
 
       // Corps du Texte
       let y = 84;
       doc.setTextColor(15, 23, 42);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10.5);
+      doc.setFont('times', 'normal');
 
       const introText = `Je soussigné(e), ${signerName}, agissant en qualité de ${signerTitle} au sein de la société ${company.name}, certifie et atteste par la présente que :`;
       const splitIntro = doc.splitTextToSize(introText, pageWidth - 30);
@@ -193,12 +193,12 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       doc.roundedRect(15, y, pageWidth - 30, 48, 3, 3, 'FD');
 
       let empY = y + 7;
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.setTextColor(31, 56, 100);
       doc.text(`Monsieur / Madame : ${currentEmp.lastName.toUpperCase()} ${currentEmp.firstName}`, 20, empY);
       
       empY += 7;
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('times', 'normal');
       doc.setTextColor(51, 65, 85);
       doc.text(`Matricule RH : ${currentEmp.matricule}    |    Sexe : ${currentEmp.gender === 'M' ? 'Masculin' : 'Féminin'}    |    N° CNSS : ${currentEmp.cnss || 'En cours'}`, 20, empY);
 
@@ -206,25 +206,25 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       doc.text(`Département / Direction : ${currentEmp.department}`, 20, empY);
 
       empY += 7;
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.text(`Date d'Engagement (Entrée) : ${entryDate}`, 20, empY);
 
       empY += 7;
       doc.text(`Date de Fin de Service (Sortie) : ${exitDate}`, 20, empY);
 
       empY += 7;
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('times', 'normal');
       doc.text(`Motif de fin de service : ${departureReason}`, 20, empY);
 
       y += 56;
 
       // Section Fonctions Occupées (Art. 168 exige les emplois occupés)
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.setTextColor(31, 56, 100);
       doc.text('EMPLOIS ET FONCTIONS SUCCESSIVEMENT OCCUPÉS :', 15, y);
       y += 6;
 
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('times', 'normal');
       doc.setTextColor(30, 41, 59);
       const posText = `Pendant toute la durée de son service au sein de notre établissement, l'intéressé(e) a exercé la fonction de : "${positionsHeld}" avec dévouement et compétence.`;
       const splitPos = doc.splitTextToSize(posText, pageWidth - 30);
@@ -232,7 +232,7 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       y += splitPos.length * 5 + 8;
 
       // Déclaration de libération légale
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('times', 'normal');
       const freeText = `Conformément aux dispositions de l'Article 168 de la Loi n° 015/2002 portant Code du Travail en République Démocratique du Congo, nous certifions que l'intéressé(e) quitte notre société libre de tout engagement envers elle.`;
       const splitFree = doc.splitTextToSize(freeText, pageWidth - 30);
       doc.text(splitFree, 15, y);
@@ -243,11 +243,11 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
         doc.setDrawColor(167, 243, 208);
         doc.roundedRect(15, y, pageWidth - 30, 16, 2, 2, 'FD');
         
-        doc.setFont('helvetica', 'bold');
+        doc.setFont('times', 'bold');
         doc.setTextColor(6, 95, 70);
-        doc.setFontSize(8.5);
+        doc.setFontSize(9);
         doc.text('ATTESTATION POUR SOLDE DE TOUT COMPTE :', 20, y + 6);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont('times', 'normal');
         doc.text('L\'entreprise confirme que le salarié a perçu l\'intégralité de son décompte final (salaires, pécules de congé et indemnités légales).', 20, y + 11);
         y += 22;
       } else {
@@ -255,7 +255,7 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       }
 
       // Clôture
-      doc.setFontSize(9.5);
+      doc.setFontSize(10);
       doc.setTextColor(15, 23, 42);
       doc.text(`En foi de quoi, la présente attestation est délivrée à l'intéressé(e) pour servir et valoir ce que de droit.`, 15, y);
       y += 12;
@@ -269,22 +269,22 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       doc.setDrawColor(203, 213, 225);
       doc.rect(pageWidth - 85, sigY, 70, 35);
 
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setFont('times', 'bold');
       doc.setTextColor(31, 56, 100);
       doc.text('POUR L\'EMPLOYEUR :', pageWidth - 80, sigY + 6);
-      doc.setFontSize(7.5);
-      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setFont('times', 'normal');
       doc.text(signerTitle, pageWidth - 80, sigY + 11);
       doc.text(company.name, pageWidth - 80, sigY + 15);
 
       doc.setTextColor(16, 185, 129);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
+      doc.setFont('times', 'bold');
+      doc.setFontSize(8.5);
       doc.text('[SIGNÉ ÉLECTRONIQUEMENT]', pageWidth - 80, sigY + 24);
 
-      doc.setFontSize(6.5);
-      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setFont('times', 'normal');
       doc.setTextColor(100, 116, 139);
       doc.text(`ID Hash: KZ-CERT-${Date.now().toString(36).toUpperCase()}`, pageWidth - 80, sigY + 30);
 

@@ -9,6 +9,7 @@ import { getPayrollRuns, getPayslipsForRun } from '../../services/payrollService
 import { PayrollRun, Payslip } from '../../types/payroll';
 import { getCompanyConfig, CompanyConfig } from '../../services/companyService';
 import { jsPDF } from 'jspdf';
+import { formatCDF, formatUSD, safeNumber } from '../../utils/documentFormatter';
 import { FileCheck, Download, FileSpreadsheet, Building2, Printer, Send, History, CheckCircle2, Clock } from 'lucide-react';
 import { logAuditEvent } from '../../services/auditService';
 
@@ -92,12 +93,12 @@ export const DeclarationsModule: React.FC = () => {
   const activeRun = runs.find((r) => r.id === selectedRunId);
 
   // Totaux
-  const totalTaxableBase = payslips.reduce((acc, p) => acc + p.taxableBaseCDF, 0);
-  const totalIRPP = payslips.reduce((acc, p) => acc + p.irppFinalCDF, 0);
-  const totalCNSSEmployee = payslips.reduce((acc, p) => acc + p.cnssEmployeeCDF, 0);
-  const totalCNSSEmployer = payslips.reduce((acc, p) => acc + p.cnssEmployerCDF, 0);
-  const totalINPPEmployer = payslips.reduce((acc, p) => acc + p.inppEmployerCDF, 0);
-  const totalONEMEmployer = payslips.reduce((acc, p) => acc + p.onemEmployerCDF, 0);
+  const totalTaxableBase = payslips.reduce((acc, p) => acc + safeNumber(p.taxableBaseCDF), 0);
+  const totalIRPP = payslips.reduce((acc, p) => acc + safeNumber(p.irppFinalCDF), 0);
+  const totalCNSSEmployee = payslips.reduce((acc, p) => acc + safeNumber(p.cnssEmployeeCDF), 0);
+  const totalCNSSEmployer = payslips.reduce((acc, p) => acc + safeNumber(p.cnssEmployerCDF, Math.round(safeNumber(p.grossSalaryCDF) * 0.09)), 0);
+  const totalINPPEmployer = payslips.reduce((acc, p) => acc + safeNumber(p.inppEmployerCDF, Math.round(safeNumber(p.grossSalaryCDF) * 0.02)), 0);
+  const totalONEMEmployer = payslips.reduce((acc, p) => acc + safeNumber(p.onemEmployerCDF, Math.round(safeNumber(p.grossSalaryCDF) * 0.002)), 0);
 
   const getCurrentDocAmount = (organism: 'CNSS' | 'DGI_IRPP' | 'INPP' | 'ONEM') => {
     switch (organism) {
@@ -145,7 +146,7 @@ export const DeclarationsModule: React.FC = () => {
   const exportCSV = () => {
     let csv = 'Matricule,Nom,Brut,BaseImposable,IRPP,BaseCNSS,CNSSEmploye,CNSSEmployeur,INPP,ONEM\n';
     payslips.forEach((p) => {
-      csv += `"${p.employeeMatricule}","${p.employeeName}",${p.grossSalaryCDF},${p.taxableBaseCDF},${p.irppFinalCDF},${p.cnssBaseCDF},${p.cnssEmployeeCDF},${p.cnssEmployerCDF},${p.inppEmployerCDF},${p.onemEmployerCDF}\n`;
+      csv += `"${p.employeeMatricule}","${p.employeeName}",${safeNumber(p.grossSalaryCDF)},${safeNumber(p.taxableBaseCDF)},${safeNumber(p.irppFinalCDF)},${safeNumber(p.cnssBaseCDF)},${safeNumber(p.cnssEmployeeCDF)},${safeNumber(p.cnssEmployerCDF)},${safeNumber(p.inppEmployerCDF)},${safeNumber(p.onemEmployerCDF)}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -157,41 +158,43 @@ export const DeclarationsModule: React.FC = () => {
 
   const exportPDF = () => {
     const doc = new jsPDF();
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.setFontSize(13);
     doc.text(company.name.toUpperCase(), 14, 18);
 
     doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 14, 24);
 
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`DÉCLARATION RECAPITULATIVE LÉGALE RDC : ${selectedDoc}`, 14, 32);
+    doc.setFont('times', 'bold');
+    doc.text(`DÉCLARATION RÉCAPITULATIVE LÉGALE RDC : ${selectedDoc}`, 14, 32);
     doc.text(`Période : ${activeRun?.period || ''} | Échéance légale : 15 du mois suivant`, 14, 38);
 
     let y = 48;
     doc.setFontSize(9);
+    doc.setFont('times', 'bold');
     doc.text('Matricule & Nom Salarié', 14, y);
-    doc.text('Brut (CDF)', 100, y);
-    doc.text('Montant Dû (CDF)', 150, y);
+    doc.text('Brut (CDF)', 140, y, { align: 'right' });
+    doc.text('Montant Dû (CDF)', 192, y, { align: 'right' });
     doc.line(14, y + 2, 196, y + 2);
     y += 8;
 
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     payslips.forEach((p) => {
+      const gross = safeNumber(p.grossSalaryCDF);
       const val =
         selectedDoc === 'DGI_IRPP'
-          ? p.irppFinalCDF
+          ? safeNumber(p.irppFinalCDF)
           : selectedDoc === 'CNSS'
-          ? p.cnssEmployeeCDF + p.cnssEmployerCDF
+          ? safeNumber(p.cnssEmployeeCDF) + safeNumber(p.cnssEmployerCDF, Math.round(gross * 0.09))
           : selectedDoc === 'INPP'
-          ? p.inppEmployerCDF
-          : p.onemEmployerCDF;
+          ? safeNumber(p.inppEmployerCDF, Math.round(gross * 0.02))
+          : safeNumber(p.onemEmployerCDF, Math.round(gross * 0.002));
 
       doc.text(`${p.employeeMatricule} - ${p.employeeName}`, 14, y);
-      doc.text(p.grossSalaryCDF.toLocaleString() + ' FC', 100, y);
-      doc.text(val.toLocaleString() + ' FC', 150, y);
+      doc.text(formatCDF(gross), 140, y, { align: 'right' });
+      doc.text(formatCDF(val), 192, y, { align: 'right' });
       y += 6;
     });
 
@@ -203,7 +206,7 @@ export const DeclarationsModule: React.FC = () => {
 
   const handleOpenEditText = () => {
     if (!selectedLetter) return;
-    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations et obligations légales au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel employé par notre société ${company.name}.\n\nLe montant global récapitulatif dû s'élève à la somme de : ${(selectedLetter.totalAmountCDF ?? 0).toLocaleString()} CDF (Francs Congolais).\n\nLe règlement afférent a été effectué par : ${selectedLetter.paymentMode} (Référence de la transaction : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
+    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations et obligations légales au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel employé par notre société ${company.name}.\n\nLe montant total s'élève à : ${formatCDF(selectedLetter.totalAmountCDF)} (Francs Congolais).\n\nLe règlement afférent a été effectué par : ${selectedLetter.paymentMode} (Référence de la transaction : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
 
     setEditingText(selectedLetter.customBodyText || defaultBody);
     setIsEditingTextModalOpen(true);
@@ -235,12 +238,12 @@ export const DeclarationsModule: React.FC = () => {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
     // Header with Logo if exists
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.setFontSize(12);
     doc.text(company.name.toUpperCase(), 20, 20);
 
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setFont('times', 'normal');
     doc.text(`${company.address} — ${company.cityProvince}`, 20, 25);
     doc.text(`RCCM: ${company.rccm} | ID.NAT: ${company.idNat} | NIF: ${company.nif}`, 20, 29);
 
@@ -250,21 +253,21 @@ export const DeclarationsModule: React.FC = () => {
 
     // Destinataire Box
     doc.rect(110, 48, 85, 25);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(9.5);
     doc.text(selectedLetter.recipientTitle, 114, 55, { maxWidth: 78 });
 
     // Objet
-    doc.setFontSize(10);
+    doc.setFontSize(10.5);
     doc.text(`OBJET : TRANSMISSION DE LA DÉCLARATION LÉGALE - ${selectedLetter.organism}`, 20, 82);
     doc.text(`PÉRIODE : ${selectedLetter.period.toUpperCase()}`, 20, 88);
 
     doc.line(20, 92, 195, 92);
 
     // Body
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations / impôts Dus au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel de notre société ${company.name}.\n\nLe montant total à s'élever s'établit à : ${(selectedLetter.totalAmountCDF ?? 0).toLocaleString()} CDF (Francs Congolais).\n\nLe règlement de cette obligation a été effectué par : ${selectedLetter.paymentMode} (Réf. Règlement : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
+    doc.setFont('times', 'normal');
+    doc.setFontSize(10.5);
+    const defaultBody = `Monsieur le Directeur / Chef de Service,\n\nNous avons l'honneur de vous transmettre, par la présente, la déclaration officielle des cotisations et impôts dus au titre du mois de ${selectedLetter.period} pour l'ensemble du personnel de notre société ${company.name}.\n\nLe montant total s'élève à : ${formatCDF(selectedLetter.totalAmountCDF)} (Francs Congolais).\n\nLe règlement de cette obligation a été effectué par : ${selectedLetter.paymentMode} (Réf. Règlement : ${selectedLetter.bankReference}).\n\nVous en souhaitant bonne réception, nous vous prions d'agréer, Monsieur le Directeur, l'expression de nos sentiments très distingués.`;
 
     const body = selectedLetter.customBodyText || defaultBody;
 
@@ -272,15 +275,15 @@ export const DeclarationsModule: React.FC = () => {
     doc.text(splitBody, 20, 102);
 
     // Signature Area
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('POUR LA DIRECTION GÉNÉRALE', 20, 190);
     doc.text(company.signerName, 20, 210);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(company.signerTitle, 20, 215);
 
     doc.rect(120, 185, 75, 40);
     doc.text("ACCUSÉ DE RÉCEPTION DE L'ORGANISME", 123, 192);
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.text('Sceau, Date & Cachet à la réception :', 123, 202);
 
     doc.save(`Lettre_Transmission_${selectedLetter.id}.pdf`);
@@ -593,7 +596,7 @@ export const DeclarationsModule: React.FC = () => {
                   </div>
 
                   {/* Body */}
-                  <div className="text-xs leading-relaxed space-y-4 text-justify whitespace-pre-line">
+                  <div className="text-xs leading-relaxed space-y-4 text-left whitespace-pre-line">
                     {selectedLetter.customBodyText ? (
                       selectedLetter.customBodyText
                     ) : (
@@ -605,8 +608,8 @@ export const DeclarationsModule: React.FC = () => {
                           personnel employé par notre société <strong>{company.name}</strong>.
                         </p>
                         <p>
-                          Le montant global récapitulatif dû s'élève à la somme de :{' '}
-                          <strong className="text-sm font-sans">{(selectedLetter.totalAmountCDF ?? 0).toLocaleString()} CDF</strong> (Francs
+                          Le montant total s'élève à :{' '}
+                          <strong className="text-sm font-sans">{formatCDF(selectedLetter.totalAmountCDF)}</strong> (Francs
                           Congolais).
                         </p>
                         <p>

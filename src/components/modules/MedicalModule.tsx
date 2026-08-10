@@ -26,6 +26,7 @@ import {
   Activity,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { formatCDF, safeNumber } from '../../utils/documentFormatter';
 import { getCompanyConfig, CompanyConfig } from '../../services/companyService';
 import { logAuditEvent } from '../../services/auditService';
 
@@ -320,12 +321,12 @@ export const MedicalModule: React.FC = () => {
     doc.setFillColor(31, 56, 100);
     doc.rect(15, 12, 180, 24, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.setFontSize(14);
     doc.text(company.name.toUpperCase(), 20, 22);
 
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setFont('times', 'normal');
     doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 20, 28);
     doc.text(`RAPPORT DE SUIVI MÉDICAL HOSPITALIER (RDC)`, 20, 33);
 
@@ -336,15 +337,15 @@ export const MedicalModule: React.FC = () => {
     doc.rect(15, 42, 180, 18, 'D');
 
     doc.setTextColor(31, 56, 100);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.setFontSize(12);
     doc.text(`RAPPORT DE CONSULTATION HÔPITAL : ${selectedReport.id}`, 20, 52);
     doc.setFontSize(9);
     doc.text(`DATE HÔPITAL : ${selectedReport.reportDate}`, 130, 52);
 
     let y = 68;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    doc.setFont('times', 'bold');
     doc.setTextColor(30, 41, 59);
     doc.text('I. IDENTIFICATION PATIENT & ÉTABLISSEMENT', 15, y);
 
@@ -352,55 +353,55 @@ export const MedicalModule: React.FC = () => {
     doc.line(15, y + 2, 195, y + 2);
 
     y += 10;
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setFont('times', 'bold');
     doc.text('Employé :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(`${selectedReport.employeeName} (${selectedReport.employeeMatricule} — ${selectedReport.department})`, 50, y);
 
     y += 6;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('Établissement :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(selectedReport.hospitalName, 50, y);
 
     y += 6;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('Médecin Traitant :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(selectedReport.doctorName, 50, y);
 
     y += 12;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    doc.setFont('times', 'bold');
     doc.text('II. DIAGNOSTIC CLINIQUE & RECOMMANDATIONS', 15, y);
     doc.line(15, y + 2, 195, y + 2);
 
     y += 10;
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setFont('times', 'bold');
     doc.text('Diagnostic :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     const diagLines = doc.splitTextToSize(selectedReport.clinicalDiagnosis, 130);
     doc.text(diagLines, 50, y);
 
     y += diagLines.length * 6 + 4;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('Repos Prescrit :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(`${selectedReport.restDaysGranted} jour(s) de repos médical accordé(s)`, 50, y);
 
     y += 6;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('Aptitude Travail :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(selectedReport.fitnessStatus, 50, y);
 
     y += 6;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('Montant Facture :', 20, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`${selectedReport.hospitalCostCDF.toLocaleString()} CDF`, 50, y);
+    doc.setFont('times', 'normal');
+    doc.text(formatCDF(selectedReport.hospitalCostCDF), 50, y);
 
     doc.save(`Rapport_Hospitalier_${selectedReport.id}.pdf`);
   };
@@ -419,12 +420,12 @@ export const MedicalModule: React.FC = () => {
     doc.setFillColor(31, 56, 100);
     doc.rect(15, 12, 180, 24, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.setFontSize(14);
     doc.text(company.name.toUpperCase(), 20, 22);
 
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setFont('times', 'normal');
     doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 20, 28);
     doc.text(`SERVICE DE SANTÉ & PRÉVENTION MÉDICALE AU TRAVAIL (CODE RDC ART. 177)`, 20, 33);
 
@@ -435,7 +436,7 @@ export const MedicalModule: React.FC = () => {
     doc.rect(15, 42, 180, 18, 'D');
 
     doc.setTextColor(31, 56, 100);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.setFontSize(13);
     doc.text(`BON DE SOINS MÉDICAUX N° : ${selectedVoucher.id}`, 20, 52);
 
@@ -444,8 +445,8 @@ export const MedicalModule: React.FC = () => {
 
     // Grid Info
     let y = 68;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    doc.setFont('times', 'bold');
     doc.setTextColor(30, 41, 59);
     doc.text('I. INFORMATIONS SUR LE BÉNÉFICIAIRE & SALARIÉ', 15, y);
 
@@ -453,53 +454,53 @@ export const MedicalModule: React.FC = () => {
     doc.line(15, y + 2, 195, y + 2);
 
     y += 10;
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setFont('times', 'bold');
     doc.text('Employé Titulaire :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(`${selectedVoucher.employeeName} (Matricule: ${selectedVoucher.employeeMatricule})`, 60, y);
 
     y += 6;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('Département :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(selectedVoucher.department, 60, y);
 
     y += 6;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('Bénéficiaire Effectif :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(`${selectedVoucher.beneficiaryName} (${selectedVoucher.beneficiaryType})`, 60, y);
 
     y += 12;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('II. ÉTABLISSEMENT DE SANTÉ & PRESTATIONS', 15, y);
     doc.line(15, y + 2, 195, y + 2);
 
     y += 10;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('Centre / Hôpital Agréé :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(selectedVoucher.medicalCenterName, 65, y);
 
     y += 6;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('Catégorie de Soins :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(selectedVoucher.careCategory, 65, y);
 
     y += 6;
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('Taux de Prise en Charge :', 20, y);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.setTextColor(5, 150, 105);
     doc.text(`${selectedVoucher.coverageRate}% PAR L'ENTREPRISE`, 65, y);
 
     y += 6;
     doc.setTextColor(30, 41, 59);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('Motif / Observations :', 20, y);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(selectedVoucher.reasonNotes || 'Soin médical sous convention.', 65, y);
 
     // Official Stamp and Signature Box
@@ -508,10 +509,10 @@ export const MedicalModule: React.FC = () => {
     doc.rect(15, y, 85, 40, 'F');
     doc.rect(15, y, 85, 40, 'D');
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8.5);
     doc.text('POUR LE SERVICE RH / MÉDICAL', 20, y + 8);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(company.signerName, 20, y + 16);
     doc.text(company.signerTitle, 20, y + 22);
 
@@ -521,9 +522,9 @@ export const MedicalModule: React.FC = () => {
     doc.rect(110, y, 85, 40, 'D');
 
     doc.setTextColor(5, 150, 105);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('VISAT & CACHET DU CENTRE MÉDICAL', 115, y + 8);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.setTextColor(100, 116, 139);
     doc.text('Date de Réception : ..... / ..... / 2026', 115, y + 18);
     doc.text('Signature du Médecin Traitant :', 115, y + 26);

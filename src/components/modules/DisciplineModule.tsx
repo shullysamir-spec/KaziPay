@@ -26,6 +26,7 @@ import {
   Lock,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { formatCDF, safeNumber } from '../../utils/documentFormatter';
 import { getCompanyConfig, CompanyConfig } from '../../services/companyService';
 import { LegalReferenceModal } from '../common/LegalReferenceModal';
 import { getLegalAdvice, LegalAdviceResponse } from '../../services/legalAdvisorService';
@@ -350,19 +351,19 @@ export const DisciplineModule: React.FC = () => {
     doc.setFillColor(31, 56, 100);
     doc.rect(15, 12, 180, 22, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.setFontSize(14);
     doc.text(company.name.toUpperCase(), 20, 22);
 
     doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text('DIRECTION DES RESSOURCES HUMAINES & CONTENTIEUX SOCIAL - RDC', 20, 28);
 
     // Right Ref Box
     doc.setFillColor(240, 240, 240);
     doc.rect(140, 38, 55, 16, 'F');
     doc.setTextColor(31, 56, 100);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.setFontSize(9);
     doc.text(`RÉF : ${selectedCase.id}`, 143, 44);
     doc.text(`DATE : ${selectedCase.notificationDate}`, 143, 50);
@@ -373,13 +374,13 @@ export const DisciplineModule: React.FC = () => {
     doc.rect(15, 60, 180, 16, 'DF');
 
     doc.setTextColor(153, 27, 27);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.setFontSize(11);
     doc.text(`OBJET : ${getSanctionLabel(selectedCase.type).toUpperCase()}`, 20, 67);
 
     doc.setTextColor(51, 65, 85);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setFont('times', 'normal');
     doc.text(
       `Destinataire : M./Mme ${selectedCase.employeeName} (Matricule : ${selectedCase.employeeMatricule}) - Dép. ${selectedCase.department}`,
       20,
@@ -388,7 +389,8 @@ export const DisciplineModule: React.FC = () => {
 
     // Letter Body
     doc.setTextColor(30, 41, 59);
-    doc.setFontSize(10);
+    doc.setFont('times', 'normal');
+    doc.setFontSize(10.5);
 
     const bodyText = selectedCase.customLetterContent || selectedCase.reason;
     const splitLines = doc.splitTextToSize(bodyText, 170);
@@ -402,8 +404,8 @@ export const DisciplineModule: React.FC = () => {
 
     // Employer Electronic Signature Box
     doc.rect(15, startSigY, 85, 45);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setFont('times', 'bold');
     doc.setTextColor(31, 56, 100);
     doc.text('POUR LA DIRECTION RH', 20, startSigY + 7);
 
@@ -414,32 +416,32 @@ export const DisciplineModule: React.FC = () => {
       doc.rect(18, startSigY + 12, 79, 28, 'D');
 
       doc.setTextColor(5, 150, 105);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setFont('times', 'bold');
       doc.text('[SIGNÉ ÉLECTRONIQUEMENT]', 22, startSigY + 18);
 
       doc.setTextColor(30, 41, 59);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('times', 'normal');
       doc.text(selectedCase.signerName || 'M. MUKENDI Jean-Luc', 22, startSigY + 24);
-      doc.setFontSize(7);
+      doc.setFontSize(7.5);
       doc.text(selectedCase.signerTitle || 'Directeur RH NovarisPay', 22, startSigY + 29);
       doc.text(`Horodatage : ${selectedCase.signedAt || selectedCase.notificationDate}`, 22, startSigY + 34);
     } else {
       doc.setTextColor(148, 163, 184);
-      doc.setFont('helvetica', 'italic');
+      doc.setFont('times', 'italic');
       doc.text('[ Signature & Cachet RH ]', 25, startSigY + 25);
     }
 
     // Employee Receipt Box
     doc.rect(110, startSigY, 85, 45);
     doc.setTextColor(31, 56, 100);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(9.5);
     doc.text("ACCUSÉ DE RÉCEPTION DE L'EMPLOYÉ", 115, startSigY + 7);
 
     doc.setTextColor(100, 116, 139);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFont('times', 'normal');
+    doc.setFontSize(8.5);
     doc.text('Mention : "Reçu en mains propres le : ....../....../2026"', 115, startSigY + 18);
     doc.text('Signature & Emargement du salarié :', 115, startSigY + 26);
 

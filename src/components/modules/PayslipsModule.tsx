@@ -14,6 +14,7 @@ import { getCompanyConfig, CompanyConfig } from '../../services/companyService';
 import { DocumentBarcode } from '../common/DocumentBarcode';
 import { generateBarcodeDataUrl } from '../../services/barcodeService';
 import { jsPDF } from 'jspdf';
+import { formatCDF, formatUSD, safeNumber } from '../../utils/documentFormatter';
 import {
   FileText,
   Printer,
@@ -96,14 +97,14 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     const textColor = [40, 40, 40];
     const lightGray = [245, 247, 250];
 
-    // 1. En-tête Employeur
-    doc.setFont('helvetica', 'bold');
+    // 1. En-tête Employeur (Times New Roman)
+    doc.setFont('times', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.text(company.name || DEFAULT_COMPANY_DETAILS.name, 14, 18);
 
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setFont('times', 'normal');
     doc.setTextColor(textColor[0], textColor[1], textColor[2]);
     doc.text(`${company.address || DEFAULT_COMPANY_DETAILS.address}`, 14, 23);
     doc.text(`RCCM: ${company.rccm || DEFAULT_COMPANY_DETAILS.rccm}  |  ID.NAT: ${company.idNat || DEFAULT_COMPANY_DETAILS.idNat}  |  NIF: ${company.nif || DEFAULT_COMPANY_DETAILS.nif}`, 14, 28);
@@ -112,11 +113,11 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     // Titre Bulletin
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.rect(130, 10, 66, 12, 'F');
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.setFontSize(10);
     doc.setTextColor(255, 255, 255);
     doc.text('BULLETIN DE PAIE', 133, 16);
-    doc.setFontSize(7.5);
+    doc.setFontSize(8);
     doc.text(`Période : ${formatPeriodLabel(ps.period)}`, 133, 20);
 
     // Dessiner l'image du Code-Barres certifié
@@ -139,13 +140,13 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     doc.setDrawColor(210, 215, 225);
     doc.rect(14, y, 182, 32, 'S');
 
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('INFORMATIONS DU SALARIÉ', 18, y + 6);
     doc.text('PÉRIODE ET PRÉSENCES', 110, y + 6);
 
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.setTextColor(textColor[0], textColor[1], textColor[2]);
     
     // Col 1
@@ -164,8 +165,8 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     y = 80;
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.rect(14, y, 182, 7, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8.5);
     doc.setTextColor(255, 255, 255);
     doc.text('Code & Libellé de la Rubrique', 18, y + 5);
     doc.text('Base (CDF)', 110, y + 5, { align: 'right' });
@@ -173,14 +174,14 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     doc.text('Retenues (CDF)', 192, y + 5, { align: 'right' });
 
     y += 7;
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.setTextColor(textColor[0], textColor[1], textColor[2]);
 
     ps.lines.forEach((line) => {
       doc.text(line.label, 18, y + 5);
-      doc.text(line.baseCDF ? line.baseCDF.toLocaleString('fr-FR') : '-', 110, y + 5, { align: 'right' });
-      doc.text(line.gainCDF > 0 ? line.gainCDF.toLocaleString('fr-FR') : '-', 150, y + 5, { align: 'right' });
-      doc.text(line.deductionCDF > 0 ? line.deductionCDF.toLocaleString('fr-FR') : '-', 192, y + 5, { align: 'right' });
+      doc.text(line.baseCDF ? formatCDF(line.baseCDF, false) : '-', 110, y + 5, { align: 'right' });
+      doc.text(line.gainCDF > 0 ? formatCDF(line.gainCDF, false) : '-', 150, y + 5, { align: 'right' });
+      doc.text(line.deductionCDF > 0 ? formatCDF(line.deductionCDF, false) : '-', 192, y + 5, { align: 'right' });
       y += 6;
     });
 
@@ -189,44 +190,57 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     y += 6;
 
     // 4. Synthèse Net à Payer Box
-    const totalRetenues = ps.totalDeductionsCDF || (ps.cnssEmployeeCDF + ps.irppFinalCDF + ps.loanDeductionCDF);
+    const grossVal = safeNumber(ps.grossSalaryCDF);
+    const cnssEmpVal = safeNumber(ps.cnssEmployeeCDF);
+    const irppVal = safeNumber(ps.irppFinalCDF);
+    const loanVal = safeNumber(ps.loanDeductionCDF);
+    const totalRetenues = safeNumber(ps.totalDeductionsCDF, cnssEmpVal + irppVal + loanVal);
+    const netCDFVal = safeNumber(ps.netSalaryCDF, grossVal - totalRetenues);
+    const netUSDVal = safeNumber(ps.netSalaryUSD, ps.exchangeRate ? netCDFVal / ps.exchangeRate : 0);
+
     doc.setFillColor(31, 56, 100);
     doc.rect(14, y, 182, 18, 'F');
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Salaire Brut Total : ${ps.grossSalaryCDF.toLocaleString('fr-FR')} FC`, 18, y + 7);
-    doc.text(`Total Retenues : ${totalRetenues.toLocaleString('fr-FR')} FC`, 18, y + 13);
+    doc.setFontSize(8.5);
+    doc.setFont('times', 'normal');
+    doc.text(`Salaire Brut Total : ${formatCDF(grossVal)}`, 18, y + 7);
+    doc.text(`Total Retenues : ${formatCDF(totalRetenues)}`, 18, y + 13);
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(10.5);
     doc.setTextColor(255, 220, 100);
-    doc.text(`NET À PAYER : ${ps.netSalaryCDF.toLocaleString('fr-FR')} FC`, 192, y + 8, { align: 'right' });
-    doc.setFontSize(9);
+    doc.text(`NET À PAYER : ${formatCDF(netCDFVal)}`, 192, y + 7, { align: 'right' });
+    doc.setFontSize(8.5);
     doc.setTextColor(255, 255, 255);
-    doc.text(`($${ps.netSalaryUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD - Taux: 1 USD = ${ps.exchangeRate} FC)`, 192, y + 14, { align: 'right' });
+    doc.text(`(${formatUSD(netUSDVal)} - Taux: 1 USD = ${formatCDF(ps.exchangeRate, false)} FC)`, 192, y + 13, { align: 'right' });
 
     y += 24;
 
     // 5. Section Charges Patronales & Congés (2 Colonnes)
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
+    const cnssPatronal = safeNumber(ps.cnssEmployerCDF, Math.round(grossVal * 0.09));
+    const inppPatronal = safeNumber(ps.inppEmployerCDF, Math.round(grossVal * (company.companySize === 'LARGE' ? 0.01 : 0.02)));
+    const onemPatronal = safeNumber(ps.onemEmployerCDF, Math.round(grossVal * 0.002));
+    const totalCharges = cnssPatronal + inppPatronal + onemPatronal;
+    const masseSalariale = safeNumber(ps.totalEmployerCostCDF, grossVal + totalCharges);
+
+    doc.setFontSize(8.5);
+    doc.setFont('times', 'bold');
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.text('CHARGES PATRONALES RDC (A TITRE INDICATIF)', 14, y);
     doc.text('SOLDE DES CONGÉS ET PAIEMENT', 110, y);
 
     y += 4;
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.setTextColor(textColor[0], textColor[1], textColor[2]);
 
-    doc.text(`CNSS Patronal (9%) : ${ps.cnssEmployerCDF.toLocaleString('fr-FR')} FC`, 14, y + 4);
-    doc.text(`INPP (${company.companySize === 'LARGE' ? '1%' : '2%'}) : ${ps.inppEmployerCDF.toLocaleString('fr-FR')} FC`, 14, y + 9);
-    doc.text(`ONEM (0.2%) : ${ps.onemEmployerCDF.toLocaleString('fr-FR')} FC`, 14, y + 14);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Masse salariale totale : ${(ps.totalEmployerCostCDF || (ps.grossSalaryCDF + ps.totalEmployerChargesCDF)).toLocaleString('fr-FR')} FC`, 14, y + 19);
+    doc.text(`CNSS Patronal (9%) : ${formatCDF(cnssPatronal)}`, 14, y + 4);
+    doc.text(`INPP (${company.companySize === 'LARGE' ? '1%' : '2%'}) : ${formatCDF(inppPatronal)}`, 14, y + 9);
+    doc.text(`ONEM (0.2%) : ${formatCDF(onemPatronal)}`, 14, y + 14);
+    doc.setFont('times', 'bold');
+    doc.text(`Masse salariale totale : ${formatCDF(masseSalariale)}`, 14, y + 19);
 
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.text(`Congés Acquis : ${ps.leaveEarnedDays || 18}j  |  Pris : ${ps.leaveTakenDays || 4}j  |  Solde : ${ps.leaveRemainingDays || 14}j`, 110, y + 4);
     doc.text(`Mode de règlement : ${ps.paymentMethod || 'Virement Bancaire'}`, 110, y + 9);
     doc.text(`Réf. Virement : ${ps.paymentReference || 'VIR-' + ps.period}`, 110, y + 14);
@@ -236,25 +250,25 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
 
     // 6. Signatures & Mentions Légales
     doc.rect(14, y, 85, 24);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8.5);
     doc.text('Signature de l\'Employeur / Cachet RH', 18, y + 6);
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(7);
+    doc.setFont('times', 'italic');
+    doc.setFontSize(7.5);
     doc.setTextColor(0, 120, 60);
     doc.text('[ Signature Numérique NovarisPay RDC Certifiée ]', 18, y + 15);
 
     doc.rect(111, y, 85, 24);
     doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8.5);
     doc.text('Signature du Salarié', 115, y + 6);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
+    doc.setFont('times', 'normal');
+    doc.setFontSize(7.5);
     doc.text('Pour réception et accord le ____/____/2026', 115, y + 15);
 
     y += 28;
-    doc.setFontSize(6.5);
+    doc.setFontSize(7);
     doc.setTextColor(120, 120, 120);
     doc.text(`Bulletin de paie édité le ${new Date().toLocaleDateString('fr-FR')} — Réf: ${ps.payslipRef || 'BS-' + ps.period}. Conformément à l'Art. 91 du Code du Travail RDC, ce bulletin est à conserver sans limitation de durée.`, 14, y);
   };
@@ -539,13 +553,13 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
                           {line.label}
                         </td>
                         <td className="p-2.5 text-right font-mono text-slate-600">
-                          {line.baseCDF ? line.baseCDF.toLocaleString('fr-FR') : '-'}
+                          {line.baseCDF ? formatCDF(line.baseCDF, false) : '-'}
                         </td>
                         <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
-                          {line.gainCDF > 0 ? line.gainCDF.toLocaleString('fr-FR') : '-'}
+                          {line.gainCDF > 0 ? formatCDF(line.gainCDF, false) : '-'}
                         </td>
                         <td className="p-2.5 text-right font-mono font-bold text-red-700">
-                          {line.deductionCDF > 0 ? line.deductionCDF.toLocaleString('fr-FR') : '-'}
+                          {line.deductionCDF > 0 ? formatCDF(line.deductionCDF, false) : '-'}
                         </td>
                       </tr>
                     ))}
@@ -555,10 +569,10 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
                       <td className="p-2.5 text-slate-900">TOTAL BRUT & RETENUES</td>
                       <td className="p-2.5 text-right">-</td>
                       <td className="p-2.5 text-right text-emerald-800 font-black font-mono">
-                        {selectedPayslip.grossSalaryCDF.toLocaleString('fr-FR')} FC
+                        {formatCDF(selectedPayslip.grossSalaryCDF)}
                       </td>
                       <td className="p-2.5 text-right text-red-800 font-black font-mono">
-                        {(selectedPayslip.totalDeductionsCDF || (selectedPayslip.cnssEmployeeCDF + selectedPayslip.irppFinalCDF + selectedPayslip.loanDeductionCDF)).toLocaleString('fr-FR')} FC
+                        {formatCDF(selectedPayslip.totalDeductionsCDF || (safeNumber(selectedPayslip.cnssEmployeeCDF) + safeNumber(selectedPayslip.irppFinalCDF) + safeNumber(selectedPayslip.loanDeductionCDF)))}
                       </td>
                     </tr>
                   </tfoot>
@@ -569,20 +583,20 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
               <div className="bg-[#1F3864] text-white p-5 rounded-xl shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="space-y-1 text-center md:text-left">
                   <div className="text-xs text-slate-300 font-medium">
-                    Salaire Brut : <strong className="text-white font-mono">{selectedPayslip.grossSalaryCDF.toLocaleString('fr-FR')} FC</strong>
+                    Salaire Brut : <strong className="text-white font-mono">{formatCDF(selectedPayslip.grossSalaryCDF)}</strong>
                   </div>
                   <div className="text-xs text-slate-300 font-medium">
-                    Total Retenues Legales & Prêts : <strong className="text-white font-mono">{(selectedPayslip.totalDeductionsCDF || (selectedPayslip.cnssEmployeeCDF + selectedPayslip.irppFinalCDF + selectedPayslip.loanDeductionCDF)).toLocaleString('fr-FR')} FC</strong>
+                    Total Retenues Légales & Prêts : <strong className="text-white font-mono">{formatCDF(selectedPayslip.totalDeductionsCDF || (safeNumber(selectedPayslip.cnssEmployeeCDF) + safeNumber(selectedPayslip.irppFinalCDF) + safeNumber(selectedPayslip.loanDeductionCDF)))}</strong>
                   </div>
                 </div>
 
                 <div className="text-center md:text-right border-t md:border-t-0 md:border-l border-slate-600 pt-3 md:pt-0 md:pl-6">
-                  <span className="text-xs text-[#BF9000] font-black uppercase tracking-widest block">NET À PAYER SALARIÉ</span>
-                  <div className="text-2xl md:text-3xl font-black text-white tracking-tight my-0.5">
-                    {selectedPayslip.netSalaryCDF.toLocaleString('fr-FR')} FC
+                  <span className="text-xs text-[#BF9000] font-black uppercase tracking-normal block">NET À PAYER SALARIÉ</span>
+                  <div className="text-2xl md:text-3xl font-black text-white tracking-normal my-0.5">
+                    {formatCDF(selectedPayslip.netSalaryCDF)}
                   </div>
                   <div className="text-xs text-yellow-300 font-bold font-mono">
-                    ${selectedPayslip.netSalaryUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                    {formatUSD(selectedPayslip.netSalaryUSD)}
                   </div>
                 </div>
               </div>
@@ -591,7 +605,7 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 {/* Leave Balance */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
-                  <div className="font-bold text-[#1F3864] uppercase text-[10px] tracking-wider border-b pb-1">
+                  <div className="font-bold text-[#1F3864] uppercase text-[10px] tracking-normal border-b pb-1">
                     8. Solde des Congés
                   </div>
                   <div className="flex justify-between">
@@ -610,24 +624,24 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
 
                 {/* Employer Charges */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5">
-                  <div className="font-bold text-[#1F3864] uppercase text-[10px] tracking-wider border-b pb-1">
+                  <div className="font-bold text-[#1F3864] uppercase text-[10px] tracking-normal border-b pb-1">
                     9. Charges Patronales RDC
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">CNSS Patronal (9%) :</span>
-                    <span className="font-mono text-slate-800">{selectedPayslip.cnssEmployerCDF.toLocaleString('fr-FR')} FC</span>
+                    <span className="font-mono text-slate-800">{formatCDF(safeNumber(selectedPayslip.cnssEmployerCDF, Math.round(safeNumber(selectedPayslip.grossSalaryCDF) * 0.09)))}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">INPP (1-3%) :</span>
-                    <span className="font-mono text-slate-800">{selectedPayslip.inppEmployerCDF.toLocaleString('fr-FR')} FC</span>
+                    <span className="font-mono text-slate-800">{formatCDF(safeNumber(selectedPayslip.inppEmployerCDF, Math.round(safeNumber(selectedPayslip.grossSalaryCDF) * 0.02)))}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">ONEM (0.2%) :</span>
-                    <span className="font-mono text-slate-800">{selectedPayslip.onemEmployerCDF.toLocaleString('fr-FR')} FC</span>
+                    <span className="font-mono text-slate-800">{formatCDF(safeNumber(selectedPayslip.onemEmployerCDF, Math.round(safeNumber(selectedPayslip.grossSalaryCDF) * 0.002)))}</span>
                   </div>
                   <div className="flex justify-between border-t pt-1 font-bold">
                     <span className="text-slate-700">Masse Salariale Total :</span>
-                    <span className="font-mono text-[#1F3864]">{(selectedPayslip.totalEmployerCostCDF || (selectedPayslip.grossSalaryCDF + selectedPayslip.totalEmployerChargesCDF)).toLocaleString('fr-FR')} FC</span>
+                    <span className="font-mono text-[#1F3864]">{formatCDF(safeNumber(selectedPayslip.totalEmployerCostCDF, safeNumber(selectedPayslip.grossSalaryCDF) + safeNumber(selectedPayslip.cnssEmployerCDF, Math.round(safeNumber(selectedPayslip.grossSalaryCDF) * 0.09)) + safeNumber(selectedPayslip.inppEmployerCDF, Math.round(safeNumber(selectedPayslip.grossSalaryCDF) * 0.02)) + safeNumber(selectedPayslip.onemEmployerCDF, Math.round(safeNumber(selectedPayslip.grossSalaryCDF) * 0.002))))}</span>
                   </div>
                 </div>
 

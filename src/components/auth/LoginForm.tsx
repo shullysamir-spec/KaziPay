@@ -7,18 +7,6 @@ import React, { useState } from 'react';
 import { loginUser } from '../../services/authService';
 import { UserProfile } from '../../types/auth';
 import { Language, i18n } from '../../lib/i18n';
-import { Lock, Mail, ShieldAlert, KeyRound, CheckCircle2 } from 'lucide-react';
-
-interface LoginFormProps {
-  onLoginSuccess: (user: UserProfile) => void;
-  lang: Language;
-  onOpenAdminInstructions: () => void;
-}
-
-import React, { useState } from 'react';
-import { loginUser } from '../../services/authService';
-import { UserProfile } from '../../types/auth';
-import { Language, i18n } from '../../lib/i18n';
 import { NovarisLogo } from '../common/NovarisLogo';
 import { Lock, Mail, ShieldAlert, KeyRound, CheckCircle2, ShieldCheck, Zap, Globe, Users, ArrowRight } from 'lucide-react';
 
