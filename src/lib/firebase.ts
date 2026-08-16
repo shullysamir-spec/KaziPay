@@ -5,7 +5,7 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import firebaseConfigJson from '../../firebase-applet-config.json';
 
 const firebaseConfig = {
@@ -21,9 +21,25 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
 
-export const db = firebaseConfigJson.firestoreDatabaseId
-  ? getFirestore(app, firebaseConfigJson.firestoreDatabaseId)
-  : getFirestore(app);
+let dbInstance;
+try {
+  const dbId = firebaseConfigJson.firestoreDatabaseId || undefined;
+  if (dbId) {
+    dbInstance = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    }, dbId);
+  } else {
+    dbInstance = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    });
+  }
+} catch {
+  dbInstance = firebaseConfigJson.firestoreDatabaseId
+    ? getFirestore(app, firebaseConfigJson.firestoreDatabaseId)
+    : getFirestore(app);
+}
+
+export const db = dbInstance;
 
 export enum OperationType {
   CREATE = 'create',

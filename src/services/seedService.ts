@@ -28,17 +28,25 @@ export const TEST_ACCOUNTS = [
 ];
 
 export async function bootstrapSystemData(): Promise<void> {
+  // 1. Initialiser les 10 Rôles
   try {
-    // 1. Initialiser les 10 Rôles
     for (const roleDef of ALL_ROLES) {
-      const roleRef = doc(db, 'roles', roleDef.code);
-      const snap = await getDoc(roleRef);
-      if (!snap.exists()) {
-        await setDoc(roleRef, roleDef);
+      try {
+        const roleRef = doc(db, 'roles', roleDef.code);
+        const snap = await getDoc(roleRef);
+        if (!snap.exists()) {
+          await setDoc(roleRef, roleDef);
+        }
+      } catch (rErr) {
+        console.warn(`Rôle ${roleDef.code} non synchronisé (mode hors-ligne):`, rErr);
       }
     }
+  } catch (err) {
+    console.warn('Initialisation des rôles ignorée en mode hors-ligne:', err);
+  }
 
-    // 2. Initialiser la Matrice de Permissions par défaut
+  // 2. Initialiser la Matrice de Permissions par défaut
+  try {
     const rolePermsSnap = await getDocs(collection(db, 'rolePermissions'));
     if (rolePermsSnap.empty) {
       const allPermissions = Object.values(PermissionKey);
@@ -87,15 +95,23 @@ export async function bootstrapSystemData(): Promise<void> {
         });
       }
     }
+  } catch (err) {
+    console.warn('Matrice de permissions ignorée en mode hors-ligne:', err);
+  }
 
-    // 3. Initialiser les Paramètres Légaux RDC 2026
+  // 3. Initialiser les Paramètres Légaux RDC 2026
+  try {
     const statutoryRef = doc(db, 'statutoryParams', DEFAULT_STATUTORY_PARAMS_2026.version);
     const statSnap = await getDoc(statutoryRef);
     if (!statSnap.exists()) {
       await setDoc(statutoryRef, DEFAULT_STATUTORY_PARAMS_2026);
     }
+  } catch (err) {
+    console.warn('Paramètres légaux RDC 2026 ignorés en mode hors-ligne:', err);
+  }
 
-    // 4. Initialiser des employés et jeux complets de démonstration si vides et non purgés par l'utilisateur
+  // 4. Initialiser des employés et jeux complets de démonstration si vides et non purgés par l'utilisateur
+  try {
     const sysConfigRef = doc(db, 'systemConfig', 'status');
     const sysConfigSnap = await getDoc(sysConfigRef);
     const isUserPurged = sysConfigSnap.exists() && sysConfigSnap.data()?.userPurged === true;
@@ -105,7 +121,7 @@ export async function bootstrapSystemData(): Promise<void> {
       await seedFullDemoDataset();
     }
   } catch (error) {
-    console.error('Erreur lors du bootstrap initial Firestore:', error);
+    console.warn('Chargement des données de démonstration ignoré en mode hors-ligne:', error);
   }
 }
 

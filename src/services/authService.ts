@@ -59,19 +59,30 @@ export async function logSecurityEvent(
 }
 
 /**
- * Récupère le profil d'un utilisateur dans Firestore
+ * Récupère le profil d'un utilisateur dans Firestore avec secours local si hors-ligne
  */
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   try {
     const userDoc = await getDoc(doc(db, 'users', uid));
     if (userDoc.exists()) {
-      return userDoc.data() as UserProfile;
+      const data = userDoc.data() as UserProfile;
+      try {
+        localStorage.setItem(`novarispay_user_${uid}`, JSON.stringify(data));
+      } catch {}
+      return data;
     }
-    return null;
   } catch (err) {
-    console.error('Erreur lors de la lecture du profil utilisateur:', err);
-    return null;
+    console.warn('Lecture profil utilisateur Firestore hors-ligne, restauration depuis cache local:', err);
   }
+
+  // Secours hors-ligne
+  const cached = localStorage.getItem(`novarispay_user_${uid}`);
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch {}
+  }
+  return null;
 }
 
 /**
