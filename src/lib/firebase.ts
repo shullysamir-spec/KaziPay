@@ -5,7 +5,11 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import {
+  Firestore,
+  getFirestore,
+  enableIndexedDbPersistence,
+} from 'firebase/firestore';
 import firebaseConfigJson from '../../firebase-applet-config.json';
 
 const firebaseConfig = {
@@ -21,25 +25,31 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
 
-let dbInstance;
-try {
-  const dbId = firebaseConfigJson.firestoreDatabaseId || undefined;
-  if (dbId) {
-    dbInstance = initializeFirestore(app, {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-    }, dbId);
-  } else {
-    dbInstance = initializeFirestore(app, {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-    });
-  }
-} catch {
-  dbInstance = firebaseConfigJson.firestoreDatabaseId
-    ? getFirestore(app, firebaseConfigJson.firestoreDatabaseId)
-    : getFirestore(app);
-}
+/**
+ * Initialisation de Firestore avec la base de données configurée
+ */
+export const db: Firestore = firebaseConfigJson.firestoreDatabaseId
+  ? getFirestore(app, firebaseConfigJson.firestoreDatabaseId)
+  : getFirestore(app);
 
-export const db = dbInstance;
+/**
+ * Configuration de la persistance locale IndexedDB avec enableIndexedDbPersistence
+ * Permet la consultation et la modification des données RH (salariés, paies, congés, présences)
+ * même en cas de réseau instable ou de déconnexion temporaire.
+ */
+if (typeof window !== 'undefined') {
+  enableIndexedDbPersistence(db).catch((err: { code?: string; message?: string }) => {
+    if (err.code === 'failed-precondition') {
+      // Plusieurs onglets ouverts simultanément, la persistance fonctionne sur l'onglet principal
+      console.warn('Firestore persistence: Plusieurs onglets ouverts simultanément');
+    } else if (err.code === 'unimplemented') {
+      // Le navigateur ne supporte pas toutes les fonctionnalités d'IndexedDB nécessaires
+      console.warn('Firestore persistence: Navigateur incompatible avec la persistance IndexedDB');
+    } else {
+      console.warn('Firestore persistence notice:', err.message || err);
+    }
+  });
+}
 
 export enum OperationType {
   CREATE = 'create',

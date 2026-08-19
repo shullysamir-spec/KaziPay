@@ -225,9 +225,10 @@ export const AttendanceModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Attendance Table */}
+      {/* Attendance Table (Desktop/Tablet) & Cards (Mobile) */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop / Tablet View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-[#1F3864] text-white uppercase font-bold text-[11px] tracking-wider">
               <tr>
@@ -359,6 +360,102 @@ export const AttendanceModule: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Stacked Cards (< md) */}
+        <div className="block md:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              Chargement de la grille et connexion au poinçon biométrique...
+            </div>
+          ) : (
+            employees.map((emp) => {
+              const rec = records[emp.id || ''] || {};
+              const isLocked = rec.isLocked;
+
+              return (
+                <div key={emp.id} className="p-4 space-y-3 hover:bg-slate-50 transition">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-sm text-slate-900">{emp.lastName} {emp.firstName}</div>
+                      <div className="text-[11px] text-slate-500">{emp.position}</div>
+                    </div>
+                    <span
+                      className={`font-mono font-bold px-2.5 py-1 rounded text-xs ${
+                        (rec.latenessMinutes || 0) > 0
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-emerald-100 text-emerald-800'
+                      }`}
+                    >
+                      {(rec.latenessMinutes || 0) > 0 ? `${rec.latenessMinutes} min retard` : 'À l\'heure'}
+                    </span>
+                  </div>
+
+                  {/* Clock In / Out */}
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Arrivée</label>
+                      <input
+                        type="time"
+                        disabled={isLocked}
+                        value={rec.clockIn || '08:00'}
+                        onChange={(e) => handleChange(emp.id || '', 'clockIn', e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded font-mono font-bold bg-white min-h-[40px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Départ</label>
+                      <input
+                        type="time"
+                        disabled={isLocked}
+                        value={rec.clockOut || '17:00'}
+                        onChange={(e) => handleChange(emp.id || '', 'clockOut', e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded font-mono font-bold bg-white min-h-[40px]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Attendance counts */}
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-center">
+                      <span className="block text-[10px] text-slate-500 font-bold uppercase">J. Travaillés</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={31}
+                        disabled={isLocked}
+                        value={rec.daysWorked ?? 26}
+                        onChange={(e) => handleChange(emp.id || '', 'daysWorked', parseInt(e.target.value) || 0)}
+                        className="w-full p-1.5 border rounded font-bold text-center mt-1 min-h-[38px]"
+                      />
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-center">
+                      <span className="block text-[10px] text-red-500 font-bold uppercase">Absences</span>
+                      <input
+                        type="number"
+                        min={0}
+                        disabled={isLocked}
+                        value={rec.absences ?? 0}
+                        onChange={(e) => handleChange(emp.id || '', 'absences', parseInt(e.target.value) || 0)}
+                        className="w-full p-1.5 border rounded text-center text-red-600 font-bold mt-1 min-h-[38px]"
+                      />
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-center">
+                      <span className="block text-[10px] text-blue-600 font-bold uppercase">HS Total</span>
+                      <input
+                        type="number"
+                        min={0}
+                        disabled={isLocked}
+                        value={(rec.overtime130 ?? 0) + (rec.overtime160 ?? 0) + (rec.overtime200 ?? 0)}
+                        onChange={(e) => handleChange(emp.id || '', 'overtime130', parseInt(e.target.value) || 0)}
+                        className="w-full p-1.5 border rounded text-center font-bold mt-1 min-h-[38px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

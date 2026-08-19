@@ -50,6 +50,7 @@ export function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('novarispay_theme') as 'light' | 'dark') || (localStorage.getItem('novarispay_theme') as 'light' | 'dark') || 'light';
   });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSuperAdminModalOpen, setIsSuperAdminModalOpen] = useState<boolean>(false);
   const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState<boolean>(false);
   const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState<boolean>(false);
@@ -228,17 +229,19 @@ export function App() {
           onOpenAdminInstructions={() => setIsSuperAdminModalOpen(true)}
         />
       ) : (
-        <div className="flex flex-1 overflow-hidden h-screen">
-          {/* Left Navigation Sidebar */}
+        <div className="flex flex-1 overflow-hidden h-screen w-full relative">
+          {/* Left Navigation Sidebar (Desktop + Mobile Drawer) */}
           <Sidebar
             activeModule={activeModule}
             onSelectModule={setActiveModule}
             lang={lang}
             currentUser={currentUser}
+            isOpenMobile={isMobileMenuOpen}
+            onCloseMobile={() => setIsMobileMenuOpen(false)}
           />
 
           {/* Main Area Wrapper */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden w-full">
             {/* Mode Test Banner */}
             <TestModeBanner currentUser={currentUser} onUserSwitched={setCurrentUser} />
 
@@ -254,10 +257,11 @@ export function App() {
               theme={theme}
               onToggleTheme={handleToggleTheme}
               onNavigateToModule={setActiveModule}
+              onToggleMobileMenu={() => setIsMobileMenuOpen((prev) => !prev)}
             />
 
             {/* Main Work Area */}
-            <main className="flex-1 p-8 overflow-y-auto">
+            <main className="flex-1 p-3 sm:p-6 lg:p-8 overflow-y-auto w-full max-w-full overflow-x-hidden">
               <div className="max-w-7xl mx-auto space-y-6">
                 {activeModule === 'dashboard' && (
                   <DashboardModule
@@ -304,13 +308,13 @@ export function App() {
             </main>
 
             {/* Editorial Aesthetic Status Footer */}
-            <footer className="h-8 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 flex items-center justify-between px-8 text-[10px] text-gray-500 dark:text-slate-400 font-medium shrink-0 transition-colors">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#2E7D32] animate-pulse"></span>
-                <span>SYSTÈME CONFORME RDC 2026 - BASE DE DONNÉES FIRESTORE SYNCHRONISÉE</span>
+            <footer className="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between py-2 sm:py-0 sm:h-8 px-3 sm:px-8 text-[10px] text-gray-500 dark:text-slate-400 font-medium shrink-0 transition-colors gap-1 text-center sm:text-left">
+              <div className="flex items-center gap-1.5 justify-center sm:justify-start flex-wrap">
+                <span className="w-2 h-2 rounded-full bg-[#2E7D32] animate-pulse shrink-0"></span>
+                <span>SYSTÈME CONFORME RDC 2026 - BASE FIRESTORE SYNCHRONISÉE</span>
               </div>
-              <div className="flex items-center gap-4">
-                <span>TAUX DE CHANGE DU JOUR: 1 USD = 2850 CDF</span>
+              <div className="flex items-center gap-3 justify-center sm:justify-end flex-wrap text-[9px] sm:text-[10px]">
+                <span>TAUX DU JOUR: 1 USD = 2850 CDF</span>
                 <span>VERSION 2.4.0-RDC</span>
               </div>
             </footer>

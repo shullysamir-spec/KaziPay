@@ -393,10 +393,10 @@ export const DeclarationsModule: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-slate-200 gap-2 text-xs font-bold">
+      <div className="flex overflow-x-auto scrollbar-none whitespace-nowrap border-b border-slate-200 gap-2 text-xs font-bold">
         <button
           onClick={() => setActiveTab('DECLARATIONS')}
-          className={`pb-3 px-4 border-b-2 flex items-center space-x-2 transition ${
+          className={`pb-3 px-4 border-b-2 flex items-center space-x-2 transition shrink-0 min-h-[44px] ${
             activeTab === 'DECLARATIONS'
               ? 'border-[#1F3864] text-[#1F3864]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -408,7 +408,7 @@ export const DeclarationsModule: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('TRANSMISSION_LETTERS')}
-          className={`pb-3 px-4 border-b-2 flex items-center space-x-2 transition ${
+          className={`pb-3 px-4 border-b-2 flex items-center space-x-2 transition shrink-0 min-h-[44px] ${
             activeTab === 'TRANSMISSION_LETTERS'
               ? 'border-[#1F3864] text-[#1F3864]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -423,35 +423,35 @@ export const DeclarationsModule: React.FC = () => {
       {activeTab === 'DECLARATIONS' && (
         <div className="space-y-6">
           {/* Organism Selector */}
-          <div className="flex border-b border-slate-200 bg-white rounded-xl p-1 border shadow-sm text-xs font-bold">
+          <div className="flex overflow-x-auto scrollbar-none whitespace-nowrap bg-white rounded-xl p-1 border border-slate-200 shadow-sm text-xs font-bold gap-1">
             <button
               onClick={() => setSelectedDoc('CNSS')}
-              className={`flex-1 py-2 rounded-lg transition ${
-                selectedDoc === 'CNSS' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600'
+              className={`flex-1 py-2.5 px-3 rounded-lg transition shrink-0 min-h-[40px] ${
+                selectedDoc === 'CNSS' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               CNSS (Sécurité Sociale 5% + 9%)
             </button>
             <button
               onClick={() => setSelectedDoc('DGI_IRPP')}
-              className={`flex-1 py-2 rounded-lg transition ${
-                selectedDoc === 'DGI_IRPP' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600'
+              className={`flex-1 py-2.5 px-3 rounded-lg transition shrink-0 min-h-[40px] ${
+                selectedDoc === 'DGI_IRPP' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               DGI - Impôt sur le Revenu (IPR)
             </button>
             <button
               onClick={() => setSelectedDoc('INPP')}
-              className={`flex-1 py-2 rounded-lg transition ${
-                selectedDoc === 'INPP' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600'
+              className={`flex-1 py-2.5 px-3 rounded-lg transition shrink-0 min-h-[40px] ${
+                selectedDoc === 'INPP' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               INPP (Formation Pro. 3%)
             </button>
             <button
               onClick={() => setSelectedDoc('ONEM')}
-              className={`flex-1 py-2 rounded-lg transition ${
-                selectedDoc === 'ONEM' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600'
+              className={`flex-1 py-2.5 px-3 rounded-lg transition shrink-0 min-h-[40px] ${
+                selectedDoc === 'ONEM' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               ONEM (Office Emploi 0.2%)

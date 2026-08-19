@@ -350,23 +350,25 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
           />
         </div>
 
-        <div className="flex items-center space-x-3 w-full md:w-auto">
-          <Filter className="w-4 h-4 text-slate-500" />
-          <select
-            value={departmentFilter}
-            onChange={(e) => setDepartmentFilter(e.target.value)}
-            className="border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 font-medium"
-          >
-            <option value="ALL">Tous les départements</option>
-            {departments.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto">
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-slate-500 shrink-0" />
+            <select
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              className="w-full sm:w-auto border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 font-medium min-h-[40px]"
+            >
+              <option value="ALL">Tous les départements</option>
+              {departments.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
 
           <select
             value={expatFilter}
             onChange={(e) => setExpatFilter(e.target.value as any)}
-            className="border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 font-medium"
+            className="w-full sm:w-auto border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 font-medium min-h-[40px]"
           >
             <option value="ALL">Tous les statuts (Locaux & Expats)</option>
             <option value="NATIONAL_ONLY">Employés Nationaux RDC</option>
@@ -375,9 +377,10 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
         </div>
       </div>
 
-      {/* Employees Table */}
+      {/* Employees Table (Desktop/Tablet) & Cards (Mobile) */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop / Tablet View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-[#1F3864] text-white uppercase font-bold text-[11px] tracking-wider">
               <tr>
@@ -461,7 +464,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                           setSelectedEmployee(emp);
                           setIs360ModalOpen(true);
                         }}
-                        className="bg-[#1F3864] text-white hover:bg-[#152747] px-2.5 py-1 rounded-lg flex items-center space-x-1 font-bold text-[11px] shadow-sm"
+                        className="bg-[#1F3864] text-white hover:bg-[#152747] px-2.5 py-1.5 rounded-lg flex items-center space-x-1 font-bold text-[11px] shadow-sm min-h-[36px]"
                         title="Ouvrir la Fiche Employé 360° Complète"
                       >
                         <Eye className="w-3.5 h-3.5 text-amber-400" />
@@ -472,7 +475,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                           setCertEmployeeId(emp.id || '');
                           setIsCertModalOpen(true);
                         }}
-                        className="p-1 text-amber-600 hover:bg-amber-50 rounded"
+                        className="p-1.5 text-amber-600 hover:bg-amber-50 rounded min-h-[36px] min-w-[36px] flex items-center justify-center"
                         title="Attestation de Fin de Service (Art. 168)"
                       >
                         <Award className="w-4 h-4" />
@@ -480,7 +483,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                       {canEdit && (
                         <button
                           onClick={() => handleOpenEdit(emp)}
-                          className="p-1 text-blue-700 hover:bg-blue-50 rounded"
+                          className="p-1.5 text-blue-700 hover:bg-blue-50 rounded min-h-[36px] min-w-[36px] flex items-center justify-center"
                           title="Modifier"
                         >
                           <Edit className="w-4 h-4" />
@@ -489,7 +492,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                       {canDelete && (
                         <button
                           onClick={() => emp.id && handleDelete(emp.id)}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded"
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded min-h-[36px] min-w-[36px] flex items-center justify-center"
                           title="Suppression logique"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -501,6 +504,126 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Stacked Cards View (< md) */}
+        <div className="block md:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              Chargement des employés...
+            </div>
+          ) : filteredEmployees.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              Aucun employé trouvé.
+            </div>
+          ) : (
+            filteredEmployees.map((emp) => (
+              <div key={emp.id} className="p-4 space-y-3 hover:bg-slate-50 transition">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {emp.photoUrl ? (
+                      <img
+                        src={emp.photoUrl}
+                        alt={emp.lastName}
+                        className="w-11 h-11 rounded-xl object-cover border border-amber-400 shrink-0 shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-11 h-11 rounded-xl bg-[#BF9000] text-[#1F3864] font-black flex items-center justify-center text-sm shrink-0 shadow-sm border border-amber-300">
+                        {emp.firstName?.[0]}{emp.lastName?.[0]}
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-sm font-bold text-slate-900 flex items-center flex-wrap gap-1">
+                        <span>{emp.lastName} {emp.firstName}</span>
+                        {emp.isExpatriate && (
+                          <span className="bg-blue-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                            EXPAT
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs font-mono text-[#1F3864] font-semibold">{emp.matricule}</div>
+                    </div>
+                  </div>
+                  {emp.currentContract && (
+                    <span className="text-[11px] bg-blue-100 text-[#1F3864] font-bold px-2 py-0.5 rounded">
+                      {emp.currentContract.type}
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <div>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Poste & Dépt</span>
+                    <span className="font-semibold text-slate-800">{emp.position}</span>
+                    <span className="text-slate-500 block text-[10px]">{emp.department}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Rémunération</span>
+                    {emp.currentContract ? (
+                      <span className="font-bold text-slate-900 font-mono">
+                        {emp.currentContract.baseSalary.toLocaleString()} {emp.currentContract.currency}
+                      </span>
+                    ) : (
+                      <span className="text-red-500 text-[11px]">Sans contrat</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Charges Famille</span>
+                    <span className="font-bold text-slate-800">{emp.dependents?.length || 0} personne(s)</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Ancienneté</span>
+                    <span className="text-slate-700">{emp.seniorityYears}a {emp.seniorityMonths}m</span>
+                  </div>
+                </div>
+
+                {/* Mobile Action Buttons with full touch targets (min 44px height) */}
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => {
+                      setSelectedEmployee(emp);
+                      setIs360ModalOpen(true);
+                    }}
+                    className="flex-1 bg-[#1F3864] text-white hover:bg-[#152747] py-2.5 px-3 rounded-lg flex items-center justify-center space-x-1.5 font-bold text-xs shadow-sm min-h-[44px]"
+                  >
+                    <Eye className="w-4 h-4 text-amber-400" />
+                    <span>Fiche 360°</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setCertEmployeeId(emp.id || '');
+                      setIsCertModalOpen(true);
+                    }}
+                    className="p-2.5 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    title="Attestation Fin de Service"
+                  >
+                    <Award className="w-4 h-4" />
+                  </button>
+
+                  {canEdit && (
+                    <button
+                      onClick={() => handleOpenEdit(emp)}
+                      className="p-2.5 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      title="Modifier"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                  )}
+
+                  {canDelete && (
+                    <button
+                      onClick={() => emp.id && handleDelete(emp.id)}
+                      className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -518,10 +641,10 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
             </div>
 
             {/* Tab selection */}
-            <div className="flex border-b border-slate-200 bg-slate-50 px-4">
+            <div className="flex border-b border-slate-200 bg-slate-50 px-4 overflow-x-auto scrollbar-none whitespace-nowrap">
               <button
                 onClick={() => setActiveTab('IDENTITY')}
-                className={`py-2.5 px-4 text-xs font-bold border-b-2 transition ${
+                className={`py-2.5 px-4 text-xs font-bold border-b-2 transition shrink-0 min-h-[44px] flex items-center ${
                   activeTab === 'IDENTITY'
                     ? 'border-[#1F3864] text-[#1F3864]'
                     : 'border-transparent text-slate-500'
@@ -531,7 +654,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
               </button>
               <button
                 onClick={() => setActiveTab('CONTRACT')}
-                className={`py-2.5 px-4 text-xs font-bold border-b-2 transition ${
+                className={`py-2.5 px-4 text-xs font-bold border-b-2 transition shrink-0 min-h-[44px] flex items-center ${
                   activeTab === 'CONTRACT'
                     ? 'border-[#1F3864] text-[#1F3864]'
                     : 'border-transparent text-slate-500'
@@ -541,7 +664,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
               </button>
               <button
                 onClick={() => setActiveTab('DEPENDENTS')}
-                className={`py-2.5 px-4 text-xs font-bold border-b-2 transition ${
+                className={`py-2.5 px-4 text-xs font-bold border-b-2 transition shrink-0 min-h-[44px] flex items-center ${
                   activeTab === 'DEPENDENTS'
                     ? 'border-[#1F3864] text-[#1F3864]'
                     : 'border-transparent text-slate-500'
@@ -551,7 +674,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
               </button>
               <button
                 onClick={() => setActiveTab('DOCUMENTS')}
-                className={`py-2.5 px-4 text-xs font-bold border-b-2 transition ${
+                className={`py-2.5 px-4 text-xs font-bold border-b-2 transition shrink-0 min-h-[44px] flex items-center ${
                   activeTab === 'DOCUMENTS'
                     ? 'border-[#1F3864] text-[#1F3864]'
                     : 'border-transparent text-slate-500'

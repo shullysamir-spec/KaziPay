@@ -229,10 +229,10 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 bg-white rounded-xl p-1 border shadow-sm text-xs font-bold gap-1">
+      <div className="flex overflow-x-auto scrollbar-none whitespace-nowrap bg-white rounded-xl p-1 border border-slate-200 shadow-sm text-xs font-bold gap-1">
         <button
           onClick={() => setActiveTab('RUNS')}
-          className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition ${
+          className={`flex-1 py-2.5 px-3.5 text-xs font-bold rounded-lg transition shrink-0 min-h-[44px] flex items-center justify-center ${
             activeTab === 'RUNS' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -240,36 +240,37 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('EXPENSES')}
-          className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center space-x-1.5 ${
+          className={`flex-1 py-2.5 px-3.5 text-xs font-bold rounded-lg transition flex items-center justify-center space-x-1.5 shrink-0 min-h-[44px] ${
             activeTab === 'EXPENSES' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <DollarSign className="w-4 h-4 text-emerald-400" />
-          <span>Notes de Frais & Remboursements ({expenseReports.length})</span>
+          <span>Notes de Frais ({expenseReports.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('TEST_SUITE')}
-          className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center space-x-1.5 ${
+          className={`flex-1 py-2.5 px-3.5 text-xs font-bold rounded-lg transition flex items-center justify-center space-x-1.5 shrink-0 min-h-[44px] ${
             activeTab === 'TEST_SUITE' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <FlaskConical className="w-4 h-4 text-[#BF9000]" />
-          <span>Certification du Calcul (6 Employés Types)</span>
+          <span>Certification du Calcul (6 Employés)</span>
         </button>
         <button
           onClick={() => setActiveTab('CHECKLIST_RECETTE')}
-          className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center space-x-1.5 ${
+          className={`flex-1 py-2.5 px-3.5 text-xs font-bold rounded-lg transition flex items-center justify-center space-x-1.5 shrink-0 min-h-[44px] ${
             activeTab === 'CHECKLIST_RECETTE' ? 'bg-[#1F3864] text-white shadow' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <CheckCircle className="w-4 h-4 text-emerald-400" />
-          <span>Checklist de Recette Production (8 Points)</span>
+          <span>Checklist Recette Production (8 Points)</span>
         </button>
       </div>
 
       {activeTab === 'RUNS' && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop/Tablet Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-700">
               <thead className="bg-[#1F3864] text-white uppercase font-bold text-[11px] tracking-wider">
                 <tr>
@@ -335,7 +336,7 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
                           <button
                             onClick={() => run.id && handleCalculate(run.id)}
                             disabled={calculatingRunId === run.id}
-                            className="bg-[#1F3864] text-white hover:bg-[#152747] px-2.5 py-1 rounded text-[11px] font-bold shadow"
+                            className="bg-[#1F3864] text-white hover:bg-[#152747] px-2.5 py-1 rounded text-[11px] font-bold shadow min-h-[32px]"
                           >
                             {calculatingRunId === run.id ? 'Calcul...' : 'Calculer'}
                           </button>
@@ -344,7 +345,7 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
                           <button
                             onClick={() => run.id && handleValidate(run.id)}
                             disabled={validatingRunId === run.id}
-                            className="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 px-2.5 py-1 rounded text-[11px] font-bold"
+                            className="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 px-2.5 py-1 rounded text-[11px] font-bold min-h-[32px]"
                           >
                             {validatingRunId === run.id ? 'Validation...' : 'Valider'}
                           </button>
@@ -353,7 +354,7 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
                           <button
                             onClick={() => run.id && handleClose(run.id)}
                             disabled={closingRunId === run.id}
-                            className="bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50 px-2.5 py-1 rounded text-[11px] font-bold"
+                            className="bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50 px-2.5 py-1 rounded text-[11px] font-bold min-h-[32px]"
                           >
                             {closingRunId === run.id ? 'Clôture...' : 'Clôturer'}
                           </button>
@@ -361,7 +362,7 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
                         {run.id && (
                           <button
                             onClick={() => onViewPayslips(run.id!)}
-                            className="border border-slate-300 hover:bg-slate-100 text-slate-800 px-2.5 py-1 rounded text-[11px] font-bold"
+                            className="border border-slate-300 hover:bg-slate-100 text-slate-800 px-2.5 py-1 rounded text-[11px] font-bold min-h-[32px]"
                           >
                             Bulletins
                           </button>
@@ -372,6 +373,96 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Stacked Cards (< md) */}
+          <div className="block md:hidden divide-y divide-slate-100">
+            {loading ? (
+              <div className="py-8 text-center text-slate-400 text-xs">
+                Chargement des traitements...
+              </div>
+            ) : runs.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 text-xs">
+                Aucun traitement de paie. Cliquez sur "Nouveau Traitement" pour lancer la paie.
+              </div>
+            ) : (
+              runs.map((run) => (
+                <div key={run.id} className="p-4 space-y-3 hover:bg-slate-50 transition">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-sm text-slate-900">{run.label}</div>
+                      <div className="text-xs text-slate-500 font-mono">Période: {run.period} • {run.employeeCount} salariés</div>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                      run.status === 'CLOSED'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : run.status === 'VALIDATED'
+                        ? 'bg-blue-100 text-blue-800'
+                        : run.status === 'CALCULATED'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-slate-100 text-slate-800'
+                    }`}>
+                      {run.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Masse Brute (CDF)</span>
+                      <span className="font-bold text-slate-900 font-mono">{run.totalGrossCDF.toLocaleString()} FC</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Net Total (CDF / USD)</span>
+                      <span className="font-bold text-[#1F3864] font-mono block">{run.totalNetCDF.toLocaleString()} FC</span>
+                      <span className="text-[10px] text-slate-500 font-semibold">${run.totalNetUSD.toLocaleString()} USD</span>
+                    </div>
+                  </div>
+
+                  {/* Actions (full touch targets min 44px) */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {run.status !== 'CLOSED' && canCalculate && (
+                      <button
+                        onClick={() => run.id && handleCalculate(run.id)}
+                        disabled={calculatingRunId === run.id}
+                        className="flex-1 bg-[#1F3864] text-white hover:bg-[#152747] py-2.5 px-3 rounded-lg text-xs font-bold shadow min-h-[44px] flex items-center justify-center space-x-1"
+                      >
+                        <Play className="w-3.5 h-3.5 text-[#BF9000]" />
+                        <span>{calculatingRunId === run.id ? 'Calcul...' : 'Calculer'}</span>
+                      </button>
+                    )}
+                    {run.status === 'CALCULATED' && canValidate && (
+                      <button
+                        onClick={() => run.id && handleValidate(run.id)}
+                        disabled={validatingRunId === run.id}
+                        className="flex-1 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 py-2.5 px-3 rounded-lg text-xs font-bold min-h-[44px] flex items-center justify-center space-x-1"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{validatingRunId === run.id ? 'Validation...' : 'Valider'}</span>
+                      </button>
+                    )}
+                    {run.status === 'VALIDATED' && canClose && (
+                      <button
+                        onClick={() => run.id && handleClose(run.id)}
+                        disabled={closingRunId === run.id}
+                        className="flex-1 bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50 py-2.5 px-3 rounded-lg text-xs font-bold min-h-[44px] flex items-center justify-center space-x-1"
+                      >
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>{closingRunId === run.id ? 'Clôture...' : 'Clôturer'}</span>
+                      </button>
+                    )}
+                    {run.id && (
+                      <button
+                        onClick={() => onViewPayslips(run.id!)}
+                        className="flex-1 border border-slate-300 hover:bg-slate-100 text-slate-800 py-2.5 px-3 rounded-lg text-xs font-bold min-h-[44px] flex items-center justify-center space-x-1"
+                      >
+                        <span>Bulletins</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

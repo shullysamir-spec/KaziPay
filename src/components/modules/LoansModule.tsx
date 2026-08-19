@@ -73,9 +73,10 @@ export const LoansModule: React.FC = () => {
         </button>
       </div>
 
-      {/* Loans Table */}
+      {/* Loans Table (Desktop/Tablet) & Cards (Mobile) */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop / Tablet View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-[#1F3864] text-white uppercase font-bold text-[11px] tracking-wider">
               <tr>
@@ -134,6 +135,64 @@ export const LoansModule: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Stacked Cards (< md) */}
+        <div className="block md:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              Chargement du portefeuille de prêts...
+            </div>
+          ) : loans.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              Aucun prêt ou avance en cours.
+            </div>
+          ) : (
+            loans.map((loan) => {
+              const totalAmt = loan.totalAmount ?? loan.amount ?? 0;
+              const deduction = loan.monthlyDeduction ?? 0;
+              const balance = loan.remainingBalance ?? totalAmt;
+              const labelStr = loan.label || loan.reason || 'Avance sur salaire';
+              return (
+                <div key={loan.id} className="p-4 space-y-3 hover:bg-slate-50 transition">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-sm text-slate-900">{loan.employeeName || loan.employeeId}</div>
+                      <div className="text-xs text-slate-600 font-semibold">{labelStr}</div>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                      loan.status === 'SOLDE'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {loan.status || 'EN_COURS'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Total Prêté</span>
+                      <span className="font-bold text-slate-900 font-mono text-[11px]">
+                        {totalAmt.toLocaleString()} {loan.currency || 'CDF'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Mensualité</span>
+                      <span className="font-bold text-[#1F3864] font-mono text-[11px]">
+                        {deduction.toLocaleString()} {loan.currency || 'CDF'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Solde Dû</span>
+                      <span className="font-bold text-red-600 font-mono text-[11px]">
+                        {balance.toLocaleString()} {loan.currency || 'CDF'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

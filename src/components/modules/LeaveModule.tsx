@@ -77,9 +77,10 @@ export const LeaveModule: React.FC = () => {
         </button>
       </div>
 
-      {/* Requests Table */}
+      {/* Requests Table (Desktop/Tablet) & Cards (Mobile) */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop / Tablet View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-[#1F3864] text-white uppercase font-bold text-[11px] tracking-wider">
               <tr>
@@ -129,14 +130,14 @@ export const LeaveModule: React.FC = () => {
                         <>
                           <button
                             onClick={() => r.id && handleApprove(r.id, 'Approuvé')}
-                            className="p-1 bg-emerald-600 text-white hover:bg-emerald-700 rounded"
+                            className="p-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded min-h-[32px] min-w-[32px] inline-flex items-center justify-center"
                             title="Approuver"
                           >
                             <Check className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => r.id && handleApprove(r.id, 'Refusé')}
-                            className="p-1 bg-red-600 text-white hover:bg-red-700 rounded"
+                            className="p-1.5 bg-red-600 text-white hover:bg-red-700 rounded min-h-[32px] min-w-[32px] inline-flex items-center justify-center"
                             title="Refuser"
                           >
                             <X className="w-4 h-4" />
@@ -149,6 +150,70 @@ export const LeaveModule: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Stacked Cards (< md) */}
+        <div className="block md:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              Chargement des congés...
+            </div>
+          ) : requests.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              Aucune demande de congé enregistrée.
+            </div>
+          ) : (
+            requests.map((r) => (
+              <div key={r.id} className="p-4 space-y-3 hover:bg-slate-50 transition">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-bold text-sm text-slate-900">{r.employeeName || r.employeeId}</div>
+                    <div className="text-xs text-slate-500 font-semibold">{r.type}</div>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                    r.status === 'Approuvé'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : r.status === 'Refusé'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {r.status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
+                  <div>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Période</span>
+                    <span className="font-medium text-slate-800">Du {r.startDate}</span>
+                    <span className="font-medium text-slate-800 block">au {r.endDate}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Durée</span>
+                    <span className="font-bold text-[#1F3864] text-sm">{r.daysCount} jour(s)</span>
+                  </div>
+                </div>
+
+                {r.status === 'En attente' && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => r.id && handleApprove(r.id, 'Approuvé')}
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-lg text-xs flex items-center justify-center space-x-1.5 shadow min-h-[44px]"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Approuver</span>
+                    </button>
+                    <button
+                      onClick={() => r.id && handleApprove(r.id, 'Refusé')}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-3 rounded-lg text-xs flex items-center justify-center space-x-1.5 shadow min-h-[44px]"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Refuser</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
 

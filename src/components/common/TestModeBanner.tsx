@@ -59,15 +59,15 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
   };
 
   return (
-    <div className="bg-[#0D1B2A] text-white border-b border-amber-500/30 text-xs py-2 px-6 shadow-md transition-colors">
+    <div className="bg-[#0D1B2A] text-white border-b border-amber-500/30 text-xs py-2 px-3 sm:px-6 shadow-md transition-colors">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
         {/* Left Indicator */}
-        <div className="flex items-center gap-2">
-          <span className="flex h-2.5 w-2.5 relative">
+        <div className="flex items-center gap-2 text-center sm:text-left flex-wrap justify-center sm:justify-start">
+          <span className="flex h-2.5 w-2.5 relative shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
           </span>
-          <span className="font-black text-amber-400 tracking-wide uppercase text-[11px]">MODE TEST & AUDIT DÉMO</span>
+          <span className="font-black text-amber-400 tracking-wide uppercase text-[10px] sm:text-[11px]">MODE TEST & AUDIT DÉMO</span>
           <span className="hidden md:inline text-slate-400">|</span>
           <span className="hidden md:inline text-slate-300">
             Gestion de Données : Purge Vierge ou Jeu de Test RDC (Barèmes 2026)
@@ -75,14 +75,14 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
         </div>
 
         {/* Right Action Controls */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center w-full sm:w-auto">
           {/* Toggle Accounts Drawer */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold px-3 py-1 rounded-md border border-slate-700 transition flex items-center gap-1.5 shadow-xs"
+            className="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold px-2.5 sm:px-3 py-1.5 rounded-md border border-slate-700 transition flex items-center gap-1.5 shadow-xs text-[11px] sm:text-xs min-h-[36px]"
           >
             <Users className="w-3.5 h-3.5" />
-            <span>Changer de Rôle ({TEST_ACCOUNTS.length})</span>
+            <span>Rôles ({TEST_ACCOUNTS.length})</span>
           </button>
 
           {/* Reset/Purge Data Button */}
@@ -90,10 +90,10 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
             <button
               onClick={() => setConfirmModalOpen(true)}
               disabled={isResetting}
-              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-3 py-1 rounded-md transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-2.5 sm:px-3 py-1.5 rounded-md transition flex items-center gap-1.5 shadow-xs disabled:opacity-50 text-[11px] sm:text-xs min-h-[36px]"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
-              <span>Gestion des Données (Purger / Réinit.)</span>
+              <span className="truncate">Gestion Données</span>
             </button>
           )}
         </div>

@@ -482,8 +482,42 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
 
       {/* Main Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Side: Employee List */}
-        <div className="lg:col-span-1 bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3 print:hidden">
+        {/* Mobile Quick Employee Selector (< lg) */}
+        <div className="block lg:hidden bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-2 print:hidden">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
+              <User className="w-4 h-4 text-[#1F3864]" />
+              <span>Choisir le Salarié ({visiblePayslips.length})</span>
+            </label>
+            <button
+              onClick={() => setShowArchived(!showArchived)}
+              className={`text-[10px] font-bold px-2 py-1 rounded border transition min-h-[36px] flex items-center ${
+                showArchived
+                  ? 'bg-amber-100 text-amber-800 border-amber-300'
+                  : 'bg-slate-100 text-slate-600 border-slate-200'
+              }`}
+            >
+              {showArchived ? 'Masquer Archivés' : 'Voir Archivés'}
+            </button>
+          </div>
+          <select
+            value={selectedPayslip?.employeeId || ''}
+            onChange={(e) => {
+              const found = visiblePayslips.find((p) => p.employeeId === e.target.value);
+              if (found) setSelectedPayslip(found);
+            }}
+            className="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white font-bold text-slate-900 min-h-[44px]"
+          >
+            {visiblePayslips.map((ps) => (
+              <option key={ps.id || ps.employeeId} value={ps.employeeId}>
+                {ps.employeeName} ({ps.employeeMatricule}) — {formatCDF(ps.netSalaryCDF)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Left Side: Desktop Employee List (>= lg) */}
+        <div className="hidden lg:block lg:col-span-1 bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3 print:hidden">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center space-x-1">
               <User className="w-3.5 h-3.5 text-slate-400" />
@@ -546,7 +580,7 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
         </div>
 
         {/* Right Side: Enterprise 11-Section Payslip Preview */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 overflow-x-auto">
           {selectedPayslip ? (
             <div className="bg-white rounded-xl border border-slate-300 shadow-xl p-6 md:p-8 space-y-6 max-w-4xl mx-auto font-sans print:shadow-none print:border-none print:p-0">
               
