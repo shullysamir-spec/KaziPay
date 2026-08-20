@@ -2,8 +2,7 @@
  * @license
  * NovarisPay - ERP RH et Paie RDC
  * 
- * COMPOSANT DE NOTIFICATIONS RH & PAIE
- * Alerte RH: Contrats à expiration, Visites Médicales en attente, Demandes de Congés à valider.
+ * COMPOSANT DE NOTIFICATIONS RH & PAIE (BILINGUAL)
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -25,12 +24,14 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
 } from '../../services/notificationService';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface NotificationCenterProps {
   onNavigateToModule?: (moduleKey: string) => void;
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNavigateToModule }) => {
+  const { lang, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'CONTRACT' | 'LEAVE' | 'MEDICAL'>('ALL');
@@ -50,7 +51,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
 
   useEffect(() => {
     fetchNotifications();
-    // Refresh periodically every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -120,19 +120,19 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
       case 'high':
         return (
           <span className="bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
-            Urgent
+            {t.notifications.urgent}
           </span>
         );
       case 'medium':
         return (
           <span className="bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
-            Action requise
+            {t.notifications.actionRequired}
           </span>
         );
       default:
         return (
           <span className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-[9px] font-semibold px-1.5 py-0.5 rounded uppercase">
-            Info
+            {t.notifications.info}
           </span>
         );
     }
@@ -148,8 +148,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
             ? 'bg-slate-100 dark:bg-slate-800 border-[#287BFF] text-[#287BFF] dark:text-blue-400'
             : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
         }`}
-        title="Notifications & Alertes RH"
-        aria-label="Centre de notifications"
+        title={t.notifications.title}
+        aria-label={t.notifications.title}
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
@@ -167,11 +167,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
             <div className="flex items-center space-x-2">
               <Sparkles className="w-4 h-4 text-[#287BFF]" />
               <h2 className="font-extrabold text-sm text-[#071D49] dark:text-blue-300">
-                Centre d'Alertes RH & Paie
+                {t.notifications.title}
               </h2>
               {unreadCount > 0 && (
                 <span className="bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 font-bold text-[10px] px-2 py-0.5 rounded-full">
-                  {unreadCount} non lue{unreadCount > 1 ? 's' : ''}
+                  {unreadCount} {unreadCount > 1 ? t.notifications.unreads : t.notifications.unread}
                 </span>
               )}
             </div>
@@ -181,10 +181,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
                 <button
                   onClick={handleMarkAllRead}
                   className="p-1 text-slate-500 hover:text-[#287BFF] dark:hover:text-blue-300 text-[11px] font-bold flex items-center space-x-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition"
-                  title="Tout marquer comme lu"
+                  title={t.notifications.markAllRead}
                 >
                   <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="hidden sm:inline">Tout lire</span>
+                  <span className="hidden sm:inline">{t.notifications.markAllRead}</span>
                 </button>
               )}
               <button
@@ -206,7 +206,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
-              Tous ({notifications.length})
+              {t.notifications.all} ({notifications.length})
             </button>
             <button
               onClick={() => setActiveFilter('CONTRACT')}
@@ -216,7 +216,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
-              Contrats ({notifications.filter((n) => n.type === 'CONTRACT_EXPIRING').length})
+              {t.notifications.contracts} ({notifications.filter((n) => n.type === 'CONTRACT_EXPIRING').length})
             </button>
             <button
               onClick={() => setActiveFilter('LEAVE')}
@@ -226,7 +226,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
-              Congés ({notifications.filter((n) => n.type === 'LEAVE_PENDING').length})
+              {t.notifications.leaves} ({notifications.filter((n) => n.type === 'LEAVE_PENDING').length})
             </button>
             <button
               onClick={() => setActiveFilter('MEDICAL')}
@@ -236,19 +236,19 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
-              Santé ({notifications.filter((n) => n.type === 'MEDICAL_PENDING').length})
+              {t.notifications.medical} ({notifications.filter((n) => n.type === 'MEDICAL_PENDING').length})
             </button>
           </div>
 
           {/* List */}
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 p-2 space-y-1">
             {loading ? (
-              <div className="p-8 text-center text-xs text-slate-400">Chargement des alertes...</div>
+              <div className="p-8 text-center text-xs text-slate-400">{t.notifications.loading}</div>
             ) : filteredNotifications.length === 0 ? (
               <div className="p-8 text-center space-y-2">
                 <CheckCheck className="w-8 h-8 text-emerald-500 mx-auto opacity-60" />
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  Aucune alerte pour le moment dans cette catégorie.
+                  {t.notifications.empty}
                 </p>
               </div>
             ) : (
@@ -279,9 +279,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
                     </p>
 
                     <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 pt-1">
-                      <span>Échéance / Date: {notif.date}</span>
+                      <span>{t.notifications.due} {notif.date}</span>
                       <span className="text-[#287BFF] dark:text-blue-400 font-bold group-hover:underline flex items-center space-x-0.5">
-                        <span>Traiter</span>
+                        <span>{t.notifications.process}</span>
                         <ArrowRight className="w-3 h-3 ml-0.5" />
                       </span>
                     </div>
@@ -291,7 +291,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
                     <button
                       onClick={(e) => handleMarkAsRead(notif.id, e)}
                       className="p-1 text-slate-400 hover:text-emerald-600 rounded transition"
-                      title="Marquer comme lu"
+                      title={t.notifications.markAllRead}
                     >
                       <span className="w-2 h-2 rounded-full bg-blue-600 block"></span>
                     </button>
@@ -303,7 +303,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
 
           {/* Footer */}
           <div className="p-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 text-center text-[10px] font-medium text-slate-500 dark:text-slate-400">
-            Mise à jour en temps réel selon la réglementation du travail RDC (Code 2026)
+            {t.notifications.footer}
           </div>
         </div>
       )}

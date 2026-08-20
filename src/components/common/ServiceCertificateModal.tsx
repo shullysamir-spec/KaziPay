@@ -262,7 +262,7 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       doc.setFontSize(7);
       doc.setFont('times', 'normal');
       doc.setTextColor(100, 116, 139);
-      doc.text(`ID Hash: KZ-CERT-${Date.now().toString(36).toUpperCase()}`, pageWidth - 80, sigY + 30);
+      doc.text(`ID Hash: NP-CERT-${Date.now().toString(36).toUpperCase()}`, pageWidth - 80, sigY + 30);
 
       // Footer
       renderOfficialPdfFooter(doc, {

@@ -13,18 +13,43 @@ import { DEFAULT_STATUTORY_PARAMS_2026, calculatePayslip, calculateSoldeDeToutCo
 
 export const SUPER_ADMIN_CREDENTIALS = {
   email: 'admin@novarispay.cd',
-  password: 'Admin@2026!',
-  displayName: 'Super Administrateur NovarisPay',
+  password: 'Admin@Temp2026!',
+  displayName: 'Administrateur Système NovarisPay',
 };
 
 export const TEST_ACCOUNTS = [
-  { roleName: 'Super Administrateur', email: 'admin@novarispay.cd', password: 'Admin@2026!', roleCode: RoleCode.SUPERADMIN, color: 'bg-purple-600' },
-  { roleName: 'Gestionnaire RH', email: 'rh@novarispay.cd', password: 'Rh@2026!', roleCode: RoleCode.HR_MANAGER, color: 'bg-blue-600' },
-  { roleName: 'Gestionnaire Paie', email: 'paie@novarispay.cd', password: 'Paie@2026!', roleCode: RoleCode.PAYROLL_MANAGER, color: 'bg-emerald-600' },
-  { roleName: 'Manager / Chef de Service', email: 'manager@novarispay.cd', password: 'Manager@2026!', roleCode: RoleCode.DEPT_MANAGER, color: 'bg-amber-600' },
-  { roleName: 'Directeur Financier', email: 'finance@novarispay.cd', password: 'Finance@2026!', roleCode: RoleCode.FINANCE_MANAGER, color: 'bg-indigo-600' },
-  { roleName: 'Employé Self-Service', email: 'employe@novarispay.cd', password: 'Employe@2026!', roleCode: RoleCode.EMPLOYEE, color: 'bg-slate-600' },
-  { roleName: 'Auditeur Externe', email: 'auditeur@novarispay.cd', password: 'Auditeur@2026!', roleCode: RoleCode.AUDITOR, color: 'bg-rose-600' },
+  {
+    roleName: 'Administrateur Système',
+    email: 'admin@novarispay.cd',
+    password: 'Admin@Temp2026!',
+    roleCode: RoleCode.SUPERADMIN,
+    color: 'bg-purple-600',
+    description: 'Accès total (tous les modules et paramètres)'
+  },
+  {
+    roleName: 'Responsable RH',
+    email: 'rh@novarispay.cd',
+    password: 'RH@Temp2026!',
+    roleCode: RoleCode.HR_MANAGER,
+    color: 'bg-blue-600',
+    description: 'Gestion du personnel, paie, congés, présences'
+  },
+  {
+    roleName: 'Direction Financière',
+    email: 'finance@novarispay.cd',
+    password: 'Finance@Temp2026!',
+    roleCode: RoleCode.FINANCE_MANAGER,
+    color: 'bg-indigo-600',
+    description: 'Paie, déclarations, coûts, facturation, rapports financiers'
+  },
+  {
+    roleName: 'Auditeur & Contrôle',
+    email: 'auditeur@novarispay.cd',
+    password: 'Auditeur@Temp2026!',
+    roleCode: RoleCode.AUDITOR,
+    color: 'bg-rose-600',
+    description: 'Consultation seule (rapports, journaux, aucun droit de modification)'
+  },
 ];
 
 export async function bootstrapSystemData(): Promise<void> {
@@ -173,7 +198,7 @@ export async function seedFullDemoDataset(): Promise<void> {
   const demoEmployees = [
     {
       id: 'emp-001',
-      matricule: 'KP-2026-001',
+      matricule: 'NP-2026-001',
       lastName: 'KASONGO',
       firstName: 'Jean-Paul',
       gender: 'M',
@@ -209,7 +234,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-002',
-      matricule: 'KP-2026-002',
+      matricule: 'NP-2026-002',
       lastName: 'TSHIMANGA',
       firstName: 'Joseph',
       gender: 'M',
@@ -248,7 +273,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-003',
-      matricule: 'KP-2026-003',
+      matricule: 'NP-2026-003',
       lastName: 'KABILA',
       firstName: 'Sarah',
       gender: 'F',
@@ -282,7 +307,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-004',
-      matricule: 'KP-2026-004',
+      matricule: 'NP-2026-004',
       lastName: 'MBOYO',
       firstName: 'Marie-Claire',
       gender: 'F',
@@ -319,7 +344,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-005',
-      matricule: 'KP-2026-005',
+      matricule: 'NP-2026-005',
       lastName: 'MBALA',
       firstName: 'Marc',
       gender: 'M',
@@ -351,7 +376,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-006',
-      matricule: 'KP-2026-006',
+      matricule: 'NP-2026-006',
       lastName: 'LUKUSA',
       firstName: 'Antoine',
       gender: 'M',
@@ -388,7 +413,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-007',
-      matricule: 'KP-2026-007',
+      matricule: 'NP-2026-007',
       lastName: 'MWAMBA',
       firstName: 'Christian',
       gender: 'M',
@@ -421,7 +446,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-008',
-      matricule: 'KP-2026-008',
+      matricule: 'NP-2026-008',
       lastName: 'ILUNGA',
       firstName: 'Patrick',
       gender: 'M',
@@ -454,7 +479,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-009',
-      matricule: 'KP-2026-009',
+      matricule: 'NP-2026-009',
       lastName: 'KALANGA',
       firstName: 'Beatrice',
       gender: 'F',
@@ -486,7 +511,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-010',
-      matricule: 'KP-2026-010',
+      matricule: 'NP-2026-010',
       lastName: 'BAKAMPA',
       firstName: 'Dieudonné',
       gender: 'M',
@@ -518,7 +543,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-011',
-      matricule: 'KP-2026-011',
+      matricule: 'NP-2026-011',
       lastName: 'NSAKA',
       firstName: 'Mireille',
       gender: 'F',
@@ -550,7 +575,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-012',
-      matricule: 'KP-2026-012',
+      matricule: 'NP-2026-012',
       lastName: 'KIBAMBE',
       firstName: 'Alain',
       gender: 'M',
@@ -582,7 +607,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-013',
-      matricule: 'KP-2026-013',
+      matricule: 'NP-2026-013',
       lastName: 'NGALULA',
       firstName: 'Justin',
       gender: 'M',
@@ -615,7 +640,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-014',
-      matricule: 'KP-2026-014',
+      matricule: 'NP-2026-014',
       lastName: 'KALOMBO',
       firstName: 'François',
       gender: 'M',
@@ -651,7 +676,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-015',
-      matricule: 'KP-2026-015',
+      matricule: 'NP-2026-015',
       lastName: 'MUTOMBO',
       firstName: 'Chantal',
       gender: 'F',
@@ -686,7 +711,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-016',
-      matricule: 'KP-2026-016',
+      matricule: 'NP-2026-016',
       lastName: 'NSEKA',
       firstName: 'Jacques',
       gender: 'M',
@@ -723,7 +748,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-017',
-      matricule: 'KP-2026-017',
+      matricule: 'NP-2026-017',
       lastName: 'BANZA',
       firstName: 'Syntyche',
       gender: 'F',
@@ -755,7 +780,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-018',
-      matricule: 'KP-2026-018',
+      matricule: 'NP-2026-018',
       lastName: 'MBUYI',
       firstName: 'Yves',
       gender: 'M',
@@ -790,7 +815,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-019',
-      matricule: 'KP-2026-019',
+      matricule: 'NP-2026-019',
       lastName: 'MPIANA',
       firstName: 'Deborah',
       gender: 'F',
@@ -822,7 +847,7 @@ export async function seedFullDemoDataset(): Promise<void> {
     },
     {
       id: 'emp-020',
-      matricule: 'KP-2026-020',
+      matricule: 'NP-2026-020',
       lastName: 'KANKU',
       firstName: 'Gédéon',
       gender: 'M',
@@ -1156,7 +1181,7 @@ export async function seedFullDemoDataset(): Promise<void> {
   // 7. Soldes de Tout Compte (STC) pour les 2 employés inactifs (emp-008 et emp-013)
   const stc1 = calculateSoldeDeToutCompte({
     employeeId: 'emp-008',
-    employeeMatricule: 'KP-2026-008',
+    employeeMatricule: 'NP-2026-008',
     employeeName: 'Patrick ILUNGA',
     contractType: 'CDI',
     terminationReason: 'LICENCIEMENT_AVEC_PREAVIS',
@@ -1173,7 +1198,7 @@ export async function seedFullDemoDataset(): Promise<void> {
 
   const stc2 = calculateSoldeDeToutCompte({
     employeeId: 'emp-013',
-    employeeMatricule: 'KP-2026-013',
+    employeeMatricule: 'NP-2026-013',
     employeeName: 'Justin NGALULA',
     contractType: 'CDD',
     terminationReason: 'FIN_CDD',

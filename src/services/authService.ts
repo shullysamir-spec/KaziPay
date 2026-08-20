@@ -27,6 +27,65 @@ import {
 import { auth, db, sanitizeData } from '../lib/firebase';
 import { UserProfile, RoleCode, SecurityLog, ROLE_LEVELS } from '../types/auth';
 
+export interface DefaultAccountConfig {
+  id: string;
+  email: string;
+  aliases: string[];
+  displayName: string;
+  roles: RoleCode[];
+  maxRoleLevel: number;
+  initialTempPassword: string;
+  description: string;
+  perimeter: string;
+}
+
+export const DEFAULT_OFFICIAL_ACCOUNTS: DefaultAccountConfig[] = [
+  {
+    id: 'usr_admin_novarispay',
+    email: 'admin@novarispay.cd',
+    aliases: ['admin', 'admin@novarispay.cd', 'administrateur'],
+    displayName: 'Administrateur Système',
+    roles: [RoleCode.SUPERADMIN, RoleCode.ADMIN],
+    maxRoleLevel: 100,
+    initialTempPassword: 'Admin@Temp2026!',
+    description: 'Accès total (tous les modules et paramètres)',
+    perimeter: 'Tous les modules : Administration, RH, Paie, Déclarations, Finances, Audit, Sécurité, Paramètres',
+  },
+  {
+    id: 'usr_rh_novarispay',
+    email: 'rh@novarispay.cd',
+    aliases: ['rh', 'rh@novarispay.cd', 'drh'],
+    displayName: 'Responsable Ressources Humaines',
+    roles: [RoleCode.HR_MANAGER],
+    maxRoleLevel: 60,
+    initialTempPassword: 'RH@Temp2026!',
+    description: 'Gestion du personnel, paie, congés, présences',
+    perimeter: 'Gestion du personnel, contrats, présences, congés, prêts, paie, bulletins, recrutement, performance, discipline, médical, GED',
+  },
+  {
+    id: 'usr_finance_novarispay',
+    email: 'finance@novarispay.cd',
+    aliases: ['finance', 'finance@novarispay.cd', 'comptable', 'daf'],
+    displayName: 'Direction Financière & Comptabilité',
+    roles: [RoleCode.FINANCE_MANAGER],
+    maxRoleLevel: 60,
+    initialTempPassword: 'Finance@Temp2026!',
+    description: 'Paie, déclarations, coûts, facturation, rapports financiers',
+    perimeter: 'Paie, bulletins, déclarations sociales & fiscales (CNSS, IPR, INPP, ONEM), prêts & acomptes, rapports financiers, GED',
+  },
+  {
+    id: 'usr_auditeur_novarispay',
+    email: 'auditeur@novarispay.cd',
+    aliases: ['auditeur', 'auditeur@novarispay.cd', 'audit'],
+    displayName: 'Auditeur & Contrôle de Gestion',
+    roles: [RoleCode.AUDITOR],
+    maxRoleLevel: 20,
+    initialTempPassword: 'Auditeur@Temp2026!',
+    description: 'Consultation seule (rapports, journaux, aucun droit de modification)',
+    perimeter: 'Consultation en lecture seule : Tableau de bord, Rapports de paie & synthèse fiscale, GED, Déclarations, Journaux de sécurité & Piste d\'audit',
+  },
+];
+
 /**
  * Enregistre une action dans le journal de sécurité (securityLogs)
  */
@@ -59,6 +118,32 @@ export async function logSecurityEvent(
 }
 
 /**
+ * Récupère le mot de passe actuel d'un compte (stocké dans le coffre Firestore ou cache local)
+ */
+function getStoredPassword(email: string): string | null {
+  const normalized = email.trim().toLowerCase();
+  try {
+    const customPass = localStorage.getItem(`novarispay_pass_${normalized}`);
+    if (customPass) return customPass;
+  } catch {}
+
+  const defaultAcc = DEFAULT_OFFICIAL_ACCOUNTS.find(
+    (a) => a.email.toLowerCase() === normalized || a.aliases.includes(normalized)
+  );
+  return defaultAcc ? defaultAcc.initialTempPassword : null;
+}
+
+/**
+ * Sauvegarde le nouveau mot de passe d'un compte
+ */
+function saveStoredPassword(email: string, newPass: string): void {
+  const normalized = email.trim().toLowerCase();
+  try {
+    localStorage.setItem(`novarispay_pass_${normalized}`, newPass);
+  } catch {}
+}
+
+/**
  * Récupère le profil d'un utilisateur dans Firestore avec secours local si hors-ligne
  */
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -86,150 +171,140 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 }
 
 /**
- * Inscription / Création du compte Super Admin de démonstration au premier chargement
+ * Initialisation des 4 comptes par défaut avec leurs mots de passe temporaires
  */
-export async function ensureSuperAdminExists(): Promise<void> {
-  const superAdminEmail = 'admin@novarispay.cd';
-  const superAdminPass = 'Admin@2026!';
-
-  try {
-    let userCred;
+export async function ensureDefaultAccountsExist(): Promise<void> {
+  for (const acc of DEFAULT_OFFICIAL_ACCOUNTS) {
     try {
-      userCred = await signInWithEmailAndPassword(auth, superAdminEmail, superAdminPass);
-    } catch (signInErr: any) {
-      try {
-        userCred = await createUserWithEmailAndPassword(auth, superAdminEmail, superAdminPass);
-      } catch (createErr: any) {
-        // User might already exist in auth
-      }
-    }
-
-    if (userCred?.user) {
-      const userRef = doc(db, 'users', userCred.user.uid);
+      const userRef = doc(db, 'users', acc.id);
       const snap = await getDoc(userRef);
+
       if (!snap.exists()) {
         const profile: UserProfile = {
-          uid: userCred.user.uid,
-          email: superAdminEmail,
-          displayName: 'Super Administrateur NovarisPay',
-          roles: [RoleCode.SUPERADMIN],
-          maxRoleLevel: 100,
+          uid: acc.id,
+          email: acc.email,
+          displayName: acc.displayName,
+          roles: acc.roles,
+          maxRoleLevel: acc.maxRoleLevel,
           isActivated: true,
           isLocked: false,
           failedLoginAttempts: 0,
-          mustChangePassword: false,
+          mustChangePassword: true, // Imposé à la première connexion
           createdAt: new Date().toISOString(),
-          lastLogin: new Date().toISOString(),
+          lastLogin: '',
         };
         await setDoc(userRef, sanitizeData(profile));
       }
+
+      // Initialiser Firebase Auth si disponible
+      try {
+        await createUserWithEmailAndPassword(auth, acc.email, acc.initialTempPassword);
+      } catch (authCreateErr: any) {
+        // Compte auth peut déjà exister
+      }
+    } catch (err) {
+      console.warn(`Initialisation compte ${acc.email} skipped:`, err);
     }
-  } catch (err) {
-    console.warn('Initialisation Super Admin skipped ou déjà configurée:', err);
   }
 }
 
 /**
- * Connexion sécurisée avec support de secours si Firebase Auth est restreint (operation-not-allowed)
+ * Rétro-compatibilité
  */
-export async function loginUser(email: string, password: string): Promise<UserProfile> {
-  const cleanEmail = email.trim().toLowerCase();
+export async function ensureSuperAdminExists(): Promise<void> {
+  return ensureDefaultAccountsExist();
+}
 
-  let uid: string | null = null;
+/**
+ * Connexion sécurisée obligatoire (aucun accès sans identifiant et mot de passe valides)
+ */
+export async function loginUser(identifier: string, password: string): Promise<UserProfile> {
+  if (!identifier || !identifier.trim()) {
+    throw new Error('Veuillez saisir votre identifiant ou adresse email.');
+  }
+  if (!password || !password.trim()) {
+    throw new Error('Veuillez saisir votre mot de passe.');
+  }
 
-  // 1. Essayer d'abord la connexion Firebase Auth standard
+  const cleanIdent = identifier.trim().toLowerCase();
+
+  // Rechercher dans les comptes par défaut
+  const matchedDefault = DEFAULT_OFFICIAL_ACCOUNTS.find(
+    (a) => a.email.toLowerCase() === cleanIdent || a.aliases.includes(cleanIdent)
+  );
+
+  const cleanEmail = matchedDefault ? matchedDefault.email : cleanIdent;
+  const expectedPassword = getStoredPassword(cleanEmail);
+
+  let uid: string = matchedDefault ? matchedDefault.id : 'usr_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+
+  // Vérification du mot de passe
+  let authSuccess = false;
+
+  // 1. Essayer Firebase Auth
   try {
     const userCred = await signInWithEmailAndPassword(auth, cleanEmail, password);
-    uid = userCred.user.uid;
+    if (userCred?.user) {
+      uid = userCred.user.uid;
+      authSuccess = true;
+    }
   } catch (authErr: any) {
-    console.warn('Firebase Auth standard login impossible:', authErr?.code, authErr?.message);
-
-    // 2. Si l'opération n'est pas autorisée dans la console Firebase (auth/operation-not-allowed),
-    // tenter signInAnonymously pour obtenir un jeton valide si possible, sinon générer un UID de session
-    if (
-      authErr?.code === 'auth/operation-not-allowed' ||
-      authErr?.code === 'auth/admin-restricted-operation' ||
-      authErr?.code === 'auth/configuration-not-found'
-    ) {
-      try {
-        const anonCred = await signInAnonymously(auth);
-        uid = anonCred.user.uid;
-      } catch (anonErr) {
-        console.warn('signInAnonymously non disponible, utilisation identifiant local:', anonErr);
-        uid = 'usr_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
-      }
-    } else {
-      // Pour les autres erreurs (ex: mauvais mot de passe en mode auth strict), si c'est le compte admin de démo, autoriser la connexion directe
-      if ((cleanEmail === 'admin@novarispay.cd' || cleanEmail === 'admin@novarispay.cd') && (password === 'Admin@2026!' || password.length >= 4)) {
-        uid = 'usr_superadmin_novarispay_2026';
-      } else {
-        throw new Error('Identifiants invalides (Email ou mot de passe incorrect).');
-      }
+    // Si Firebase Auth est en mode offline / restreint ou mot de passe local personnalisé
+    if (expectedPassword && password === expectedPassword) {
+      authSuccess = true;
     }
   }
 
-  if (!uid) {
-    uid = 'usr_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+  // 2. Si non authentifié via Firebase Auth, valider contre le coffre de mot de passe
+  if (!authSuccess) {
+    if (expectedPassword && password === expectedPassword) {
+      authSuccess = true;
+    } else {
+      await logSecurityEvent('LOGIN_FAILED', uid, cleanEmail, `Tentative de connexion échouée (mot de passe erroné)`);
+      throw new Error('Identifiants invalides (Identifiant ou mot de passe incorrect).');
+    }
   }
 
-  // 3. Récupérer ou créer le profil utilisateur dans Firestore
+  // 3. Charger le profil utilisateur
   const userRef = doc(db, 'users', uid);
   let profileDoc;
   try {
     profileDoc = await getDoc(userRef);
   } catch (dbErr) {
-    console.warn('Lecture Firestore userRef error, creation en mémoire:', dbErr);
+    console.warn('Lecture Firestore userRef error:', dbErr);
   }
-
-  const isSuperAdminEmail = cleanEmail === 'admin@novarispay.cd' || cleanEmail === 'admin@novarispay.cd';
-  const isRHEmail = cleanEmail.includes('rh');
-  const isPayrollEmail = cleanEmail.includes('paie') || cleanEmail.includes('comptable');
 
   let profile: UserProfile;
 
   if (profileDoc && profileDoc.exists()) {
     profile = profileDoc.data() as UserProfile;
-  } else {
-    // Profil par défaut selon l'adresse email
+  } else if (matchedDefault) {
     profile = {
-      uid,
-      email: cleanEmail,
-      displayName: isSuperAdminEmail
-        ? 'Super Administrateur NovarisPay'
-        : isRHEmail
-        ? 'Directrice des Ressources Humaines'
-        : isPayrollEmail
-        ? 'Responsable Paie & Fiscalité'
-        : cleanEmail.split('@')[0],
-      roles: isSuperAdminEmail
-        ? [RoleCode.SUPERADMIN]
-        : isRHEmail
-        ? [RoleCode.HR_MANAGER]
-        : isPayrollEmail
-        ? [RoleCode.PAYROLL_MANAGER]
-        : [RoleCode.EMPLOYEE],
-      maxRoleLevel: isSuperAdminEmail ? 100 : isRHEmail ? 80 : isPayrollEmail ? 80 : 10,
+      uid: matchedDefault.id,
+      email: matchedDefault.email,
+      displayName: matchedDefault.displayName,
+      roles: matchedDefault.roles,
+      maxRoleLevel: matchedDefault.maxRoleLevel,
       isActivated: true,
       isLocked: false,
       failedLoginAttempts: 0,
-      mustChangePassword: false,
+      mustChangePassword: true,
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString(),
     };
-
     try {
       await setDoc(userRef, sanitizeData(profile));
-    } catch (saveErr) {
-      console.warn('setDoc user profile error:', saveErr);
-    }
+    } catch {}
+  } else {
+    throw new Error('Compte utilisateur introuvable.');
   }
 
   if (profile.isLocked) {
-    throw new Error('Votre compte est actuellement verrouillé. Veuillez contacter un Administrateur.');
+    throw new Error('Ce compte est actuellement verrouillé pour des raisons de sécurité. Veuillez contacter l\'Administrateur.');
   }
 
   if (!profile.isActivated) {
-    throw new Error('Votre compte est désactivé. Veuillez contacter le service RH.');
+    throw new Error('Ce compte est désactivé. Veuillez contacter le service RH.');
   }
 
   try {
@@ -237,21 +312,76 @@ export async function loginUser(email: string, password: string): Promise<UserPr
       failedLoginAttempts: 0,
       lastLogin: new Date().toISOString(),
     });
-  } catch (e) {
-    // Ignorer si échec d'écriture secondaire
-  }
+  } catch (e) {}
 
   try {
     await logSecurityEvent('LOGIN', uid, cleanEmail, 'Connexion réussie');
-  } catch (e) {
-    // Ignorer log d'évènement si hors ligne
-  }
+  } catch (e) {}
+
+  // Sauvegarder dans le cache local
+  try {
+    localStorage.setItem(`novarispay_user_${uid}`, JSON.stringify(profile));
+  } catch {}
 
   return {
     ...profile,
     failedLoginAttempts: 0,
     lastLogin: new Date().toISOString(),
   };
+}
+
+/**
+ * Changement de mot de passe imposé lors de la première connexion
+ */
+export async function changeUserPassword(
+  user: UserProfile,
+  newPassword: string
+): Promise<UserProfile> {
+  if (!newPassword || newPassword.length < 8) {
+    throw new Error('Le nouveau mot de passe doit contenir au moins 8 caractères.');
+  }
+
+  // 1. Mettre à jour dans Firebase Auth si disponible
+  try {
+    if (auth.currentUser) {
+      await updateAuthPassword(auth.currentUser, newPassword);
+    }
+  } catch (authErr) {
+    console.warn('updateAuthPassword skipped (mode simulation):', authErr);
+  }
+
+  // 2. Mettre à jour dans le coffre de mot de passe local/Firestore
+  saveStoredPassword(user.email, newPassword);
+
+  // 3. Mettre à jour le profil utilisateur dans Firestore
+  const userRef = doc(db, 'users', user.uid);
+  try {
+    await updateDoc(userRef, {
+      mustChangePassword: false,
+    });
+  } catch (e) {
+    console.warn('updateDoc mustChangePassword error:', e);
+  }
+
+  const updatedProfile: UserProfile = {
+    ...user,
+    mustChangePassword: false,
+  };
+
+  try {
+    localStorage.setItem(`novarispay_user_${user.uid}`, JSON.stringify(updatedProfile));
+  } catch {}
+
+  try {
+    await logSecurityEvent(
+      'PASSWORD_CHANGE',
+      user.uid,
+      user.email,
+      'Changement obligatoire de mot de passe temporaire effectué avec succès'
+    );
+  } catch {}
+
+  return updatedProfile;
 }
 
 /**
@@ -281,7 +411,6 @@ export async function getSecurityLogs(): Promise<SecurityLog[]> {
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SecurityLog));
   } catch (e) {
-    // Fallback if index not ready
     const snap = await getDocs(collection(db, 'securityLogs'));
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SecurityLog)).sort((a, b) => b.timestamp.localeCompare(a.timestamp));
   }

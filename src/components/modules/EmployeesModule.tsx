@@ -1,6 +1,6 @@
 /**
  * @license
- * NovarisPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC (BILINGUAL)
  */
 
 import React, { useEffect, useState } from 'react';
@@ -10,38 +10,30 @@ import {
   updateEmployee,
   softDeleteEmployee,
   validateEmployeeData,
-  getExpiringContracts,
-  getEmployeeCircumstances,
-  deriveEmployeeStatus,
 } from '../../services/employeeService';
 import { getPayslipsForEmployee } from '../../services/payrollService';
 import { Employee, Contract, EmployeeWithContract, Dependent } from '../../types/employee';
 import { UserProfile, PermissionKey } from '../../types/auth';
 import { Payslip } from '../../types/payroll';
 import { checkPermission } from '../../services/rbacEngine';
+import { useLanguage } from '../../context/LanguageContext';
 import { Employee360Modal } from './Employee360Modal';
 import { ServiceCertificateModal } from '../common/ServiceCertificateModal';
 import { EmployeePhotoModal } from '../common/EmployeePhotoModal';
 import { formatCDF, formatUSD } from '../../utils/documentFormatter';
 import {
-  Users,
   Plus,
   Search,
   Filter,
-  FileSpreadsheet,
   AlertTriangle,
-  Calendar,
-  CreditCard,
   Edit,
   Trash2,
-  CheckCircle,
   X,
   Upload,
   Eye,
   Download,
   Award,
   Check,
-  FileText,
   Camera,
   Loader2,
 } from 'lucide-react';
@@ -52,6 +44,7 @@ interface EmployeesModuleProps {
 }
 
 export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, rolePermissions }) => {
+  const { lang, t, formatDate, formatNumber } = useLanguage();
   const [employees, setEmployees] = useState<EmployeeWithContract[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<EmployeeWithContract[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -165,7 +158,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
   const handleOpenCreate = () => {
     setSelectedEmployee(null);
     setFormData({
-      matricule: `KP-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      matricule: `NP-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
       lastName: '',
       firstName: '',
       gender: 'M',
@@ -208,7 +201,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
     e.preventDefault();
     const errors = validateEmployeeData(formData);
     if (!contractData.baseSalary || contractData.baseSalary <= 0) {
-      errors.push('Le salaire de base du contrat doit être supérieur à zéro.');
+      errors.push(lang === 'fr' ? 'Le salaire de base du contrat doit être supérieur à zéro.' : 'Contract base salary must be greater than zero.');
     }
     if (errors.length > 0) {
       setFormErrors(errors);
@@ -228,14 +221,14 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
       setIsModalOpen(false);
       loadData();
     } catch (err: any) {
-      setFormErrors([err.message || 'Erreur d\'enregistrement']);
+      setFormErrors([err.message || (lang === 'fr' ? 'Erreur d\'enregistrement' : 'Save error')]);
     } finally {
       setSavingEmployee(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Confirmer la suppression logique de cet employé ?')) {
+    if (window.confirm(t.employees.deleteConfirm)) {
       await softDeleteEmployee(id);
       loadData();
     }
@@ -281,7 +274,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
         const parts = lines[i].split(',');
         if (parts.length < 5) {
           invalid++;
-          errors.push(`Ligne ${i + 1}: Nombre de colonnes insuffisant.`);
+          errors.push(lang === 'fr' ? `Ligne ${i + 1}: Nombre de colonnes insuffisant.` : `Line ${i + 1}: Insufficient number of columns.`);
         } else {
           valid++;
         }
@@ -294,14 +287,26 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
 
   const departments = Array.from(new Set(employees.map((e) => e.department))).filter(Boolean);
 
+  const getDocItems = () => [
+    { key: 'cni', label: lang === 'fr' ? '1. Pièce d\'Identité / Carte d\'Électeur / Passeport' : '1. National ID / Voter Card / Passport' },
+    { key: 'cv', label: lang === 'fr' ? '2. CV Certifié Conforme & Copie des Diplômes' : '2. Certified CV & Copy of Degrees' },
+    { key: 'cnss_nif', label: lang === 'fr' ? '3. Numéro Impôt (NIF) & Attestation CNSS' : '3. Tax ID (NIF) & CNSS Certificate' },
+    { key: 'domicile', label: lang === 'fr' ? '4. Certificat de Domicile / Résidence' : '4. Certificate of Residence / Domicile' },
+    { key: 'medical', label: lang === 'fr' ? '5. Certificat Médical d\'Aptitude Physique (Obligatoire RDC)' : '5. Medical Fitness Certificate (DRC Mandatory)' },
+    { key: 'casier', label: lang === 'fr' ? '6. Extrait de Casier Judiciaire (< 3 mois)' : '6. Police Clearance / Criminal Record (< 3 months)' },
+    { key: 'etat_civil', label: lang === 'fr' ? '7. Acte de Mariage & Actes de Naissance Enfants à charge' : '7. Marriage Certificate & Children Birth Certificates' },
+    { key: 'services_anterieurs', label: lang === 'fr' ? '8. Attestation des Services Antérieurs / Certificat de Fin de Travail' : '8. Prior Service Certificate / Work Certificate' },
+    { key: 'photos', label: lang === 'fr' ? '9. Photos d\'Identité Récentes (x4)' : '9. Recent Passport Photos (x4)' },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div>
-          <h1 className="text-xl font-black text-[#1F3864]">Gestion des Employés & Contrats</h1>
-          <p className="text-xs text-slate-500">
-            Base centrale du personnel avec personnes à charge pour le calcul IRPP et allocations familiales.
+          <h1 className="text-xl font-black text-[#1F3864] dark:text-blue-300">{t.employees.title}</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {t.employees.subtitle}
           </p>
         </div>
 
@@ -314,23 +319,23 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
             className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-3.5 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow transition"
           >
             <Award className="w-4 h-4 text-slate-950 stroke-[1.75]" />
-            <span>Attestation Fin de Service (Art. 168)</span>
+            <span>{lang === 'fr' ? 'Attestation Fin de Service (Art. 168)' : 'End of Service Certificate (Art. 168)'}</span>
           </button>
           {canCreate && (
             <>
               <button
                 onClick={() => setIsCSVModalOpen(true)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-2 rounded-lg text-xs flex items-center space-x-1.5 border border-slate-300 transition"
+                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold px-3 py-2 rounded-lg text-xs flex items-center space-x-1.5 border border-slate-300 dark:border-slate-700 transition"
               >
-                <Upload className="w-4 h-4 text-slate-600" />
-                <span>Import CSV</span>
+                <Upload className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                <span>{lang === 'fr' ? 'Import CSV' : 'CSV Import'}</span>
               </button>
               <button
                 onClick={handleOpenCreate}
-                className="bg-[#1F3864] hover:bg-[#152747] text-white font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow transition"
+                className="bg-[#1F3864] hover:bg-[#152747] dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow transition"
               >
-                <Plus className="w-4 h-4 text-[#BF9000]" />
-                <span>Nouvel Employé</span>
+                <Plus className="w-4 h-4 text-[#BF9000] dark:text-amber-300" />
+                <span>{t.employees.addEmployee}</span>
               </button>
             </>
           )}
@@ -338,15 +343,15 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Rechercher par nom, matricule..."
-            className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#1F3864]"
+            placeholder={t.employees.searchPlaceholder}
+            className="w-full pl-9 pr-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#1F3864] dark:bg-slate-800 dark:text-slate-100"
           />
         </div>
 
@@ -356,9 +361,9 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
             <select
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="w-full sm:w-auto border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 font-medium min-h-[40px]"
+              className="w-full sm:w-auto border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium min-h-[40px]"
             >
-              <option value="ALL">Tous les départements</option>
+              <option value="ALL">{t.employees.allDepartments}</option>
               {departments.map((d) => (
                 <option key={d} value={d}>{d}</option>
               ))}
@@ -368,47 +373,47 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
           <select
             value={expatFilter}
             onChange={(e) => setExpatFilter(e.target.value as any)}
-            className="w-full sm:w-auto border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 font-medium min-h-[40px]"
+            className="w-full sm:w-auto border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium min-h-[40px]"
           >
-            <option value="ALL">Tous les statuts (Locaux & Expats)</option>
-            <option value="NATIONAL_ONLY">Employés Nationaux RDC</option>
-            <option value="EXPAT_ONLY">Expatriés uniquement</option>
+            <option value="ALL">{lang === 'fr' ? 'Tous les statuts (Locaux & Expats)' : 'All Statuses (Locals & Expats)'}</option>
+            <option value="NATIONAL_ONLY">{lang === 'fr' ? 'Employés Nationaux RDC' : 'DRC National Employees'}</option>
+            <option value="EXPAT_ONLY">{lang === 'fr' ? 'Expatriés uniquement' : 'Expatriates Only'}</option>
           </select>
         </div>
       </div>
 
       {/* Employees Table (Desktop/Tablet) & Cards (Mobile) */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         {/* Desktop / Tablet View */}
         <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700">
+          <table className="w-full text-left text-xs text-slate-700 dark:text-slate-200">
             <thead className="bg-[#1F3864] text-white uppercase font-bold text-[11px] tracking-wider">
               <tr>
-                <th className="py-3 px-4">Matricule & Nom</th>
-                <th className="py-3 px-4">Poste & Dépt</th>
-                <th className="py-3 px-4">Contrat & Salaire</th>
-                <th className="py-3 px-4">Charges Famille</th>
-                <th className="py-3 px-4">Ancienneté</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-4">{t.employees.colMatricule} & {t.employees.colName}</th>
+                <th className="py-3 px-4">{t.employees.colPosition}</th>
+                <th className="py-3 px-4">{t.employees.colContract} & {t.employees.colBaseSalary}</th>
+                <th className="py-3 px-4">{lang === 'fr' ? 'Charges Famille' : 'Dependents'}</th>
+                <th className="py-3 px-4">{t.payslips.seniorityLabel}</th>
+                <th className="py-3 px-4 text-right">{t.employees.colActions}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-400">
-                    Chargement des employés...
+                    {t.common.loading}
                   </td>
                 </tr>
               ) : filteredEmployees.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-400">
-                    Aucun employé trouvé.
+                    {t.employees.emptyList}
                   </td>
                 </tr>
               ) : (
                 filteredEmployees.map((emp) => (
-                  <tr key={emp.id} className="hover:bg-slate-50 transition">
-                    <td className="py-3 px-4 font-bold text-slate-900">
+                  <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                    <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100">
                       <div className="flex items-center space-x-3">
                         {emp.photoUrl ? (
                           <img
@@ -430,33 +435,33 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] font-mono text-[#1F3864]">{emp.matricule}</div>
+                          <div className="text-[11px] font-mono text-[#1F3864] dark:text-blue-300">{emp.matricule}</div>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-800">{emp.position}</div>
-                      <div className="text-slate-500 text-[11px]">{emp.department} • {emp.site}</div>
+                      <div className="font-semibold text-slate-800 dark:text-slate-200">{emp.position}</div>
+                      <div className="text-slate-500 dark:text-slate-400 text-[11px]">{emp.department} • {emp.site}</div>
                     </td>
                     <td className="py-3 px-4">
                       {emp.currentContract ? (
                         <div>
-                          <span className="font-bold text-slate-900">
-                            {emp.currentContract.baseSalary.toLocaleString()} {emp.currentContract.currency}
+                          <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">
+                            {formatNumber(emp.currentContract.baseSalary)} {emp.currentContract.currency}
                           </span>
-                          <span className="ml-2 text-[10px] bg-blue-100 text-[#1F3864] font-bold px-1.5 py-0.5 rounded">
+                          <span className="ml-2 text-[10px] bg-blue-100 dark:bg-blue-950 text-[#1F3864] dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
                             {emp.currentContract.type}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-red-500 font-semibold">Aucun contrat</span>
+                        <span className="text-red-500 font-semibold">{lang === 'fr' ? 'Aucun contrat' : 'No contract'}</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 font-bold text-slate-800">
-                      {emp.dependents ? emp.dependents.length : 0} charge(s)
+                    <td className="py-3 px-4 font-bold text-slate-800 dark:text-slate-200">
+                      {emp.dependents ? emp.dependents.length : 0} {lang === 'fr' ? 'charge(s)' : 'dependent(s)'}
                     </td>
-                    <td className="py-3 px-4 text-slate-600">
-                      {emp.seniorityYears} an(s) {emp.seniorityMonths} mois
+                    <td className="py-3 px-4 text-slate-600 dark:text-slate-300">
+                      {emp.seniorityYears} {lang === 'fr' ? 'an(s)' : 'yr(s)'} {emp.seniorityMonths} {lang === 'fr' ? 'mois' : 'mo(s)'}
                     </td>
                     <td className="py-3 px-4 text-right space-x-1.5 flex items-center justify-end">
                       <button
@@ -464,27 +469,27 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                           setSelectedEmployee(emp);
                           setIs360ModalOpen(true);
                         }}
-                        className="bg-[#1F3864] text-white hover:bg-[#152747] px-2.5 py-1.5 rounded-lg flex items-center space-x-1 font-bold text-[11px] shadow-sm min-h-[36px]"
-                        title="Ouvrir la Fiche Employé 360° Complète"
+                        className="bg-[#1F3864] text-white hover:bg-[#152747] dark:bg-blue-600 dark:hover:bg-blue-700 px-2.5 py-1.5 rounded-lg flex items-center space-x-1 font-bold text-[11px] shadow-sm min-h-[36px]"
+                        title={t.employee360.modalTitle}
                       >
                         <Eye className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Fiche 360°</span>
+                        <span>{t.employees.viewProfile360}</span>
                       </button>
                       <button
                         onClick={() => {
                           setCertEmployeeId(emp.id || '');
                           setIsCertModalOpen(true);
                         }}
-                        className="p-1.5 text-amber-600 hover:bg-amber-50 rounded min-h-[36px] min-w-[36px] flex items-center justify-center"
-                        title="Attestation de Fin de Service (Art. 168)"
+                        className="p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded min-h-[36px] min-w-[36px] flex items-center justify-center"
+                        title={lang === 'fr' ? 'Attestation de Fin de Service (Art. 168)' : 'End of Service Certificate (Art. 168)'}
                       >
                         <Award className="w-4 h-4" />
                       </button>
                       {canEdit && (
                         <button
                           onClick={() => handleOpenEdit(emp)}
-                          className="p-1.5 text-blue-700 hover:bg-blue-50 rounded min-h-[36px] min-w-[36px] flex items-center justify-center"
-                          title="Modifier"
+                          className="p-1.5 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded min-h-[36px] min-w-[36px] flex items-center justify-center"
+                          title={t.employees.editEmployee}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -492,8 +497,8 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                       {canDelete && (
                         <button
                           onClick={() => emp.id && handleDelete(emp.id)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded min-h-[36px] min-w-[36px] flex items-center justify-center"
-                          title="Suppression logique"
+                          className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded min-h-[36px] min-w-[36px] flex items-center justify-center"
+                          title={t.employees.deleteEmployee}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -507,18 +512,18 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
         </div>
 
         {/* Mobile Stacked Cards View (< md) */}
-        <div className="block md:hidden divide-y divide-slate-100">
+        <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800">
           {loading ? (
             <div className="py-8 text-center text-slate-400 text-xs">
-              Chargement des employés...
+              {t.common.loading}
             </div>
           ) : filteredEmployees.length === 0 ? (
             <div className="py-8 text-center text-slate-400 text-xs">
-              Aucun employé trouvé.
+              {t.employees.emptyList}
             </div>
           ) : (
             filteredEmployees.map((emp) => (
-              <div key={emp.id} className="p-4 space-y-3 hover:bg-slate-50 transition">
+              <div key={emp.id} className="p-4 space-y-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {emp.photoUrl ? (
@@ -533,7 +538,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                       </div>
                     )}
                     <div>
-                      <div className="text-sm font-bold text-slate-900 flex items-center flex-wrap gap-1">
+                      <div className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center flex-wrap gap-1">
                         <span>{emp.lastName} {emp.firstName}</span>
                         {emp.isExpatriate && (
                           <span className="bg-blue-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
@@ -541,53 +546,52 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                           </span>
                         )}
                       </div>
-                      <div className="text-xs font-mono text-[#1F3864] font-semibold">{emp.matricule}</div>
+                      <div className="text-xs font-mono text-[#1F3864] dark:text-blue-300 font-semibold">{emp.matricule}</div>
                     </div>
                   </div>
                   {emp.currentContract && (
-                    <span className="text-[11px] bg-blue-100 text-[#1F3864] font-bold px-2 py-0.5 rounded">
+                    <span className="text-[11px] bg-blue-100 dark:bg-blue-950 text-[#1F3864] dark:text-blue-300 font-bold px-2 py-0.5 rounded">
                       {emp.currentContract.type}
                     </span>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700">
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Poste & Dépt</span>
-                    <span className="font-semibold text-slate-800">{emp.position}</span>
-                    <span className="text-slate-500 block text-[10px]">{emp.department}</span>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">{t.employees.colPosition}</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{emp.position}</span>
+                    <span className="text-slate-500 dark:text-slate-400 block text-[10px]">{emp.department}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Rémunération</span>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">{t.employees.colBaseSalary}</span>
                     {emp.currentContract ? (
-                      <span className="font-bold text-slate-900 font-mono">
-                        {emp.currentContract.baseSalary.toLocaleString()} {emp.currentContract.currency}
+                      <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">
+                        {formatNumber(emp.currentContract.baseSalary)} {emp.currentContract.currency}
                       </span>
                     ) : (
-                      <span className="text-red-500 text-[11px]">Sans contrat</span>
+                      <span className="text-red-500 text-[11px]">{lang === 'fr' ? 'Sans contrat' : 'No contract'}</span>
                     )}
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Charges Famille</span>
-                    <span className="font-bold text-slate-800">{emp.dependents?.length || 0} personne(s)</span>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">{lang === 'fr' ? 'Charges Famille' : 'Dependents'}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{emp.dependents?.length || 0} {lang === 'fr' ? 'personne(s)' : 'person(s)'}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Ancienneté</span>
-                    <span className="text-slate-700">{emp.seniorityYears}a {emp.seniorityMonths}m</span>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">{t.payslips.seniorityLabel}</span>
+                    <span className="text-slate-700 dark:text-slate-300">{emp.seniorityYears}y {emp.seniorityMonths}m</span>
                   </div>
                 </div>
 
-                {/* Mobile Action Buttons with full touch targets (min 44px height) */}
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     onClick={() => {
                       setSelectedEmployee(emp);
                       setIs360ModalOpen(true);
                     }}
-                    className="flex-1 bg-[#1F3864] text-white hover:bg-[#152747] py-2.5 px-3 rounded-lg flex items-center justify-center space-x-1.5 font-bold text-xs shadow-sm min-h-[44px]"
+                    className="flex-1 bg-[#1F3864] text-white hover:bg-[#152747] dark:bg-blue-600 dark:hover:bg-blue-700 py-2.5 px-3 rounded-lg flex items-center justify-center space-x-1.5 font-bold text-xs shadow-sm min-h-[44px]"
                   >
                     <Eye className="w-4 h-4 text-amber-400" />
-                    <span>Fiche 360°</span>
+                    <span>{t.employees.viewProfile360}</span>
                   </button>
 
                   <button
@@ -595,8 +599,8 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                       setCertEmployeeId(emp.id || '');
                       setIsCertModalOpen(true);
                     }}
-                    className="p-2.5 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                    title="Attestation Fin de Service"
+                    className="p-2.5 text-amber-700 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 rounded-lg border border-amber-200 dark:border-amber-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    title={lang === 'fr' ? 'Attestation Fin de Service' : 'End of Service Certificate'}
                   >
                     <Award className="w-4 h-4" />
                   </button>
@@ -604,8 +608,8 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                   {canEdit && (
                     <button
                       onClick={() => handleOpenEdit(emp)}
-                      className="p-2.5 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                      title="Modifier"
+                      className="p-2.5 text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 rounded-lg border border-blue-200 dark:border-blue-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      title={t.employees.editEmployee}
                     >
                       <Edit className="w-4 h-4" />
                     </button>
@@ -614,8 +618,8 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                   {canDelete && (
                     <button
                       onClick={() => emp.id && handleDelete(emp.id)}
-                      className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                      title="Supprimer"
+                      className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 rounded-lg border border-red-200 dark:border-red-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      title={t.employees.deleteEmployee}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -630,10 +634,10 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
       {/* Employee Modal Form */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
             <div className="bg-[#1F3864] text-white p-4 flex items-center justify-between sticky top-0 z-10">
               <h2 className="font-bold text-base">
-                {selectedEmployee ? 'Fiche Employé — Modification' : 'Création d\'un Nouvel Employé'}
+                {selectedEmployee ? t.employees.modalEditTitle : t.employees.modalAddTitle}
               </h2>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-300 hover:text-white">
                 <X className="w-5 h-5" />
@@ -641,52 +645,52 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
             </div>
 
             {/* Tab selection */}
-            <div className="flex border-b border-slate-200 bg-slate-50 px-4 overflow-x-auto scrollbar-none whitespace-nowrap">
+            <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-4 overflow-x-auto scrollbar-none whitespace-nowrap">
               <button
                 onClick={() => setActiveTab('IDENTITY')}
                 className={`py-2.5 px-4 text-xs font-bold border-b-2 transition shrink-0 min-h-[44px] flex items-center ${
                   activeTab === 'IDENTITY'
-                    ? 'border-[#1F3864] text-[#1F3864]'
-                    : 'border-transparent text-slate-500'
+                    ? 'border-[#1F3864] dark:border-blue-400 text-[#1F3864] dark:text-blue-400'
+                    : 'border-transparent text-slate-500 dark:text-slate-400'
                 }`}
               >
-                Identité & Contact
+                {t.employees.tabIdentity}
               </button>
               <button
                 onClick={() => setActiveTab('CONTRACT')}
                 className={`py-2.5 px-4 text-xs font-bold border-b-2 transition shrink-0 min-h-[44px] flex items-center ${
                   activeTab === 'CONTRACT'
-                    ? 'border-[#1F3864] text-[#1F3864]'
-                    : 'border-transparent text-slate-500'
+                    ? 'border-[#1F3864] dark:border-blue-400 text-[#1F3864] dark:text-blue-400'
+                    : 'border-transparent text-slate-500 dark:text-slate-400'
                 }`}
               >
-                Contrat & Salaire
+                {t.employees.tabContract}
               </button>
               <button
                 onClick={() => setActiveTab('DEPENDENTS')}
                 className={`py-2.5 px-4 text-xs font-bold border-b-2 transition shrink-0 min-h-[44px] flex items-center ${
                   activeTab === 'DEPENDENTS'
-                    ? 'border-[#1F3864] text-[#1F3864]'
-                    : 'border-transparent text-slate-500'
+                    ? 'border-[#1F3864] dark:border-blue-400 text-[#1F3864] dark:text-blue-400'
+                    : 'border-transparent text-slate-500 dark:text-slate-400'
                 }`}
               >
-                Personnes à Charge ({formData.dependents?.length || 0})
+                {t.employees.tabDependents} ({formData.dependents?.length || 0})
               </button>
               <button
                 onClick={() => setActiveTab('DOCUMENTS')}
                 className={`py-2.5 px-4 text-xs font-bold border-b-2 transition shrink-0 min-h-[44px] flex items-center ${
                   activeTab === 'DOCUMENTS'
-                    ? 'border-[#1F3864] text-[#1F3864]'
-                    : 'border-transparent text-slate-500'
+                    ? 'border-[#1F3864] dark:border-blue-400 text-[#1F3864] dark:text-blue-400'
+                    : 'border-transparent text-slate-500 dark:text-slate-400'
                 }`}
               >
-                Checklist Documents RDC ({Object.values(docStatuses).filter(Boolean).length}/9)
+                {t.employees.tabDocuments} ({Object.values(docStatuses).filter(Boolean).length}/9)
               </button>
             </div>
 
             <form onSubmit={handleSave} className="p-6 space-y-4">
               {formErrors.length > 0 && (
-                <div className="bg-red-50 border-l-4 border-[#C00000] p-3 rounded text-xs text-red-800 space-y-1">
+                <div className="bg-red-50 dark:bg-red-950/40 border-l-4 border-[#C00000] p-3 rounded text-xs text-red-800 dark:text-red-300 space-y-1">
                   {formErrors.map((err, i) => (
                     <div key={i}>• {err}</div>
                   ))}
@@ -696,23 +700,25 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
               {activeTab === 'IDENTITY' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   {/* Photo Profile Card */}
-                  <div className="col-span-1 sm:col-span-2 p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-4">
+                  <div className="col-span-1 sm:col-span-2 p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between gap-4">
                     <div className="flex items-center space-x-3">
                       {formData.photoUrl ? (
                         <img
                           src={formData.photoUrl}
                           alt="Photo Employé"
-                          className="w-14 h-14 rounded-full object-cover border-2 border-[#1F3864] shadow-sm"
+                          className="w-14 h-14 rounded-full object-cover border-2 border-[#1F3864] dark:border-blue-400 shadow-sm"
                         />
                       ) : (
-                        <div className="w-14 h-14 rounded-full bg-[#1F3864] text-white flex items-center justify-center font-bold text-base shadow-sm">
+                        <div className="w-14 h-14 rounded-full bg-[#1F3864] dark:bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
                           {((formData.firstName?.[0] || 'E') + (formData.lastName?.[0] || '')).toUpperCase()}
                         </div>
                       )}
                       <div>
-                        <div className="font-bold text-xs text-slate-800">Photo de Profil Salarié</div>
-                        <div className="text-[11px] text-slate-500">
-                          {formData.photoUrl ? 'Photo enregistrée pour la fiche 360°' : 'Aucune photo enregistrée (Avatar par défaut)'}
+                        <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
+                          {lang === 'fr' ? 'Photo de Profil Salarié' : 'Employee Profile Photo'}
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {formData.photoUrl ? (lang === 'fr' ? 'Photo enregistrée pour la fiche 360°' : 'Photo saved for 360° file') : (lang === 'fr' ? 'Aucune photo enregistrée (Avatar par défaut)' : 'No photo uploaded (Default avatar)')}
                         </div>
                       </div>
                     </div>
@@ -721,111 +727,117 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                       <button
                         type="button"
                         onClick={() => setIsPhotoModalOpen(true)}
-                        className="bg-[#1F3864] hover:bg-[#152747] text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1.5 shadow transition"
+                        className="bg-[#1F3864] hover:bg-[#152747] dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1.5 shadow transition"
                       >
-                        <Camera className="w-3.5 h-3.5 text-[#BF9000]" />
-                        <span>Prendre / Importer Photo</span>
+                        <Camera className="w-3.5 h-3.5 text-[#BF9000] dark:text-amber-300" />
+                        <span>{lang === 'fr' ? 'Prendre / Importer Photo' : 'Take / Upload Photo'}</span>
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block font-bold mb-1">Matricule *</label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">{t.employees.matricule} *</label>
                     <input
                       type="text"
                       value={formData.matricule || ''}
                       onChange={(e) => setFormData({ ...formData, matricule: e.target.value })}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Nom de famille *</label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">{t.employees.lastName} *</label>
                     <input
                       type="text"
                       value={formData.lastName || ''}
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Prénom *</label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">{t.employees.firstName} *</label>
                     <input
                       type="text"
                       value={formData.firstName || ''}
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Sexe</label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">{t.employees.gender}</label>
                     <select
                       value={formData.gender || 'M'}
                       onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'M' | 'F' })}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                     >
-                      <option value="M">Masculin</option>
-                      <option value="F">Féminin</option>
+                      <option value="M">{t.employees.male}</option>
+                      <option value="F">{t.employees.female}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">NIF (Numéro Impôt RDC) <span className="text-slate-400 font-normal">(Optionnel)</span></label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">
+                      {lang === 'fr' ? 'NIF (Numéro Impôt RDC)' : 'NIF (DRC Tax ID)'} <span className="text-slate-400 font-normal">({lang === 'fr' ? 'Optionnel' : 'Optional'})</span>
+                    </label>
                     <input
                       type="text"
                       value={formData.nif || ''}
                       onChange={(e) => setFormData({ ...formData, nif: e.target.value })}
                       placeholder="Ex: A2210892X"
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Numéro CNSS RDC <span className="text-slate-400 font-normal">(Optionnel)</span></label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">
+                      {lang === 'fr' ? 'Numéro CNSS RDC' : 'DRC CNSS Number'} <span className="text-slate-400 font-normal">({lang === 'fr' ? 'Optionnel' : 'Optional'})</span>
+                    </label>
                     <input
                       type="text"
                       value={formData.cnss || ''}
                       onChange={(e) => setFormData({ ...formData, cnss: e.target.value })}
                       placeholder="Ex: 1004812001-C"
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Téléphone RDC (+243...)</label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">{t.employees.phone}</label>
                     <input
                       type="text"
                       value={formData.phone || ''}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       placeholder="+243 810 000 000"
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Email <span className="text-slate-400 font-normal">(Optionnel)</span></label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">
+                      {t.employees.email} <span className="text-slate-400 font-normal">({lang === 'fr' ? 'Optionnel' : 'Optional'})</span>
+                    </label>
                     <input
                       type="email"
                       value={formData.email || ''}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Département *</label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">{t.employees.department} *</label>
                     <input
                       type="text"
                       value={formData.department || ''}
                       onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Poste *</label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">{t.employees.position} *</label>
                     <input
                       type="text"
                       value={formData.position || ''}
                       onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       required
                     />
                   </div>
@@ -835,88 +847,43 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
               {activeTab === 'CONTRACT' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="block font-bold mb-1">Type de Contrat</label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">{t.employees.contractType}</label>
                     <select
                       value={contractData.type || 'CDI'}
                       onChange={(e) => setContractData({ ...contractData, type: e.target.value as any })}
-                      className="w-full p-2 border rounded font-semibold bg-slate-50"
+                      className="w-full p-2 border rounded font-semibold bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                     >
-                      <option value="CDI">CDI - Durée Indéterminée</option>
-                      <option value="CDD">CDD - Durée Déterminée</option>
-                      <option value="Journalier">Journalier (Paiement à la tâche)</option>
-                      <option value="STAGE">Stagiaire (Convention Académique / Gratification)</option>
-                      <option value="CONSULTANCE">Consultant Indépendant (Honoraires / Retenue 15%)</option>
+                      <option value="CDI">{t.employees.contractCDI}</option>
+                      <option value="CDD">{t.employees.contractCDD}</option>
+                      <option value="Journalier">{t.employees.contractJournalier}</option>
+                      <option value="STAGE">{t.employees.contractStage}</option>
+                      <option value="CONSULTANCE">{lang === 'fr' ? 'Consultant Indépendant (Retenue 15%)' : 'Independent Consultant (15% Withholding)'}</option>
                     </select>
                   </div>
 
-                  {contractData.type === 'STAGE' && (
-                    <div className="col-span-2 p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-2">
-                      <label className="block font-bold text-amber-900">Université / École de Provenance (Stage RDC)</label>
-                      <input
-                        type="text"
-                        placeholder="Ex: Université de Kinshasa (UNIKIN) - Fac Droit"
-                        value={contractData.academicInstitution || ''}
-                        onChange={(e) => setContractData({ ...contractData, academicInstitution: e.target.value })}
-                        className="w-full p-2 bg-white border rounded text-xs"
-                      />
-                      <p className="text-[10px] text-amber-800">
-                        * Les stagiaires sous convention sont exonérés des cotisations CNSS patronales/salariales.
-                      </p>
-                    </div>
-                  )}
-
-                  {contractData.type === 'CONSULTANCE' && (
-                    <div className="col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block font-bold text-blue-900">NIF / N° Registre Commerce Consultant</label>
-                          <input
-                            type="text"
-                            placeholder="Ex: RCCM/KIN/2026-B-00192"
-                            value={contractData.consultantNif || ''}
-                            onChange={(e) => setContractData({ ...contractData, consultantNif: e.target.value })}
-                            className="w-full p-2 bg-white border rounded text-xs"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-bold text-blue-900">Domaine de Prestation</label>
-                          <input
-                            type="text"
-                            placeholder="Ex: Audit Système & Conseils Fiscalité"
-                            value={contractData.consultancyType || ''}
-                            onChange={(e) => setContractData({ ...contractData, consultancyType: e.target.value })}
-                            className="w-full p-2 bg-white border rounded text-xs"
-                          />
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-blue-800">
-                        * Prélèvement à la source obligatoire de 15% pour retenue d'impôt sur prestations de services (Code fiscal RDC).
-                      </p>
-                    </div>
-                  )}
                   <div>
-                    <label className="block font-bold mb-1">Devise du Salaire</label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">{t.employees.currency}</label>
                     <select
                       value={contractData.currency || 'CDF'}
                       onChange={(e) => setContractData({ ...contractData, currency: e.target.value as any })}
-                      className="w-full p-2 border rounded font-bold"
+                      className="w-full p-2 border rounded font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                     >
                       <option value="CDF">Franc Congolais (CDF)</option>
-                      <option value="USD">Dollar Américain (USD)</option>
+                      <option value="USD">US Dollar (USD)</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Salaire de Base Mensuel *</label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">{t.employees.baseSalary} *</label>
                     <input
                       type="number"
                       value={contractData.baseSalary || 0}
                       onChange={(e) => setContractData({ ...contractData, baseSalary: parseFloat(e.target.value) || 0 })}
-                      className="w-full p-2 border rounded font-bold text-sm"
+                      className="w-full p-2 border rounded font-bold text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       required
                     />
-                    <div className="mt-1 text-xs font-mono font-bold text-[#1F3864]">
-                      Aperçu formaté ({contractData.currency || 'CDF'}) :{' '}
-                      <span className="text-emerald-700 font-extrabold">
+                    <div className="mt-1 text-xs font-mono font-bold text-[#1F3864] dark:text-blue-300">
+                      {lang === 'fr' ? 'Aperçu formaté' : 'Formatted preview'} ({contractData.currency || 'CDF'}) :{' '}
+                      <span className="text-emerald-700 dark:text-emerald-400 font-extrabold">
                         {contractData.currency === 'USD'
                           ? formatUSD(contractData.baseSalary || 0)
                           : formatCDF(contractData.baseSalary || 0)}
@@ -924,12 +891,12 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                     </div>
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">Date de début *</label>
+                    <label className="block font-bold mb-1 dark:text-slate-200">{lang === 'fr' ? 'Date de début *' : 'Start Date *'}</label>
                     <input
                       type="date"
                       value={contractData.startDate || ''}
                       onChange={(e) => setContractData({ ...contractData, startDate: e.target.value })}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       required
                     />
                   </div>
@@ -939,23 +906,25 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
               {activeTab === 'DEPENDENTS' && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-slate-600">
-                      Les personnes à charge accordent une réduction directe de 2% sur l'IRPP par enfant (max 18%).
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      {lang === 'fr'
+                        ? 'Les personnes à charge accordent une réduction directe de 2% sur l\'IRPP par enfant (max 18%).'
+                        : 'Dependents grant a direct 2% reduction on IRPP tax per child (max 18%).'}
                     </p>
                     <button
                       type="button"
                       onClick={handleAddDependent}
-                      className="bg-[#1F3864] text-white px-3 py-1 rounded text-xs font-bold"
+                      className="bg-[#1F3864] dark:bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold"
                     >
-                      + Ajouter
+                      + {lang === 'fr' ? 'Ajouter' : 'Add'}
                     </button>
                   </div>
 
                   {formData.dependents?.map((dep) => (
-                    <div key={dep.id} className="p-3 bg-slate-50 border rounded flex items-center gap-2">
+                    <div key={dep.id} className="p-3 bg-slate-50 dark:bg-slate-800/60 border dark:border-slate-700 rounded flex items-center gap-2">
                       <input
                         type="text"
-                        placeholder="Nom complet"
+                        placeholder={t.employees.colName}
                         value={dep.fullName}
                         onChange={(e) => {
                           const updated = formData.dependents?.map((d) =>
@@ -963,7 +932,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                           );
                           setFormData({ ...formData, dependents: updated });
                         }}
-                        className="p-1.5 border rounded text-xs flex-1"
+                        className="p-1.5 border rounded text-xs flex-1 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       />
                       <input
                         type="date"
@@ -974,7 +943,7 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                           );
                           setFormData({ ...formData, dependents: updated });
                         }}
-                        className="p-1.5 border rounded text-xs"
+                        className="p-1.5 border rounded text-xs dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       />
                       <button
                         type="button"
@@ -990,35 +959,25 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
 
               {activeTab === 'DOCUMENTS' && (
                 <div className="space-y-3 text-xs">
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded text-[#1F3864] flex items-center justify-between">
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded text-[#1F3864] dark:text-blue-300 flex items-center justify-between">
                     <div>
-                      <strong>Conformité du Dossier Individuel (Code RDC)</strong>
-                      <p className="text-[11px] text-slate-600">
-                        {Object.values(docStatuses).filter(Boolean).length} / 9 pièces obligatoires fournies et validées.
+                      <strong>{lang === 'fr' ? 'Conformité du Dossier Individuel (Code RDC)' : 'Individual File Compliance (DRC Code)'}</strong>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        {Object.values(docStatuses).filter(Boolean).length} / 9 {lang === 'fr' ? 'pièces obligatoires validées.' : 'mandatory documents validated.'}
                       </p>
                     </div>
-                    <span className="text-lg font-black text-[#BF9000]">
+                    <span className="text-lg font-black text-[#BF9000] dark:text-amber-300">
                       {Math.round((Object.values(docStatuses).filter(Boolean).length / 9) * 100)} %
                     </span>
                   </div>
 
                   <div className="space-y-2">
-                    {[
-                      { key: 'cni', label: '1. Pièce d\'Identité / Carte d\'Électeur / Passeport' },
-                      { key: 'cv', label: '2. CV Certifié Conforme & Copie des Diplômes' },
-                      { key: 'cnss_nif', label: '3. Numéro Impôt (NIF) & Attestation CNSS' },
-                      { key: 'domicile', label: '4. Certificat de Domicile / Résidence' },
-                      { key: 'medical', label: '5. Certificat Médical d\'Aptitude Physique (Obligatoire RDC)' },
-                      { key: 'casier', label: '6. Extrait de Casier Judiciaire (< 3 mois)' },
-                      { key: 'etat_civil', label: '7. Acte de Mariage & Actes de Naissance Enfants à charge' },
-                      { key: 'services_anterieurs', label: '8. Attestation des Services Antérieurs / Certificat de Fin de Travail' },
-                      { key: 'photos', label: '9. Photos d\'Identité Récentes (x4)' },
-                    ].map((doc) => (
+                    {getDocItems().map((doc) => (
                       <div
                         key={doc.key}
-                        className="flex items-center justify-between p-2.5 bg-slate-50 border rounded hover:bg-slate-100"
+                        className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/60 border dark:border-slate-700 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
                       >
-                        <span className="font-semibold text-slate-800">{doc.label}</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">{doc.label}</span>
                         <div className="flex items-center space-x-2">
                           <button
                             type="button"
@@ -1027,19 +986,19 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                             }
                             className={`px-3 py-1 rounded text-[10px] font-bold flex items-center space-x-1 ${
                               docStatuses[doc.key]
-                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                : 'bg-red-100 text-red-800 border border-red-300'
+                                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                                : 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-800'
                             }`}
                           >
                             {docStatuses[doc.key] ? (
                               <>
                                 <Check className="w-3 h-3 text-emerald-600 stroke-[1.75]" />
-                                <span>Validé RH</span>
+                                <span>{lang === 'fr' ? 'Validé RH' : 'HR Validated'}</span>
                               </>
                             ) : (
                               <>
                                 <X className="w-3 h-3 text-red-600 stroke-[1.75]" />
-                                <span>Manquant</span>
+                                <span>{lang === 'fr' ? 'Manquant' : 'Missing'}</span>
                               </>
                             )}
                           </button>
@@ -1050,27 +1009,27 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
                 </div>
               )}
 
-              <div className="pt-4 border-t flex justify-end space-x-2">
+              <div className="pt-4 border-t dark:border-slate-800 flex justify-end space-x-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   disabled={savingEmployee}
-                  className="px-4 py-2 border rounded text-xs font-bold disabled:opacity-50"
+                  className="px-4 py-2 border dark:border-slate-700 dark:text-slate-300 rounded text-xs font-bold disabled:opacity-50"
                 >
-                  Annuler
+                  {t.common.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={savingEmployee}
-                  className="px-5 py-2 bg-[#1F3864] hover:bg-[#152747] text-white rounded text-xs font-bold shadow flex items-center space-x-1.5 disabled:opacity-50"
+                  className="px-5 py-2 bg-[#1F3864] hover:bg-[#152747] dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded text-xs font-bold shadow flex items-center space-x-1.5 disabled:opacity-50"
                 >
                   {savingEmployee ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Enregistrement...</span>
+                      <span>{lang === 'fr' ? 'Enregistrement...' : 'Saving...'}</span>
                     </>
                   ) : (
-                    <span>Enregistrer Salarié</span>
+                    <span>{t.employees.saveEmployee}</span>
                   )}
                 </button>
               </div>
@@ -1094,220 +1053,30 @@ export const EmployeesModule: React.FC<EmployeesModuleProps> = ({ currentUser, r
       {/* CSV Import Modal */}
       {isCSVModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200">
-            <h2 className="text-base font-bold text-[#1F3864] mb-3">Import Massif d'Employés (CSV)</h2>
-            <p className="text-xs text-slate-600 mb-4">
-              Téléchargez un fichier CSV contenant les colonnes : Matricule, Nom, Prénom, Département, Poste, SalaireBase, Devise.
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800">
+            <h2 className="text-base font-bold text-[#1F3864] dark:text-blue-300 mb-3">{lang === 'fr' ? 'Import Massif d\'Employés (CSV)' : 'Mass Employee Import (CSV)'}</h2>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">
+              {lang === 'fr'
+                ? 'Téléchargez un fichier CSV contenant les colonnes : Matricule, Nom, Prénom, Département, Poste, SalaireBase, Devise.'
+                : 'Upload a CSV file containing columns: Matricule, LastName, FirstName, Department, Position, BaseSalary, Currency.'}
             </p>
 
-            <input type="file" accept=".csv" onChange={handleCSVFile} className="text-xs mb-4" />
+            <input type="file" accept=".csv" onChange={handleCSVFile} className="text-xs mb-4 dark:text-slate-300" />
 
             {csvReport && (
-              <div className="p-3 bg-slate-50 rounded border text-xs space-y-1 mb-4">
-                <div>Lignes détectées: <strong>{csvReport.total}</strong></div>
-                <div className="text-emerald-700">Lignes valides: <strong>{csvReport.valid}</strong></div>
-                <div className="text-red-700">Lignes invalides: <strong>{csvReport.invalid}</strong></div>
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded border dark:border-slate-700 text-xs space-y-1 mb-4">
+                <div>{lang === 'fr' ? 'Lignes détectées' : 'Detected rows'}: <strong>{csvReport.total}</strong></div>
+                <div className="text-emerald-700 dark:text-emerald-400">{lang === 'fr' ? 'Lignes valides' : 'Valid rows'}: <strong>{csvReport.valid}</strong></div>
+                <div className="text-red-700 dark:text-red-400">{lang === 'fr' ? 'Lignes invalides' : 'Invalid rows'}: <strong>{csvReport.invalid}</strong></div>
               </div>
             )}
 
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setIsCSVModalOpen(false)}
-                className="px-4 py-2 border rounded text-xs font-bold"
+                className="px-4 py-2 border dark:border-slate-700 dark:text-slate-300 rounded text-xs font-bold"
               >
-                Fermer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Espace & Suivi Individuel Employé Modal */}
-      {isSelfServiceOpen && selectedEmployee && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
-            {/* Modal Header */}
-            <div className="bg-[#1F3864] text-white p-6 flex items-center justify-between sticky top-0 z-10">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-[#BF9000] text-[#1F3864] font-black rounded-full flex items-center justify-center text-lg shadow">
-                  {selectedEmployee.firstName[0]}{selectedEmployee.lastName[0]}
-                </div>
-                <div>
-                  <h2 className="font-bold text-lg">{selectedEmployee.lastName} {selectedEmployee.firstName}</h2>
-                  <p className="text-xs text-slate-300 font-mono">
-                    Matricule: {selectedEmployee.matricule} • {selectedEmployee.position} ({selectedEmployee.department})
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsSelfServiceOpen(false)}
-                className="text-slate-300 hover:text-white p-1 rounded-lg hover:bg-white/10"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6 text-xs text-slate-800">
-              {/* Stat Cards Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl space-y-1">
-                  <div className="text-[11px] font-bold text-blue-900 uppercase">Congés Acquis (2026)</div>
-                  <div className="text-2xl font-black text-[#1F3864]">
-                    {Math.round((selectedEmployee.seniorityMonths || 12) * 1.833)} <span className="text-xs font-bold">jours</span>
-                  </div>
-                  <div className="text-[10px] text-slate-500">Code du travail RDC (1.83j/mois)</div>
-                </div>
-
-                <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-1">
-                  <div className="text-[11px] font-bold text-amber-900 uppercase">Congés Pris / Consommés</div>
-                  <div className="text-2xl font-black text-amber-800">
-                    4 <span className="text-xs font-bold">jours</span>
-                  </div>
-                  <div className="text-[10px] text-slate-500">Dernier congé: Mai 2026</div>
-                </div>
-
-                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-1">
-                  <div className="text-[11px] font-bold text-emerald-900 uppercase">Solde Congés Restants</div>
-                  <div className="text-2xl font-black text-emerald-700">
-                    {Math.max(0, Math.round((selectedEmployee.seniorityMonths || 12) * 1.833) - 4)} <span className="text-xs font-bold">jours</span>
-                  </div>
-                  <div className="text-[10px] text-emerald-600 font-bold">Disponible pour demande</div>
-                </div>
-
-                <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl space-y-1">
-                  <div className="text-[11px] font-bold text-indigo-900 uppercase">Prochain Congé Prévu</div>
-                  <div className="text-sm font-bold text-indigo-950">
-                    15/08/2026 au 30/08/2026
-                  </div>
-                  <div className="inline-block bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
-                    Statut : Approuvé RH
-                  </div>
-                </div>
-              </div>
-
-              {/* Suivi des Paies et Bulletins */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
-                <div className="flex items-center justify-between border-b pb-3">
-                  <h3 className="font-bold text-sm text-[#1F3864]">Historique des Paies & Bulletins Individuels</h3>
-                  <span className="text-slate-500 text-[11px]">
-                    {employeePayslips.length} bulletin(s) disponible(s)
-                  </span>
-                </div>
-
-                {employeePayslips.length === 0 ? (
-                  <div className="py-6 text-center text-slate-500 italic">
-                    Aucun bulletin de paie archivé pour cet employé dans la période actuelle.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-[#1F3864] text-white uppercase text-[10px] font-bold">
-                        <tr>
-                          <th className="p-2.5">Période</th>
-                          <th className="p-2.5">Salaire Brut (CDF)</th>
-                          <th className="p-2.5">Retenues IRPP & CNSS</th>
-                          <th className="p-2.5">Prêt / Avance</th>
-                          <th className="p-2.5">Net à Payer (CDF)</th>
-                          <th className="p-2.5">Net (USD)</th>
-                          <th className="p-2.5 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {employeePayslips.map((ps) => (
-                          <tr key={ps.id || ps.period} className="hover:bg-slate-50">
-                            <td className="p-2.5 font-bold text-slate-900 font-mono">{ps.period}</td>
-                            <td className="p-2.5 font-bold text-slate-800">{ps.grossSalaryCDF.toLocaleString()} FC</td>
-                            <td className="p-2.5 text-red-700">{(ps.irppFinalCDF + ps.cnssEmployeeCDF).toLocaleString()} FC</td>
-                            <td className="p-2.5 text-amber-800">{ps.loanDeductionCDF > 0 ? `${ps.loanDeductionCDF.toLocaleString()} FC` : '-'}</td>
-                            <td className="p-2.5 font-black text-emerald-800">{ps.netSalaryCDF.toLocaleString()} FC</td>
-                            <td className="p-2.5 font-bold text-slate-700">${ps.netSalaryUSD}</td>
-                            <td className="p-2.5 text-right">
-                              <button
-                                onClick={() => {
-                                  const win = window.open('', '_blank');
-                                  if (win) {
-                                    win.document.write(`
-                                      <html>
-                                        <head>
-                                          <title>Bulletin de Paie - ${ps.employeeName} (${ps.period})</title>
-                                          <style>
-                                            body { font-family: sans-serif; padding: 20px; font-size: 12px; }
-                                            .header { border-bottom: 2px solid #1F3864; padding-bottom: 10px; margin-bottom: 20px; }
-                                            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-                                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                                            th { background: #1F3864; color: white; }
-                                            .total { font-weight: bold; background: #e2e8f0; }
-                                          </style>
-                                        </head>
-                                        <body>
-                                          <div class="header">
-                                            <h2>NOVARISPAY RDC — BULLETIN DE PAIE OFFICEL</h2>
-                                            <p><strong>Employé:</strong> ${ps.employeeName} (${ps.employeeMatricule}) | <strong>Période:</strong> ${ps.period}</p>
-                                            <p><strong>Poste:</strong> ${ps.position} | <strong>Département:</strong> ${ps.department}</p>
-                                          </div>
-                                          <table>
-                                            <thead>
-                                              <tr><th>Code</th><th>Libellé</th><th>Base (CDF)</th><th>Gains (CDF)</th><th>Retenues (CDF)</th></tr>
-                                            </thead>
-                                            <tbody>
-                                              ${ps.lines.map(l => `<tr><td>${l.code}</td><td>${l.label}</td><td>${l.baseCDF.toLocaleString()}</td><td>${l.gainCDF ? l.gainCDF.toLocaleString() : '-'}</td><td>${l.deductionCDF ? l.deductionCDF.toLocaleString() : '-'}</td></tr>`).join('')}
-                                              <tr class="total"><td colspan="3">TOTAL NET À PAYER</td><td colspan="2" style="color: green; font-size: 14px;">${ps.netSalaryCDF.toLocaleString()} CDF ($${ps.netSalaryUSD} USD)</td></tr>
-                                            </tbody>
-                                          </table>
-                                          <br/><button onclick="window.print()">Imprimer Bulletin</button>
-                                        </body>
-                                      </html>
-                                    `);
-                                  }
-                                }}
-                                className="bg-[#1F3864] text-white px-2.5 py-1 rounded font-bold hover:bg-[#152747] text-[10px] inline-flex items-center space-x-1"
-                              >
-                                <Download className="w-3 h-3" />
-                                <span>Bulletin</span>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-              {/* Information Contractuelle & Prêts */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2">
-                  <h4 className="font-bold text-[#1F3864]">Détails du Contrat Actuel</h4>
-                  <div className="space-y-1 text-slate-700 text-[11px]">
-                    <div><strong>Type de Contrat :</strong> {selectedEmployee.currentContract?.type || 'CDI'}</div>
-                    <div><strong>Salaire Contractuel :</strong> {selectedEmployee.currentContract?.baseSalary.toLocaleString()} {selectedEmployee.currentContract?.currency}</div>
-                    <div><strong>Ancienneté Légale :</strong> {selectedEmployee.seniorityYears} an(s) {selectedEmployee.seniorityMonths} mois</div>
-                    <div><strong>Régime RDC :</strong> 45h / semaine (26 jours ouvrables)</div>
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2">
-                  <h4 className="font-bold text-[#1F3864]">Statut Prêts & Avances Sociale</h4>
-                  <div className="space-y-1 text-slate-700 text-[11px]">
-                    <div><strong>Plafond Légal (Quotité Cessible) :</strong> 30% du salaire net imposable</div>
-                    <div><strong>Dernière Retenue Effectuée :</strong> {employeePayslips[0]?.loanDeductionCDF ? `${employeePayslips[0].loanDeductionCDF.toLocaleString()} CDF` : '0 CDF'}</div>
-                    {employeePayslips[0]?.loanDeductionWarning && (
-                      <div className="p-2 bg-amber-100 text-amber-900 font-bold rounded text-[10px] border border-amber-300 flex items-center space-x-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0 stroke-[1.75]" />
-                        <span>{employeePayslips[0].loanDeductionWarning}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
-              <button
-                onClick={() => setIsSelfServiceOpen(false)}
-                className="bg-[#1F3864] text-white font-bold px-5 py-2 rounded-lg text-xs hover:bg-[#152747]"
-              >
-                Fermer l'Espace Employé
+                {t.common.close}
               </button>
             </div>
           </div>

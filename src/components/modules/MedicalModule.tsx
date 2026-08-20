@@ -29,6 +29,7 @@ import jsPDF from 'jspdf';
 import { formatCDF, safeNumber } from '../../utils/documentFormatter';
 import { getCompanyConfig, CompanyConfig } from '../../services/companyService';
 import { logAuditEvent } from '../../services/auditService';
+import { renderOfficialPdfHeader, renderOfficialPdfFooter } from '../../utils/documentTemplate';
 
 export interface Beneficiary {
   name: string;
@@ -118,7 +119,7 @@ export const MedicalModule: React.FC = () => {
   const [vouchers, setVouchers] = useState<MedicalVoucher[]>([
     {
       id: 'BON-MED-2026-001',
-      employeeMatricule: 'KP-2026-089',
+      employeeMatricule: 'NP-2026-089',
       employeeName: 'KASONGO Patrick',
       department: 'Exploitation',
       beneficiaryName: 'KASONGO Patrick',
@@ -134,7 +135,7 @@ export const MedicalModule: React.FC = () => {
     },
     {
       id: 'BON-MED-2026-002',
-      employeeMatricule: 'KP-2026-042',
+      employeeMatricule: 'NP-2026-042',
       employeeName: 'ILUNGA Samuel',
       department: 'Logistique',
       beneficiaryName: 'ILUNGA Marie-Louise',
@@ -153,7 +154,7 @@ export const MedicalModule: React.FC = () => {
   // Sample Records Data
   const [records] = useState<MedicalRecord[]>([
     {
-      employeeMatricule: 'KP-2026-089',
+      employeeMatricule: 'NP-2026-089',
       employeeName: 'KASONGO Patrick',
       department: 'Exploitation',
       bloodGroup: 'O+',
@@ -169,7 +170,7 @@ export const MedicalModule: React.FC = () => {
       ],
     },
     {
-      employeeMatricule: 'KP-2026-042',
+      employeeMatricule: 'NP-2026-042',
       employeeName: 'ILUNGA Samuel',
       department: 'Logistique',
       bloodGroup: 'A+',
@@ -190,7 +191,7 @@ export const MedicalModule: React.FC = () => {
     {
       id: 'REP-MED-2026-001',
       voucherId: 'BON-MED-2026-001',
-      employeeMatricule: 'KP-2026-089',
+      employeeMatricule: 'NP-2026-089',
       employeeName: 'KASONGO Patrick',
       department: 'Exploitation',
       hospitalName: 'HJ Hospitals Kinshasa',
@@ -207,7 +208,7 @@ export const MedicalModule: React.FC = () => {
     {
       id: 'REP-MED-2026-002',
       voucherId: 'BON-MED-2026-002',
-      employeeMatricule: 'KP-2026-042',
+      employeeMatricule: 'NP-2026-042',
       employeeName: 'ILUNGA Samuel',
       department: 'Logistique',
       hospitalName: 'Centre Médical de la Gombe',
@@ -320,7 +321,7 @@ export const MedicalModule: React.FC = () => {
   // Form State for new Hospital Report
   const [newReportForm, setNewReportForm] = useState<Partial<HospitalReport>>({
     voucherId: 'BON-MED-2026-001',
-    employeeMatricule: 'KP-2026-089',
+    employeeMatricule: 'NP-2026-089',
     employeeName: 'KASONGO Patrick',
     department: 'Exploitation',
     hospitalName: 'HJ Hospitals Kinshasa',
@@ -335,7 +336,7 @@ export const MedicalModule: React.FC = () => {
 
   // Form State for new Voucher
   const [newVoucherForm, setNewVoucherForm] = useState<Partial<MedicalVoucher>>({
-    employeeMatricule: 'KP-2026-089',
+    employeeMatricule: 'NP-2026-089',
     employeeName: 'KASONGO Patrick',
     department: 'Exploitation',
     beneficiaryName: 'KASONGO Patrick',
@@ -359,7 +360,7 @@ export const MedicalModule: React.FC = () => {
 
     const v: MedicalVoucher = {
       id: `BON-MED-2026-00${vouchers.length + 1}`,
-      employeeMatricule: newVoucherForm.employeeMatricule || 'KP-2026-100',
+      employeeMatricule: newVoucherForm.employeeMatricule || 'NP-2026-100',
       employeeName: newVoucherForm.employeeName,
       department: newVoucherForm.department || 'Général',
       beneficiaryName: newVoucherForm.beneficiaryName || newVoucherForm.employeeName,
@@ -397,7 +398,7 @@ export const MedicalModule: React.FC = () => {
     const rep: HospitalReport = {
       id: `REP-MED-2026-00${hospitalReports.length + 1}`,
       voucherId: newReportForm.voucherId || `BON-MED-2026-001`,
-      employeeMatricule: newReportForm.employeeMatricule || 'KP-2026-089',
+      employeeMatricule: newReportForm.employeeMatricule || 'NP-2026-089',
       employeeName: newReportForm.employeeName,
       department: newReportForm.department || 'Exploitation',
       hospitalName: newReportForm.hospitalName,
@@ -426,106 +427,100 @@ export const MedicalModule: React.FC = () => {
     );
   };
 
-  const exportReportPDF = () => {
+  const exportReportPDF = async () => {
     if (!selectedReport) return;
 
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Header Company Box with NovarisPay Emblem Logo
-    doc.setFillColor(31, 56, 100);
-    doc.rect(15, 12, 180, 24, 'F');
-    
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(20, 15, 10, 10, 1.5, 1.5, 'F');
-    doc.setFillColor(191, 144, 0);
-    doc.rect(26, 17, 2.5, 5, 'F');
-    doc.setTextColor(31, 56, 100);
-    doc.setFont('times', 'bold');
-    doc.setFontSize(7.5);
-    doc.text('N', 21.5, 22);
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('times', 'bold');
-    doc.setFontSize(13);
-    doc.text(company.name.toUpperCase(), 34, 21);
-
-    doc.setFontSize(8.5);
-    doc.setFont('times', 'normal');
-    doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 34, 27);
-    doc.text(`RAPPORT DE SUIVI MÉDICAL HOSPITALIER (RDC)`, 34, 32);
+    // Unified Header with Client Company Logo & Barcode
+    const { bottomY, barcodeId } = await renderOfficialPdfHeader(doc, {
+      documentTitle: 'RAPPORT MÉDICAL HÔPITAL',
+      documentSubtitle: 'Suivi de Santé & Diagnostic (Art. 177 Code du Travail RDC)',
+      documentReference: selectedReport.id,
+      docTypeCode: 'MED',
+      companyOverride: company,
+    });
 
     // Title Report Box
     doc.setFillColor(243, 244, 246);
-    doc.rect(15, 42, 180, 18, 'F');
+    doc.rect(15, bottomY, pageWidth - 30, 14, 'F');
     doc.setDrawColor(31, 56, 100);
-    doc.rect(15, 42, 180, 18, 'D');
+    doc.rect(15, bottomY, pageWidth - 30, 14, 'D');
 
     doc.setTextColor(31, 56, 100);
     doc.setFont('times', 'bold');
-    doc.setFontSize(12);
-    doc.text(`RAPPORT DE CONSULTATION HÔPITAL : ${selectedReport.id}`, 20, 52);
-    doc.setFontSize(9);
-    doc.text(`DATE HÔPITAL : ${selectedReport.reportDate}`, 130, 52);
+    doc.setFontSize(11);
+    doc.text(`RAPPORT DE CONSULTATION HÔPITAL : ${selectedReport.id}`, 20, bottomY + 8);
+    doc.setFontSize(8.5);
+    doc.text(`DATE HÔPITAL : ${selectedReport.reportDate}`, pageWidth - 70, bottomY + 8);
 
-    let y = 68;
-    doc.setFontSize(10.5);
+    let y = bottomY + 20;
+    doc.setFontSize(10);
     doc.setFont('times', 'bold');
     doc.setTextColor(30, 41, 59);
     doc.text('I. IDENTIFICATION PATIENT & ÉTABLISSEMENT', 15, y);
 
     doc.setLineWidth(0.3);
-    doc.line(15, y + 2, 195, y + 2);
+    doc.line(15, y + 2, pageWidth - 15, y + 2);
 
-    y += 10;
-    doc.setFontSize(9.5);
+    y += 8;
+    doc.setFontSize(9);
     doc.setFont('times', 'bold');
     doc.text('Employé :', 20, y);
     doc.setFont('times', 'normal');
     doc.text(`${selectedReport.employeeName} (${selectedReport.employeeMatricule} — ${selectedReport.department})`, 50, y);
 
-    y += 6;
+    y += 5.5;
     doc.setFont('times', 'bold');
     doc.text('Établissement :', 20, y);
     doc.setFont('times', 'normal');
     doc.text(selectedReport.hospitalName, 50, y);
 
-    y += 6;
+    y += 5.5;
     doc.setFont('times', 'bold');
     doc.text('Médecin Traitant :', 20, y);
     doc.setFont('times', 'normal');
     doc.text(selectedReport.doctorName, 50, y);
 
-    y += 12;
-    doc.setFontSize(10.5);
+    y += 10;
+    doc.setFontSize(10);
     doc.setFont('times', 'bold');
     doc.text('II. DIAGNOSTIC CLINIQUE & RECOMMANDATIONS', 15, y);
-    doc.line(15, y + 2, 195, y + 2);
+    doc.line(15, y + 2, pageWidth - 15, y + 2);
 
-    y += 10;
-    doc.setFontSize(9.5);
+    y += 8;
+    doc.setFontSize(9);
     doc.setFont('times', 'bold');
     doc.text('Diagnostic :', 20, y);
     doc.setFont('times', 'normal');
     const diagLines = doc.splitTextToSize(selectedReport.clinicalDiagnosis, 130);
     doc.text(diagLines, 50, y);
 
-    y += diagLines.length * 6 + 4;
+    y += diagLines.length * 5 + 4;
     doc.setFont('times', 'bold');
     doc.text('Repos Prescrit :', 20, y);
     doc.setFont('times', 'normal');
     doc.text(`${selectedReport.restDaysGranted} jour(s) de repos médical accordé(s)`, 50, y);
 
-    y += 6;
+    y += 5.5;
     doc.setFont('times', 'bold');
     doc.text('Aptitude Travail :', 20, y);
     doc.setFont('times', 'normal');
     doc.text(selectedReport.fitnessStatus, 50, y);
 
-    y += 6;
+    y += 5.5;
     doc.setFont('times', 'bold');
     doc.text('Montant Facture :', 20, y);
     doc.setFont('times', 'normal');
     doc.text(formatCDF(selectedReport.hospitalCostCDF), 50, y);
+
+    // Footer
+    renderOfficialPdfFooter(doc, {
+      barcodeId,
+      documentReference: selectedReport.id,
+      legalNote: 'Rapport médical confidentiel • Conforme à l\'Article 177 du Code du Travail RDC.',
+    });
 
     doc.save(`Rapport_Hospitalier_${selectedReport.id}.pdf`);
   };
@@ -534,58 +529,44 @@ export const MedicalModule: React.FC = () => {
     window.print();
   };
 
-  const exportVoucherPDF = () => {
+  const exportVoucherPDF = async () => {
     if (!selectedVoucher) return;
 
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    const pColor = company.primaryColor || '#1F3864';
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Header Company Box with NovarisPay Emblem Logo
-    doc.setFillColor(31, 56, 100);
-    doc.rect(15, 12, 180, 24, 'F');
-
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(20, 15, 10, 10, 1.5, 1.5, 'F');
-    doc.setFillColor(191, 144, 0);
-    doc.rect(26, 17, 2.5, 5, 'F');
-    doc.setTextColor(31, 56, 100);
-    doc.setFont('times', 'bold');
-    doc.setFontSize(7.5);
-    doc.text('N', 21.5, 22);
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('times', 'bold');
-    doc.setFontSize(13);
-    doc.text(company.name.toUpperCase(), 34, 21);
-
-    doc.setFontSize(8.5);
-    doc.setFont('times', 'normal');
-    doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 34, 27);
-    doc.text(`SERVICE DE SANTÉ & PRÉVENTION MÉDICALE AU TRAVAIL (CODE RDC ART. 177)`, 34, 32);
+    // Unified Header with Client Company Logo & Barcode
+    const { bottomY, barcodeId } = await renderOfficialPdfHeader(doc, {
+      documentTitle: 'BON DE SOINS MÉDICAUX',
+      documentSubtitle: 'Prise en charge médicale (Art. 177 Code du Travail RDC)',
+      documentReference: selectedVoucher.id,
+      docTypeCode: 'MED',
+      companyOverride: company,
+    });
 
     // Title Voucher Box
     doc.setFillColor(243, 244, 246);
-    doc.rect(15, 42, 180, 18, 'F');
+    doc.rect(15, bottomY, pageWidth - 30, 14, 'F');
     doc.setDrawColor(31, 56, 100);
-    doc.rect(15, 42, 180, 18, 'D');
+    doc.rect(15, bottomY, pageWidth - 30, 14, 'D');
 
     doc.setTextColor(31, 56, 100);
     doc.setFont('times', 'bold');
-    doc.setFontSize(13);
-    doc.text(`BON DE SOINS MÉDICAUX N° : ${selectedVoucher.id}`, 20, 52);
+    doc.setFontSize(11);
+    doc.text(`BON DE SOINS MÉDICAUX N° : ${selectedVoucher.id}`, 20, bottomY + 8);
 
-    doc.setFontSize(9);
-    doc.text(`DATE D'ÉMISSION : ${selectedVoucher.issueDate}  |  VALABLE JUSQU'AU : ${selectedVoucher.expiryDate}`, 110, 52);
+    doc.setFontSize(8);
+    doc.text(`DATE D'ÉMISSION : ${selectedVoucher.issueDate}  |  VALABLE JUSQU'AU : ${selectedVoucher.expiryDate}`, pageWidth - 95, bottomY + 8);
 
     // Grid Info
-    let y = 68;
-    doc.setFontSize(10.5);
+    let y = bottomY + 20;
+    doc.setFontSize(10);
     doc.setFont('times', 'bold');
     doc.setTextColor(30, 41, 59);
     doc.text('I. INFORMATIONS SUR LE BÉNÉFICIAIRE & SALARIÉ', 15, y);
 
     doc.setLineWidth(0.3);
-    doc.line(15, y + 2, 195, y + 2);
+    doc.line(15, y + 2, pageWidth - 15, y + 2);
 
     y += 10;
     doc.setFontSize(9.5);
@@ -609,7 +590,7 @@ export const MedicalModule: React.FC = () => {
     y += 12;
     doc.setFont('times', 'bold');
     doc.text('II. ÉTABLISSEMENT DE SANTÉ & PRESTATIONS', 15, y);
-    doc.line(15, y + 2, 195, y + 2);
+    doc.line(15, y + 2, pageWidth - 15, y + 2);
 
     y += 10;
     doc.setFont('times', 'bold');
@@ -662,6 +643,13 @@ export const MedicalModule: React.FC = () => {
     doc.setTextColor(100, 116, 139);
     doc.text('Date de Réception : ..... / ..... / 2026', 115, y + 18);
     doc.text('Signature du Médecin Traitant :', 115, y + 26);
+
+    // Official Footer with Barcode & Legal Note
+    renderOfficialPdfFooter(doc, {
+      barcodeId,
+      documentReference: selectedVoucher.id,
+      legalNote: 'Bon de prise en charge médicale délivré conformément à l\'Article 177 du Code du Travail RDC.',
+    });
 
     doc.save(`Bon_Soins_${selectedVoucher.id}_${selectedVoucher.beneficiaryName.replace(/\s+/g, '_')}.pdf`);
   };
@@ -1105,7 +1093,7 @@ export const MedicalModule: React.FC = () => {
                     </td>
                     <td className="p-3">
                       <div className="font-bold text-[#1F3864]">KASONGO Patrick</div>
-                      <div className="text-slate-500 font-mono text-[10px]">KP-2026-089</div>
+                      <div className="text-slate-500 font-mono text-[10px]">NP-2026-089</div>
                     </td>
                     <td className="p-3">Consultation & Examens Biologiques</td>
                     <td className="p-3 font-mono font-bold">145,000 CDF</td>
@@ -1125,7 +1113,7 @@ export const MedicalModule: React.FC = () => {
                     </td>
                     <td className="p-3">
                       <div className="font-bold text-[#1F3864]">ILUNGA Samuel</div>
-                      <div className="text-slate-500 font-mono text-[10px]">KP-2026-042</div>
+                      <div className="text-slate-500 font-mono text-[10px]">NP-2026-042</div>
                     </td>
                     <td className="p-3">Soins Maternité Conjoint(e)</td>
                     <td className="p-3 font-mono font-bold">85,000 CDF</td>

@@ -11,21 +11,18 @@ import { generateBarcodeDataUrl, generateBarcodeIdentifier, registerDocument } f
 import { formatCDF, formatUSD, formatNumber, formatDateFR, safeNumber } from './documentFormatter';
 
 /**
- * Embedded Base64 raster image of the official NovarisPay logo emblem.
+ * Embedded Base64 raster image generator for client company logo.
  * Guarantees 100% availability for print and PDF generation with zero external network requests.
  */
-let cachedLogoDataUrl: string | null = null;
+export function getEmbeddedCompanyLogoDataUrl(companyOverride?: Partial<CompanyConfig>): string {
+  const company = { ...getCompanyConfig(), ...(companyOverride || {}) };
 
-export function getEmbeddedCompanyLogoDataUrl(): string {
-  if (cachedLogoDataUrl) return cachedLogoDataUrl;
-
-  const company = getCompanyConfig();
+  // If client company uploaded a logo (Base64 data URL), use it directly
   if (company.logoUrl && company.logoUrl.startsWith('data:image')) {
-    cachedLogoDataUrl = company.logoUrl;
-    return cachedLogoDataUrl;
+    return company.logoUrl;
   }
 
-  // Generate crisp canvas raster of the corporate emblem & typography
+  // Generate crisp canvas raster of the corporate emblem & typography for the client company
   try {
     const canvas = document.createElement('canvas');
     canvas.width = 440;
@@ -38,51 +35,49 @@ export function getEmbeddedCompanyLogoDataUrl(): string {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Emblem Shield / Badge
-      ctx.fillStyle = '#1F3864'; // Corporate Navy
+      ctx.fillStyle = company.primaryColor || '#1F3864'; // Corporate Navy
       ctx.beginPath();
       ctx.roundRect(10, 10, 100, 100, 16);
       ctx.fill();
 
       // Gold Accent Ribbon
-      ctx.fillStyle = '#BF9000'; // Corporate Gold
+      ctx.fillStyle = company.accentColor || '#BF9000'; // Corporate Gold
       ctx.beginPath();
       ctx.roundRect(70, 20, 26, 50, 6);
       ctx.fill();
 
-      // Monogram "N" in white
+      // Monogram from company initials in white
+      const rawName = company.name || 'ENTREPRISE';
+      const words = rawName.trim().split(/\s+/).filter(Boolean);
+      const initials = words.length >= 2 
+        ? `${words[0][0]}${words[1][0]}`.toUpperCase()
+        : rawName.substring(0, 2).toUpperCase();
+
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 56px "Times New Roman", Times, serif';
+      ctx.font = 'bold 50px "Times New Roman", Times, serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('N', 48, 62);
+      ctx.fillText(initials, 48, 62);
 
-      // "P" accent dot
-      ctx.fillStyle = '#287BFF';
-      ctx.beginPath();
-      ctx.arc(83, 80, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Wordmark "NovarisPay"
+      // Company Name Wordmark
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
-      ctx.fillStyle = '#071D49';
-      ctx.font = 'bold 44px "Times New Roman", Times, serif';
-      ctx.fillText('NOVARIS', 130, 60);
-
-      ctx.fillStyle = '#119CFF';
-      ctx.fillText('PAY', 342, 60);
+      ctx.fillStyle = company.primaryColor || '#1F3864';
+      ctx.font = 'bold 36px "Times New Roman", Times, serif';
+      
+      const displayName = rawName.length > 22 ? rawName.substring(0, 20) + '...' : rawName;
+      ctx.fillText(displayName.toUpperCase(), 125, 58);
 
       // Subtitle
       ctx.fillStyle = '#64748B';
       ctx.font = 'bold 15px "Times New Roman", Times, serif';
-      ctx.fillText('ERP RH & PAIE • RÉPUBLIQUE DÉMOCRATIQUE DU CONGO', 132, 90);
+      ctx.fillText('RÉPUBLIQUE DÉMOCRATIQUE DU CONGO', 127, 88);
 
       // Subtle divider bar
-      ctx.fillStyle = '#BF9000';
-      ctx.fillRect(132, 100, 290, 3);
+      ctx.fillStyle = company.accentColor || '#BF9000';
+      ctx.fillRect(127, 98, 290, 3);
 
-      cachedLogoDataUrl = canvas.toDataURL('image/png');
-      return cachedLogoDataUrl;
+      return canvas.toDataURL('image/png');
     }
   } catch (e) {
     console.warn('Erreur génération canvas logo:', e);
@@ -95,7 +90,7 @@ export function getEmbeddedCompanyLogoDataUrl(): string {
 export interface PdfDocumentHeaderOptions {
   documentTitle: string; // e.g. "BULLETIN DE PAIE", "LETTRE DE TRANSMISSION"
   documentSubtitle?: string; // e.g. "Période : Juillet 2026", "Conforme Art. 91 Code du Travail"
-  documentReference?: string; // e.g. "BS-202607-001", "NVP-TRANSM-2026-0042"
+  documentReference?: string; // e.g. "BS-202607-001", "NP-TRANSM-2026-0042"
   barcodeId?: string;
   docTypeCode?: string; // "PAY", "TRANSM", "DECL", "FACT", "CERT", "STC", "360"
   companyOverride?: Partial<CompanyConfig>;
@@ -105,7 +100,7 @@ export interface PdfDocumentHeaderOptions {
 
 /**
  * Standardized High-Definition PDF Header for all official RDC documents
- * Renders embedded logo, aligned company identifiers, document banner & certified barcode.
+ * Renders client company logo, aligned company identifiers, document banner & certified barcode.
  */
 export async function renderOfficialPdfHeader(
   doc: jsPDF,
@@ -121,16 +116,16 @@ export async function renderOfficialPdfHeader(
 
   // Top National Bar
   doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-  doc.rect(0, 0, pageWidth, 10, 'F');
+  doc.rect(0, 0, pageWidth, 9, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('times', 'bold');
-  doc.setFontSize(7.5);
-  doc.text('RÉPUBLIQUE DÉMOCRATIQUE DU CONGO — ERP RH NOVARISPAY', 14, 6.5);
-  doc.text('SYSTÈME SÉCURISÉ & CONFORME AU CODE DU TRAVAIL RDC', pageWidth - 14, 6.5, { align: 'right' });
+  doc.setFontSize(7);
+  doc.text('RÉPUBLIQUE DÉMOCRATIQUE DU CONGO — DOCUMENT RH OFFICIEL', 14, 6);
+  doc.text('CONFORME AU CODE DU TRAVAIL & DISPOSITIONS LÉGALES RDC', pageWidth - 14, 6, { align: 'right' });
 
-  // Generate / register document barcode
+  // Generate / register document barcode with dynamic company prefix
   const docTypeCode = options.docTypeCode || 'DOC';
-  const barcodeId = options.barcodeId || generateBarcodeIdentifier(docTypeCode);
+  const barcodeId = options.barcodeId || generateBarcodeIdentifier(docTypeCode, undefined, company.name);
   const barcodeDataUrl = await generateBarcodeDataUrl(barcodeId, 'CODE128', {
     height: 35,
     displayValue: true,
@@ -146,62 +141,67 @@ export async function renderOfficialPdfHeader(
     createdBy: company.signerName || 'RH / Gestionnaire de Paie',
     status: 'Validated',
     version: 'v1.0',
-    companyCode: 'NVP',
+    companyCode: company.name ? company.name.substring(0, 3).toUpperCase() : 'NP',
     moduleRoute: 'ged',
   });
 
-  // Embed Local Company Logo (Top Left)
-  const logoDataUrl = getEmbeddedCompanyLogoDataUrl();
+  // Embed Local Client Company Logo (Top Left)
+  const logoDataUrl = getEmbeddedCompanyLogoDataUrl(company);
   try {
-    doc.addImage(logoDataUrl, 'PNG', 14, 14, 46, 16);
+    doc.addImage(logoDataUrl, 'PNG', 14, 12.5, 36, 18);
   } catch (err) {
-    // Fallback vector emblem
+    // Fallback vector emblem with company initials
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.roundedRect(14, 14, 14, 14, 2, 2, 'F');
+    doc.roundedRect(14, 13, 15, 15, 2, 2, 'F');
     doc.setFillColor(goldColor[0], goldColor[1], goldColor[2]);
-    doc.rect(23, 17, 3, 7, 'F');
+    doc.rect(24, 16, 3, 7, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFont('times', 'bold');
-    doc.setFontSize(9);
-    doc.text('N', 17, 23);
+    doc.setFontSize(8);
+    const initialChar = company.name ? company.name.trim().charAt(0).toUpperCase() : 'E';
+    doc.text(initialChar, 18, 22);
   }
-
-  // Company Legal Identity Info (Next to logo)
-  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-  doc.setFont('times', 'bold');
-  doc.setFontSize(12);
-  doc.text((company.name || 'NOVARISPAY CONGO SARL').toUpperCase(), 64, 19);
-
-  doc.setTextColor(71, 85, 105);
-  doc.setFont('times', 'normal');
-  doc.setFontSize(8);
-  doc.text(`${company.address || '14, Av. de la Justice, Kinshasa/Gombe'} — ${company.cityProvince || 'Kinshasa, RDC'}`, 64, 23.5);
-  doc.text(`RCCM: ${company.rccm || 'CD/KIN/RCCM/22-B-01452'}  |  ID.NAT: ${company.idNat || '01-93-N48120P'}  |  NIF: ${company.nif || 'A2210892X'}`, 64, 27.5);
-  doc.text(`N° CNSS Emp: ${company.cnssEmployerNumber || '1004812001-C'}  |  Tél: ${company.phone || '+243 810 000 000'}  |  Email: ${company.email || 'contact@novarispay.cd'}`, 64, 31.5);
 
   // Document Title Banner & Barcode (Top Right)
   const rightBoxWidth = 58;
   const rightBoxX = pageWidth - 14 - rightBoxWidth;
 
   doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-  doc.roundedRect(rightBoxX, 14, rightBoxWidth, 10, 1.5, 1.5, 'F');
+  doc.roundedRect(rightBoxX, 12.5, rightBoxWidth, 9.5, 1.5, 1.5, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('times', 'bold');
-  doc.setFontSize(9.5);
-  doc.text(options.documentTitle.toUpperCase(), rightBoxX + rightBoxWidth / 2, 20.5, { align: 'center' });
+  doc.setFontSize(9);
+  doc.text(options.documentTitle.toUpperCase(), rightBoxX + rightBoxWidth / 2, 18.5, { align: 'center' });
 
   if (barcodeDataUrl) {
     try {
-      doc.addImage(barcodeDataUrl, 'PNG', rightBoxX, 26, rightBoxWidth, 11);
+      doc.addImage(barcodeDataUrl, 'PNG', rightBoxX, 23.5, rightBoxWidth, 12);
     } catch (e) {
       console.warn('Barcode addImage failed:', e);
     }
   }
 
+  // Company Legal Identity Info (Between logo and right box, zero overlap)
+  const infoX = 53;
+  const maxInfoWidth = rightBoxX - infoX - 4;
+
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  doc.setFont('times', 'bold');
+  doc.setFontSize(11);
+  doc.text((company.name || 'SOCIÉTÉ COMMERCIALE RDC').toUpperCase(), infoX, 17, { maxWidth: maxInfoWidth });
+
+  doc.setTextColor(71, 85, 105);
+  doc.setFont('times', 'normal');
+  doc.setFontSize(7.5);
+  doc.text(`${company.address || 'Kinshasa'} — ${company.cityProvince || 'Kinshasa, RDC'}`, infoX, 21.5, { maxWidth: maxInfoWidth });
+  doc.text(`RCCM: ${company.rccm || 'CD/KIN/RCCM/22-B-01452'}  |  ID.NAT: ${company.idNat || '01-93-N48120P'}  |  NIF: ${company.nif || 'A2210892X'}`, infoX, 25.5, { maxWidth: maxInfoWidth });
+  doc.text(`N° CNSS Emp: ${company.cnssEmployerNumber || '1004812001-C'}  |  Tél: ${company.phone || '+243 810 000 000'}`, infoX, 29.5, { maxWidth: maxInfoWidth });
+  doc.text(`Email: ${company.email || 'contact@entreprise.cd'}  |  Web: ${company.website || 'www.entreprise.cd'}`, infoX, 33.5, { maxWidth: maxInfoWidth });
+
   // Header Divider Line
   doc.setLineWidth(0.5);
   doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-  doc.line(14, 39, pageWidth - 14, 39);
+  doc.line(14, 38, pageWidth - 14, 38);
 
   return { bottomY: 44, barcodeId };
 }
@@ -238,7 +238,7 @@ export function renderOfficialPdfFooter(
   const barcodeStr = options?.barcodeId ? `ID Sécurité: ${options.barcodeId}` : '';
   const legalNotice =
     options?.legalNote ||
-    'Document certifié immuable édité par NovarisPay ERP RH • Conforme au Code du Travail & à la Législation RDC';
+    'Généré par NovarisPay • Document officiel certifié conforme au Code du Travail & à la Législation RDC';
 
   doc.text(legalNotice, 14, y);
   doc.text(

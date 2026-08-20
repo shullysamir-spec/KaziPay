@@ -1,6 +1,6 @@
 /**
  * @license
- * NovarisPay - ERP RH et Paie RDC
+ * NovarisPay - ERP RH et Paie RDC (BILINGUAL)
  */
 
 import React, { useState } from 'react';
@@ -8,7 +8,7 @@ import { loginUser } from '../../services/authService';
 import { UserProfile } from '../../types/auth';
 import { Language, i18n } from '../../lib/i18n';
 import { NovarisLogo } from '../common/NovarisLogo';
-import { Lock, Mail, ShieldAlert, KeyRound, CheckCircle2, ShieldCheck, Zap, Globe, Users, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ShieldAlert, KeyRound, CheckCircle2, ShieldCheck, Zap, Globe, Users, Eye, EyeOff } from 'lucide-react';
 
 interface LoginFormProps {
   onLoginSuccess: (user: UserProfile) => void;
@@ -21,37 +21,32 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   lang,
   onOpenAdminInstructions,
 }) => {
-  const t = i18n[lang].auth;
-  const [email, setEmail] = useState('admin@novarispay.cd');
-  const [password, setPassword] = useState('Admin@2026!');
+  const t = i18n[lang] || i18n.fr;
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(null);
-    setLoading(true);
-
-    try {
-      const userProfile = await loginUser(email, password);
-      onLoginSuccess(userProfile);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Erreur lors de la connexion.');
-    } finally {
-      setLoading(false);
+    if (!identifier.trim()) {
+      setErrorMsg(lang === 'fr' ? 'Veuillez saisir votre identifiant ou email.' : 'Please enter your username or email.');
+      return;
     }
-  };
+    if (!password.trim()) {
+      setErrorMsg(lang === 'fr' ? 'Veuillez saisir votre mot de passe.' : 'Please enter your password.');
+      return;
+    }
 
-  const quickLoginAs = async (targetEmail: string, roleName: string) => {
     setErrorMsg(null);
     setLoading(true);
-    setEmail(targetEmail);
-    setPassword('Admin@2026!');
+
     try {
-      const userProfile = await loginUser(targetEmail, 'Admin@2026!');
+      const userProfile = await loginUser(identifier, password);
       onLoginSuccess(userProfile);
     } catch (err: any) {
-      setErrorMsg(err.message || `Impossible de se connecter en tant que ${roleName}`);
+      setErrorMsg(err.message || (lang === 'fr' ? 'Erreur lors de la connexion. Vérifiez vos identifiants.' : 'Sign in error. Check your credentials.'));
     } finally {
       setLoading(false);
     }
@@ -59,7 +54,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
   return (
     <div className="min-h-screen bg-[#F6F8FC] flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="max-w-5xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 grid grid-cols-1 lg:grid-cols-12 min-h-[680px]">
+      <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
         
         {/* Left Section: Form & Official Branding */}
         <div className="lg:col-span-7 p-8 sm:p-10 flex flex-col justify-between">
@@ -68,149 +63,100 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             <div className="mb-8">
               <NovarisLogo variant="full" theme="light" customHeight={48} />
               <p className="text-xs text-slate-500 font-medium mt-3">
-                Accédez à la plateforme unifiée de gestion RH et paie d'entreprise.
+                {lang === 'fr' 
+                  ? 'Portail sécurisé NovarisPay d\'Entreprise. Veuillez vous identifier pour accéder à votre espace.'
+                  : 'NovarisPay Secure Enterprise Portal. Please authenticate to access your workspace.'}
               </p>
-            </div>
-
-            {/* Quick 1-Click Demo Login Selector */}
-            <div className="mb-6 p-4 bg-slate-50 border border-slate-200/80 rounded-2xl">
-              <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2.5 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#287BFF]" />
-                  <span>Connexion Express Demo</span>
-                </span>
-                <span className="text-[10px] text-slate-400 font-normal">1 Clic</span>
-              </p>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => quickLoginAs('admin@novarispay.cd', 'Super Admin')}
-                  disabled={loading}
-                  className="p-2.5 bg-white border border-slate-200 hover:border-[#287BFF] hover:bg-blue-50/50 rounded-xl text-left transition shadow-xs group"
-                >
-                  <div className="text-xs font-bold text-[#071D49] group-hover:text-[#287BFF] truncate">Super Admin</div>
-                  <div className="text-[10px] text-slate-400 font-mono truncate">admin@novarispay.cd</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => quickLoginAs('rh@novarispay.cd', 'Directrice RH')}
-                  disabled={loading}
-                  className="p-2.5 bg-white border border-slate-200 hover:border-[#287BFF] hover:bg-blue-50/50 rounded-xl text-left transition shadow-xs group"
-                >
-                  <div className="text-xs font-bold text-[#071D49] group-hover:text-[#287BFF] truncate">Directrice RH</div>
-                  <div className="text-[10px] text-slate-400 font-mono truncate">rh@novarispay.cd</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => quickLoginAs('paie@novarispay.cd', 'Responsable Paie')}
-                  disabled={loading}
-                  className="p-2.5 bg-white border border-slate-200 hover:border-[#287BFF] hover:bg-blue-50/50 rounded-xl text-left transition shadow-xs group"
-                >
-                  <div className="text-xs font-bold text-[#071D49] group-hover:text-[#287BFF] truncate">Responsable Paie</div>
-                  <div className="text-[10px] text-slate-400 font-mono truncate">paie@novarispay.cd</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => quickLoginAs('manager@novarispay.cd', 'Manager')}
-                  disabled={loading}
-                  className="p-2.5 bg-white border border-slate-200 hover:border-[#287BFF] hover:bg-blue-50/50 rounded-xl text-left transition shadow-xs group"
-                >
-                  <div className="text-xs font-bold text-[#071D49] group-hover:text-[#287BFF] truncate">Manager</div>
-                  <div className="text-[10px] text-slate-400 font-mono truncate">manager@novarispay.cd</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => quickLoginAs('finance@novarispay.cd', 'Directeur Financier')}
-                  disabled={loading}
-                  className="p-2.5 bg-white border border-slate-200 hover:border-[#287BFF] hover:bg-blue-50/50 rounded-xl text-left transition shadow-xs group"
-                >
-                  <div className="text-xs font-bold text-[#071D49] group-hover:text-[#287BFF] truncate">Finances</div>
-                  <div className="text-[10px] text-slate-400 font-mono truncate">finance@novarispay.cd</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => quickLoginAs('auditeur@novarispay.cd', 'Auditeur Externe')}
-                  disabled={loading}
-                  className="p-2.5 bg-white border border-slate-200 hover:border-[#287BFF] hover:bg-blue-50/50 rounded-xl text-left transition shadow-xs group"
-                >
-                  <div className="text-xs font-bold text-[#071D49] group-hover:text-[#287BFF] truncate">Auditeur</div>
-                  <div className="text-[10px] text-slate-400 font-mono truncate">auditeur@novarispay.cd</div>
-                </button>
-              </div>
             </div>
 
             {/* Error message */}
             {errorMsg && (
-              <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-3 rounded-xl text-xs text-red-800 flex items-start space-x-2">
+              <div className="mb-5 bg-red-50 border-l-4 border-red-500 p-3.5 rounded-xl text-xs text-red-800 flex items-start space-x-2.5 shadow-xs">
                 <ShieldAlert className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                <span>{errorMsg}</span>
+                <div className="flex-1 font-medium">{errorMsg}</div>
               </div>
             )}
 
             {/* Credentials Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">{t.email}</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                  <span>{t.auth.email}</span>
+                  <span className="text-[10px] text-slate-400 font-normal">{lang === 'fr' ? 'Requis' : 'Required'}</span>
+                </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#287BFF] focus:bg-white transition-all font-medium"
+                    type="text"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#287BFF] focus:bg-white transition-all font-medium placeholder:text-slate-400"
                     placeholder="nom@entreprise.cd"
                     required
+                    autoComplete="username"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">{t.password}</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                  <span>{t.auth.password}</span>
+                  <span className="text-[10px] text-slate-400 font-normal">{lang === 'fr' ? 'Requis' : 'Required'}</span>
+                </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#287BFF] focus:bg-white transition-all font-medium"
-                    placeholder="••••••••"
+                    className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#287BFF] focus:bg-white transition-all font-medium placeholder:text-slate-400"
+                    placeholder="••••••••••••"
                     required
+                    autoComplete="current-password"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-1 cursor-pointer transition"
+                    title={showPassword ? (lang === 'fr' ? 'Masquer' : 'Hide') : (lang === 'fr' ? 'Afficher' : 'Show')}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#287BFF] hover:bg-[#1A6CFA] text-white font-semibold py-3 px-4 rounded-xl text-xs shadow-md shadow-blue-500/20 transition duration-200 flex items-center justify-center space-x-2"
-              >
-                {loading ? (
-                  <span>Connexion en cours...</span>
-                ) : (
-                  <>
-                    <KeyRound className="w-4 h-4" />
-                    <span>{t.loginButton}</span>
-                  </>
-                )}
-              </button>
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#287BFF] hover:bg-[#1A6CFA] text-white font-bold py-3.5 px-4 rounded-xl text-xs shadow-md shadow-blue-500/25 transition duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      <span>{lang === 'fr' ? 'Authentification en cours...' : 'Authenticating...'}</span>
+                    </span>
+                  ) : (
+                    <>
+                      <KeyRound className="w-4 h-4" />
+                      <span>{t.auth.loginButton}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </form>
           </div>
 
           <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className="text-slate-400 text-[11px]">© {new Date().getFullYear()} NovarisPay ERP — {lang === 'fr' ? 'Tous droits réservés' : 'All rights reserved'}</span>
             <button
               onClick={onOpenAdminInstructions}
-              className="text-[#287BFF] hover:underline font-semibold flex items-center gap-1"
+              className="text-slate-400 hover:text-[#287BFF] transition text-[11px] flex items-center gap-1"
+              title="Documentation RBAC"
             >
-              <Zap className="w-3.5 h-3.5" />
-              <span>Guide de démarrage rapide</span>
+              <Zap className="w-3 h-3" />
+              <span>{lang === 'fr' ? 'Aide & Accès' : 'Help & Access'}</span>
             </button>
-            <span className="text-slate-400 text-[11px]">NovarisPay v3.2 — RDC Conforme</span>
           </div>
         </div>
 
@@ -224,46 +170,50 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-white/90 font-medium">
               <ShieldCheck className="w-4 h-4 text-[#119CFF]" />
-              <span>Système Certifié RH & Paie</span>
+              <span>{lang === 'fr' ? 'Portail Sécurisé d\'Entreprise' : 'Enterprise Secure Portal'}</span>
             </div>
           </div>
 
           {/* Center Brand Hero Copy */}
           <div className="my-auto py-8 relative z-10 space-y-4">
-            <h2 className="text-3xl font-extrabold tracking-tight leading-tight">
-              Gestion RH moderne. <br />
-              Paie d'entreprise <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#119CFF] to-[#663BFF]">100% sécurisée.</span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
+              {lang === 'fr' ? 'Gestion RH & Paie' : 'HR & Payroll Management'} <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#119CFF] to-[#663BFF]">
+                {lang === 'fr' ? '100% Conforme RDC.' : '100% DRC Compliant.'}
+              </span>
             </h2>
             <p className="text-xs text-slate-200/90 leading-relaxed max-w-sm">
-              Automatisez vos bulletins, calculs d'impôts IPR, cotisations CNSS & INPP, déclarations légales et gestion des talents avec la précision NovarisPay.
+              {lang === 'fr'
+                ? 'Plateforme unifiée pour la gestion du personnel, le traitement salarial, les déclarations fiscales et le contrôle d\'accès nominatif.'
+                : 'Unified platform for employee management, payroll processing, statutory returns, and role-based access control.'}
             </p>
 
             {/* Feature Bullets */}
-            <div className="pt-4 space-y-2.5">
+            <div className="pt-2 space-y-2.5">
               <div className="flex items-center gap-3 text-xs text-slate-200">
                 <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#119CFF]" />
                 </div>
-                <span>Calculs déterministes IPR / CNSS / INPP / ONEM</span>
+                <span>{lang === 'fr' ? 'Barèmes IPR, CNSS, INPP & ONEM' : 'IPR, CNSS, INPP & ONEM Scales'}</span>
               </div>
               <div className="flex items-center gap-3 text-xs text-slate-200">
                 <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
                   <Globe className="w-3.5 h-3.5 text-[#119CFF]" />
                 </div>
-                <span>Double devise dynamique USD / CDF</span>
+                <span>{lang === 'fr' ? 'Double devise dynamique USD / CDF' : 'Dynamic dual currency USD / CDF'}</span>
               </div>
               <div className="flex items-center gap-3 text-xs text-slate-200">
                 <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
                   <Users className="w-3.5 h-3.5 text-[#119CFF]" />
                 </div>
-                <span>Portail Salariés & Certifications par Code-Barres NVP</span>
+                <span>{lang === 'fr' ? 'Authentification & Traçabilité RBAC' : 'RBAC Authentication & Audit Trail'}</span>
               </div>
             </div>
           </div>
 
           {/* Bottom Security Footer */}
           <div className="relative z-10 pt-4 border-t border-white/15 flex items-center justify-between text-[11px] text-white/70">
-            <span>Code du Travail RDC Conforme</span>
+            <span>{t.header.compliantBadge}</span>
             <span className="font-mono text-white/90">Novaris Cloud Enterprise</span>
           </div>
         </div>
@@ -272,4 +222,3 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     </div>
   );
 };
-

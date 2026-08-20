@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../../types/auth';
 import { Language, i18n } from '../../lib/i18n';
-import { Globe, LogOut, ShieldCheck, HelpCircle, Sun, Moon, Keyboard, Search, QrCode, Layers, ArrowRight, Menu, X } from 'lucide-react';
+import { Globe, LogOut, ShieldCheck, HelpCircle, Sun, Moon, Keyboard, Search, QrCode, Layers, ArrowRight, Menu } from 'lucide-react';
 import { NotificationCenter } from '../common/NotificationCenter';
 import { getRegisteredDocuments, DocumentMetadata } from '../../services/barcodeService';
 import { ModuleKey } from './Sidebar';
@@ -38,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   onNavigateToModule,
   onToggleMobileMenu,
 }) => {
-  const t = i18n[lang];
+  const t = i18n[lang] || i18n.fr;
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -46,18 +46,23 @@ export const Header: React.FC<HeaderProps> = ({
   const allRegisteredDocs = getRegisteredDocuments();
 
   const MODULE_SEARCH_ITEMS: { key: ModuleKey; label: string; desc: string; iconName: string }[] = [
-    { key: 'dashboard', label: 'Tableau de Bord', desc: 'Indicateurs clés RH et masse salariale', iconName: 'Layers' },
-    { key: 'employees', label: 'Gestion des Employés', desc: 'Dossiers du personnel, contrats et ayants droit', iconName: 'Users' },
-    { key: 'attendance', label: 'Pointages & Présences', desc: 'Heures supplémentaires, absences et retards', iconName: 'Clock' },
-    { key: 'leave', label: 'Congés & Absences', desc: 'Demandes de congé, calendrier et soldes', iconName: 'Calendar' },
-    { key: 'loans', label: 'Prêts & Avances', desc: 'Prêts scolaires, avances sur salaire et échéanciers', iconName: 'CreditCard' },
-    { key: 'payroll', label: 'Calcul de la Paie', desc: 'Calculs bruts/nets, barème IPR, CNSS et déductions', iconName: 'Calculator' },
-    { key: 'payslips', label: 'Bulletins de Paie', desc: 'Consulter et imprimer les bulletins certifiés', iconName: 'FileText' },
-    { key: 'declarations', label: 'Déclarations Légales RDC', desc: 'IPR, CNSS, INPP, ONEM et télédéclarations', iconName: 'ShieldCheck' },
-    { key: 'reports', label: 'Rapports & Audit', desc: 'Analyses RH, exportations Excel et journaux', iconName: 'BarChart' },
-    { key: 'documents', label: 'Gestion Documentaire (GED)', desc: 'Documents certifiés, contrats et codes-barres', iconName: 'FileText' },
-    { key: 'security', label: 'Sécurité & Droits (RBAC)', desc: 'Rôles, permissions et traçabilité', iconName: 'Lock' },
-    { key: 'settings', label: 'Paramètres Système', desc: 'Taux de change USD/CDF, barèmes et entreprise', iconName: 'Settings' },
+    { key: 'dashboard', label: t.nav.dashboard, desc: t.dashboard.kpiPayrollMassDesc, iconName: 'Layers' },
+    { key: 'employees', label: t.nav.employees, desc: t.employees.subtitle, iconName: 'Users' },
+    { key: 'attendance', label: t.nav.attendance, desc: t.attendance.subtitle, iconName: 'Clock' },
+    { key: 'leave', label: t.nav.leave, desc: t.leave.subtitle, iconName: 'Calendar' },
+    { key: 'loans', label: t.nav.loans, desc: t.loans.subtitle, iconName: 'CreditCard' },
+    { key: 'payroll', label: t.nav.payroll, desc: t.payroll.subtitle, iconName: 'Calculator' },
+    { key: 'payslips', label: t.nav.payslips, desc: t.payslips.subtitle, iconName: 'FileText' },
+    { key: 'declarations', label: t.nav.declarations, desc: t.declarations.subtitle, iconName: 'ShieldCheck' },
+    { key: 'reports', label: t.nav.reports, desc: t.reports.subtitle, iconName: 'BarChart' },
+    { key: 'recruitment', label: t.nav.recruitment, desc: t.recruitment.subtitle, iconName: 'UserCheck' },
+    { key: 'performance', label: t.nav.performance, desc: t.performance.subtitle, iconName: 'Target' },
+    { key: 'discipline', label: t.nav.discipline, desc: t.discipline.subtitle, iconName: 'AlertTriangle' },
+    { key: 'medical', label: t.nav.medical, desc: t.medical.subtitle, iconName: 'Stethoscope' },
+    { key: 'documents', label: t.nav.documents, desc: t.documents.subtitle, iconName: 'FileText' },
+    { key: 'automation', label: t.nav.automation, desc: t.automation.subtitle, iconName: 'Zap' },
+    { key: 'security', label: t.nav.security, desc: t.security.subtitle, iconName: 'Lock' },
+    { key: 'settings', label: t.nav.settings, desc: t.settings.subtitle, iconName: 'Settings' },
   ];
 
   const matchedModules = searchQuery.trim()
@@ -85,8 +90,6 @@ export const Header: React.FC<HeaderProps> = ({
     if (!searchQuery.trim()) return;
 
     const query = searchQuery.trim();
-
-    // Si c'est un code-barres (contient NVP ou format code-barres), ouvrir le modal de vérification
     window.dispatchEvent(
       new CustomEvent('novarispay_open_barcode_verify', { detail: { barcodeId: query } })
     );
@@ -108,12 +111,11 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="h-16 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between px-3 sm:px-6 shrink-0 z-40 sticky top-0 shadow-xs transition-colors">
       {/* Left Area: Mobile Hamburger + Current Module Title */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
-        {/* Mobile Hamburger Toggle Button */}
         {onToggleMobileMenu && (
           <button
             onClick={onToggleMobileMenu}
             className="md:hidden flex items-center justify-center p-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-w-[44px] min-h-[44px]"
-            aria-label="Ouvrir le menu principal"
+            aria-label="Toggle Menu"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -137,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-            placeholder="Recherche globale (Nom, Matricule, NVP...)"
+            placeholder={t.header.searchPlaceholder}
             className="w-full pl-9 pr-9 py-1.5 text-xs font-medium text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#287BFF] dark:focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all"
           />
           {searchQuery && (
@@ -158,7 +160,7 @@ export const Header: React.FC<HeaderProps> = ({
             {matchedModules.length > 0 && (
               <div className="space-y-1">
                 <div className="px-2 py-0.5 text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center justify-between">
-                  <span>Modules Système ({matchedModules.length})</span>
+                  <span>{t.header.modulesSection} ({matchedModules.length})</span>
                 </div>
                 {matchedModules.map((mod) => (
                   <div
@@ -188,7 +190,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Matched Documents & Barcodes Section */}
             <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-slate-800">
               <div className="px-2 py-0.5 text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center justify-between">
-                <span>Documents & Codes-Barres ({filteredDocs.length})</span>
+                <span>{t.header.documentsSection} ({filteredDocs.length})</span>
               </div>
 
               {filteredDocs.length > 0 ? (
@@ -225,8 +227,8 @@ export const Header: React.FC<HeaderProps> = ({
                   className="p-3 text-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition"
                 >
                   <QrCode className="w-5 h-5 text-[#287BFF] dark:text-blue-400 mx-auto mb-1" />
-                  <p className="font-bold text-slate-800 dark:text-slate-200">Rechercher / Vérifier "{searchQuery}"</p>
-                  <span className="text-[10px] text-slate-400">Clic pour lancer le contrôle optique et la traçabilité immuable</span>
+                  <p className="font-bold text-slate-800 dark:text-slate-200">{t.header.verifySearchPrompt} "{searchQuery}"</p>
+                  <span className="text-[10px] text-slate-400">{t.header.verifySearchDesc}</span>
                 </div>
               )}
             </div>
@@ -240,7 +242,7 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
           className="sm:hidden flex items-center justify-center p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 min-w-[40px] min-h-[40px]"
-          aria-label="Recherche rapide"
+          aria-label={t.common.search}
         >
           <Search className="w-4 h-4" />
         </button>
@@ -329,7 +331,7 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
               <div className="text-[10px] text-gray-500 dark:text-slate-400 font-medium">
-                {currentUser.roles.join(', ') || 'Utilisateur'}
+                {currentUser.roles.join(', ') || t.header.user}
               </div>
             </div>
 
@@ -355,7 +357,7 @@ export const Header: React.FC<HeaderProps> = ({
               autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Recherche (Nom, Matricule, NVP...)"
+              placeholder={t.header.searchPlaceholder}
               className="w-full pl-9 pr-16 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#287BFF]"
             />
             <button
@@ -363,7 +365,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setIsMobileSearchOpen(false)}
               className="absolute right-2 text-xs text-slate-500 font-bold px-2 py-1"
             >
-              Fermer
+              {t.header.closeSearch}
             </button>
           </form>
         </div>
@@ -371,5 +373,3 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
-
-

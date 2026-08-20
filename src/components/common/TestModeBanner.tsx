@@ -2,13 +2,14 @@
  * @license
  * NovarisPay - ERP RH et Paie RDC
  * 
- * BANDEAU DU MODE TEST & DÉMONSTRATION RDC
+ * BANDEAU DU MODE TEST & DÉMONSTRATION RDC (BILINGUAL)
  */
 
 import React, { useState } from 'react';
 import { TEST_ACCOUNTS, resetDemoData, clearAllDemoData } from '../../services/seedService';
 import { UserProfile, RoleCode } from '../../types/auth';
 import { loginUser } from '../../services/authService';
+import { useLanguage } from '../../context/LanguageContext';
 import { RefreshCw, ShieldAlert, Key, Users, Check, Trash2, Database } from 'lucide-react';
 
 interface TestModeBannerProps {
@@ -17,6 +18,7 @@ interface TestModeBannerProps {
 }
 
 export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onUserSwitched }) => {
+  const { lang, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -33,7 +35,7 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
   };
 
   const handleCopyCredentials = (account: typeof TEST_ACCOUNTS[0]) => {
-    navigator.clipboard.writeText(`Email: ${account.email} | Mot de passe: ${account.password}`);
+    navigator.clipboard.writeText(`Email: ${account.email} | Password: ${account.password}`);
     setCopiedAccount(account.email);
     setTimeout(() => setCopiedAccount(null), 2000);
   };
@@ -50,11 +52,32 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
       window.location.reload();
     } catch (err) {
       console.error('Erreur lors de l\'opération sur les données:', err);
-      alert('Erreur lors de l\'exécution.');
+      alert(lang === 'fr' ? 'Erreur lors de l\'exécution.' : 'Error during execution.');
     } finally {
       setIsResetting(false);
       setResetType(null);
       setConfirmModalOpen(false);
+    }
+  };
+
+  const getRoleDisplayName = (code: RoleCode): string => {
+    if (lang === 'en') {
+      switch (code) {
+        case RoleCode.SUPERADMIN: return 'Super Admin (Full)';
+        case RoleCode.HR_MANAGER: return 'HR Manager';
+        case RoleCode.FINANCE_MANAGER: return 'Finance Director';
+        case RoleCode.AUDITOR: return 'Auditor (Read-Only)';
+        case RoleCode.EMPLOYEE: return 'Employee (Portal)';
+        default: return 'User';
+      }
+    }
+    switch (code) {
+      case RoleCode.SUPERADMIN: return 'Super Admin (Total)';
+      case RoleCode.HR_MANAGER: return 'Directeur RH';
+      case RoleCode.FINANCE_MANAGER: return 'Dir. Financier';
+      case RoleCode.AUDITOR: return 'Auditeur Légal';
+      case RoleCode.EMPLOYEE: return 'Salarié (Self-Service)';
+      default: return 'Utilisateur';
     }
   };
 
@@ -67,10 +90,14 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
           </span>
-          <span className="font-black text-amber-400 tracking-wide uppercase text-[10px] sm:text-[11px]">MODE TEST & AUDIT DÉMO</span>
+          <span className="font-black text-amber-400 tracking-wide uppercase text-[10px] sm:text-[11px]">
+            {lang === 'fr' ? 'MODE TEST & AUDIT DÉMO' : 'TEST & AUDIT DEMO MODE'}
+          </span>
           <span className="hidden md:inline text-slate-400">|</span>
           <span className="hidden md:inline text-slate-300">
-            Gestion de Données : Purge Vierge ou Jeu de Test RDC (Barèmes 2026)
+            {lang === 'fr' 
+              ? 'Gestion de Données : Purge Vierge ou Jeu de Test RDC (Barèmes 2026)' 
+              : 'Data Management: Clean Purge or DRC Demo Dataset (2026 Scales)'}
           </span>
         </div>
 
@@ -82,7 +109,7 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
             className="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold px-2.5 sm:px-3 py-1.5 rounded-md border border-slate-700 transition flex items-center gap-1.5 shadow-xs text-[11px] sm:text-xs min-h-[36px]"
           >
             <Users className="w-3.5 h-3.5" />
-            <span>Rôles ({TEST_ACCOUNTS.length})</span>
+            <span>{lang === 'fr' ? 'Rôles' : 'Roles'} ({TEST_ACCOUNTS.length})</span>
           </button>
 
           {/* Reset/Purge Data Button */}
@@ -93,7 +120,7 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
               className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-2.5 sm:px-3 py-1.5 rounded-md transition flex items-center gap-1.5 shadow-xs disabled:opacity-50 text-[11px] sm:text-xs min-h-[36px]"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
-              <span className="truncate">Gestion Données</span>
+              <span className="truncate">{lang === 'fr' ? 'Gestion Données' : 'Manage Data'}</span>
             </button>
           )}
         </div>
@@ -116,7 +143,7 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
                 <div className="overflow-hidden">
                   <div className="flex items-center gap-1.5 font-bold">
                     <span className={`w-2 h-2 rounded-full ${acc.color}`}></span>
-                    <span className="truncate">{acc.roleName}</span>
+                    <span className="truncate">{getRoleDisplayName(acc.roleCode)}</span>
                   </div>
                   <div className="text-[10px] text-slate-400 truncate">{acc.email}</div>
                 </div>
@@ -125,7 +152,7 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
                   <button
                     onClick={() => handleCopyCredentials(acc)}
                     className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800"
-                    title="Copier les identifiants"
+                    title={lang === 'fr' ? 'Copier les identifiants' : 'Copy credentials'}
                   >
                     {copiedAccount === acc.email ? (
                       <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -143,7 +170,7 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
                         : 'bg-blue-600 hover:bg-blue-500 text-white'
                     }`}
                   >
-                    {isCurrent ? 'Actif' : 'Basculer'}
+                    {isCurrent ? (lang === 'fr' ? 'Actif' : 'Active') : (lang === 'fr' ? 'Basculer' : 'Switch')}
                   </button>
                 </div>
               </div>
@@ -159,8 +186,12 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
             <div className="flex items-center gap-3 text-amber-600 border-b pb-3">
               <ShieldAlert className="w-6 h-6 shrink-0" />
               <div>
-                <h3 className="text-base font-black text-[#1F3864]">Gestion de la Base de Données</h3>
-                <p className="text-xs text-slate-500 font-medium">Choisissez l'action à exécuter sur Firestore</p>
+                <h3 className="text-base font-black text-[#1F3864]">
+                  {lang === 'fr' ? 'Gestion de la Base de Données' : 'Database Management'}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  {lang === 'fr' ? 'Choisissez l\'action à exécuter sur Firestore' : 'Choose action to perform on Firestore'}
+                </p>
               </div>
             </div>
 
@@ -176,9 +207,13 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
               >
                 <Trash2 className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-bold text-xs text-red-900">Purger à zéro (Base Vierge pour simulation)</div>
+                  <div className="font-bold text-xs text-red-900">
+                    {lang === 'fr' ? 'Purger à zéro (Base Vierge pour simulation)' : 'Purge All (Clean Blank Database)'}
+                  </div>
                   <div className="text-[11px] text-slate-600 mt-0.5">
-                    Efface tous les salariés, contrats, paies, prêts, présences et bons médicaux. Vous démarrez avec une base entièrement vide pour créer vos propres données.
+                    {lang === 'fr' 
+                      ? 'Efface tous les salariés, contrats, paies, prêts, présences et bons médicaux. Vous démarrez avec une base entièrement vide pour créer vos propres données.' 
+                      : 'Deletes all employees, contracts, payroll runs, loans, attendance records and medical vouchers. Starts fresh with an empty database.'}
                   </div>
                 </div>
               </div>
@@ -194,9 +229,13 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
               >
                 <Database className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-bold text-xs text-amber-900">Régénérer le Jeu de Démo RDC</div>
+                  <div className="font-bold text-xs text-amber-900">
+                    {lang === 'fr' ? 'Régénérer le Jeu de Démo RDC' : 'Regenerate DRC Demo Dataset'}
+                  </div>
                   <div className="text-[11px] text-slate-600 mt-0.5">
-                    Efface les données actuelles et ré-injecte le jeu de test complet (20 salariés de démonstration, contrats 2026, bulletins de paie et historiques).
+                    {lang === 'fr' 
+                      ? 'Efface les données actuelles et ré-injecte le jeu de test complet (20 salariés de démonstration, contrats 2026, bulletins de paie et historiques).' 
+                      : 'Resets current data and seeds complete test set (20 demo employees, 2026 contracts, payslips, and history).'}
                   </div>
                 </div>
               </div>
@@ -210,7 +249,7 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
                 }}
                 className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition"
               >
-                Annuler
+                {t.common.cancel}
               </button>
               <button
                 onClick={handleRunPurgeOrReset}
@@ -218,7 +257,13 @@ export const TestModeBanner: React.FC<TestModeBannerProps> = ({ currentUser, onU
                 className="px-5 py-2 text-xs font-bold bg-[#1F3864] hover:bg-[#152747] text-white rounded-lg transition flex items-center gap-2 shadow-md disabled:opacity-40"
               >
                 {isResetting && <RefreshCw className="w-4 h-4 animate-spin text-amber-400" />}
-                <span>{resetType === 'PURGE_EMPTY' ? 'Confirmer la Purge Vierge' : resetType === 'SEED_DEMO' ? 'Confirmer la Réinitialisation Démo' : 'Sélectionner une option'}</span>
+                <span>
+                  {resetType === 'PURGE_EMPTY'
+                    ? (lang === 'fr' ? 'Confirmer la Purge Vierge' : 'Confirm Blank Purge')
+                    : resetType === 'SEED_DEMO'
+                    ? (lang === 'fr' ? 'Confirmer la Réinitialisation Démo' : 'Confirm Demo Reset')
+                    : (lang === 'fr' ? 'Sélectionner une option' : 'Select an option')}
+                </span>
               </button>
             </div>
           </div>

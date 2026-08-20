@@ -39,7 +39,7 @@ export const REFERENCE_TEST_CASES: PayrollTestCase[] = [
     description: 'Manœuvre travaillant 26 jours au SMIG de 21 500 FC/jour (559 000 FC/mois). 0 enfant à charge.',
     input: {
       employeeId: 'EMP_SMIG',
-      employeeMatricule: 'KP-001',
+      employeeMatricule: 'NP-001',
       employeeName: 'Kasongo Jean',
       department: 'Exploitation',
       position: 'Manœuvre',
@@ -75,7 +75,7 @@ export const REFERENCE_TEST_CASES: PayrollTestCase[] = [
     description: 'Cadre dirigeant à 15,0M FC où l\'IRPP calculé par tranche (5,05M FC) dépasse le plafond légal de 30% du salaire imposable.',
     input: {
       employeeId: 'EMP_HIGH',
-      employeeMatricule: 'KP-002',
+      employeeMatricule: 'NP-002',
       employeeName: 'Mukendi Pierre',
       department: 'Direction Générale',
       position: 'Directeur Général',
@@ -111,7 +111,7 @@ export const REFERENCE_TEST_CASES: PayrollTestCase[] = [
     description: 'Cadre moyen à 3,0M FC avec 3 enfants légaux enregistrés. Réduction directe de 6% sur l\'IRPP brut.',
     input: {
       employeeId: 'EMP_DEP3',
-      employeeMatricule: 'KP-003',
+      employeeMatricule: 'NP-003',
       employeeName: 'Tshimanga Joseph',
       department: 'Finance',
       position: 'Comptable Senior',
@@ -147,7 +147,7 @@ export const REFERENCE_TEST_CASES: PayrollTestCase[] = [
     description: 'Même salaire de base (3,0M FC) mais sans aucune personne à charge (0% de réduction).',
     input: {
       employeeId: 'EMP_DEP0',
-      employeeMatricule: 'KP-004',
+      employeeMatricule: 'NP-004',
       employeeName: 'Kabila Sarah',
       department: 'Finance',
       position: 'Comptable',
@@ -183,7 +183,7 @@ export const REFERENCE_TEST_CASES: PayrollTestCase[] = [
     description: 'Contrat libellé à $2 000 USD. Conversion au cours de change de la période (2 850 FC).',
     input: {
       employeeId: 'EMP_USD',
-      employeeMatricule: 'KP-005',
+      employeeMatricule: 'NP-005',
       employeeName: 'Ilunga Marc',
       department: 'Informatique',
       position: 'Architecte SI',
@@ -219,7 +219,7 @@ export const REFERENCE_TEST_CASES: PayrollTestCase[] = [
     description: 'Prise de fonction le 15 du mois. Calcul prorata temporis strict sur 12 jours ouvrables.',
     input: {
       employeeId: 'EMP_MID_MONTH',
-      employeeMatricule: 'KP-006',
+      employeeMatricule: 'NP-006',
       employeeName: 'Mwanza Alain',
       department: 'Ressources Humaines',
       position: 'Chargé de Recrutement',

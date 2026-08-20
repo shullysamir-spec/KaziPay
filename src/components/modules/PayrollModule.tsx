@@ -53,7 +53,7 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
   const [expenseReports, setExpenseReports] = useState<any[]>([
     {
       id: 'NDF-2026-001',
-      employeeMatricule: 'KP-2026-089',
+      employeeMatricule: 'NP-2026-089',
       employeeName: 'KASONGO Patrick',
       department: 'Exploitation',
       category: 'TRANSPORT',
@@ -73,7 +73,7 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
     },
     {
       id: 'NDF-2026-002',
-      employeeMatricule: 'KP-2026-042',
+      employeeMatricule: 'NP-2026-042',
       employeeName: 'ILUNGA Samuel',
       department: 'Logistique',
       category: 'HOTEL_LODGING',
@@ -104,7 +104,7 @@ export const PayrollModule: React.FC<PayrollModuleProps> = ({
 
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [newExpenseForm, setNewExpenseForm] = useState({
-    employeeMatricule: 'KP-2026-089',
+    employeeMatricule: 'NP-2026-089',
     employeeName: 'KASONGO Patrick',
     department: 'Exploitation',
     category: 'TRANSPORT',

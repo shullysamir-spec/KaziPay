@@ -69,7 +69,7 @@ export const DisciplineModule: React.FC = () => {
   const [cases, setCases] = useState<DisciplinaryCase[]>([
     {
       id: 'DISC-2026-001',
-      employeeMatricule: 'KP-2026-089',
+      employeeMatricule: 'NP-2026-089',
       employeeName: 'KASONGO Patrick',
       department: 'Exploitation',
       type: 'EXPLANATION_REQUEST',
@@ -86,7 +86,7 @@ export const DisciplineModule: React.FC = () => {
     },
     {
       id: 'DISC-2026-002',
-      employeeMatricule: 'KP-2026-042',
+      employeeMatricule: 'NP-2026-042',
       employeeName: 'ILUNGA Samuel',
       department: 'Logistique',
       type: 'TEMPORARY_SUSPENSION',
@@ -194,7 +194,7 @@ export const DisciplineModule: React.FC = () => {
 
   // New Case Form State
   const [newCase, setNewCase] = useState<Partial<DisciplinaryCase>>({
-    employeeMatricule: 'KP-2026-101',
+    employeeMatricule: 'NP-2026-101',
     employeeName: '',
     department: 'Exploitation',
     type: 'EXPLANATION_REQUEST',
@@ -235,7 +235,7 @@ export const DisciplineModule: React.FC = () => {
 
     const c: DisciplinaryCase = {
       id: `DISC-2026-00${cases.length + 1}`,
-      employeeMatricule: newCase.employeeMatricule || 'KP-2026-000',
+      employeeMatricule: newCase.employeeMatricule || 'NP-2026-000',
       employeeName: newCase.employeeName,
       department: newCase.department || 'Général',
       type: newCase.type || 'EXPLANATION_REQUEST',

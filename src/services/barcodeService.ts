@@ -36,13 +36,47 @@ export interface BarcodeSettings {
 
 const DEFAULT_SETTINGS: BarcodeSettings = {
   defaultFormat: 'CODE128',
-  companyPrefix: 'NVP',
+  companyPrefix: 'NP',
   showTextLabel: true,
   barHeight: 45,
 };
 
 const STORAGE_SETTINGS_KEY = 'novarispay_barcode_settings';
 const STORAGE_REGISTRY_KEY = 'novarispay_barcode_registry';
+
+/**
+ * Dérive automatiquement un préfixe court (2-4 caractères) à partir du nom de la société
+ */
+export function deriveCompanyPrefix(companyName?: string): string {
+  if (!companyName) {
+    try {
+      const cfg = localStorage.getItem('novarispay_active_company_config') || localStorage.getItem('novarispay_company_config');
+      if (cfg) {
+        const parsed = JSON.parse(cfg);
+        if (parsed.name) companyName = parsed.name;
+      }
+    } catch (_) {}
+  }
+
+  if (!companyName || companyName.trim().length === 0) {
+    return 'NP';
+  }
+
+  const clean = companyName.trim().replace(/[^a-zA-Z0-9\s]/g, '');
+  const words = clean.split(/\s+/).filter(Boolean);
+
+  if (words.length >= 3) {
+    return words.slice(0, 3).map((w) => w[0].toUpperCase()).join('');
+  } else if (words.length === 2) {
+    const p1 = words[0].substring(0, 2).toUpperCase();
+    const p2 = words[1].substring(0, 1).toUpperCase();
+    return `${p1}${p2}`;
+  } else if (words.length === 1) {
+    return words[0].substring(0, 3).toUpperCase();
+  }
+
+  return 'NP';
+}
 
 /**
  * Récupère ou sauvegarde la configuration globale des codes-barres
@@ -70,12 +104,11 @@ export function saveBarcodeSettings(settings: BarcodeSettings): void {
 /**
  * Génère un identifiant unique et immuable pour un document
  * Structure: [CodeEntreprise]-[TypeDoc]-[Année]-[Séquence 6 chiffres]-[Hash 6 car]
- * Exemple: NVP-PAY-2026-000245-9A73F2
+ * Exemple: NP-PAY-2026-000245-9A73F2
  */
-export function generateBarcodeIdentifier(docTypeCode: string, customSeq?: number): string {
-  const settings = getBarcodeSettings();
+export function generateBarcodeIdentifier(docTypeCode: string, customSeq?: number, companyName?: string): string {
   const year = new Date().getFullYear();
-  const prefix = settings.companyPrefix || 'NVP';
+  const prefix = deriveCompanyPrefix(companyName);
   const type = (docTypeCode || 'DOC').toUpperCase().substring(0, 5);
 
   let registry = getRegisteredDocuments();
@@ -192,7 +225,7 @@ export function registerDocument(metadata: Partial<DocumentMetadata> & { barcode
       createdBy: metadata.createdBy || 'RH / Gestionnaire de Paie',
       status: metadata.status || 'Validated',
       version: metadata.version || 'v1.0',
-      companyCode: metadata.companyCode || 'NVP',
+      companyCode: metadata.companyCode || deriveCompanyPrefix(),
       moduleRoute: metadata.moduleRoute || 'ged',
       targetId: metadata.targetId,
       auditTrail: [

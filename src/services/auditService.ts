@@ -103,7 +103,7 @@ export const getAuditLogs = async (): Promise<AuditLogEntry[]> => {
       userRole: 'SUPER_ADMIN',
       module: 'DISCIPLINE',
       action: 'SANCTION',
-      details: 'Émission demande d\'explication pour KP-2026-089 (KASONGO Patrick) - Absences Maluku.',
+      details: 'Émission demande d\'explication pour NP-2026-089 (KASONGO Patrick) - Absences Maluku.',
     },
     {
       id: 'AUD-002',

@@ -96,7 +96,7 @@ export const DocumentGEDModule: React.FC = () => {
       id: 'DOC-2026-001',
       title: 'Contrat de Travail CDI - KASONGO Patrick',
       category: 'Contrats & Avenants',
-      employeeMatricule: 'KP-2026-089',
+      employeeMatricule: 'NP-2026-089',
       employeeName: 'KASONGO Patrick',
       department: 'Exploitation',
       uploadDate: '2026-01-15',
@@ -111,7 +111,7 @@ export const DocumentGEDModule: React.FC = () => {
       id: 'DOC-2026-002',
       title: 'Passeport & Carte d\'Électeur - ILUNGA Samuel',
       category: 'Pièces d\'Identité & Passeports',
-      employeeMatricule: 'KP-2026-042',
+      employeeMatricule: 'NP-2026-042',
       employeeName: 'ILUNGA Samuel',
       department: 'Logistique',
       uploadDate: '2025-11-20',
@@ -127,7 +127,7 @@ export const DocumentGEDModule: React.FC = () => {
       id: 'DOC-2026-003',
       title: 'Compte-Rendu Hospitalier Bilan Général - KASONGO Patrick',
       category: 'Fiches & Rapports Médicaux',
-      employeeMatricule: 'KP-2026-089',
+      employeeMatricule: 'NP-2026-089',
       employeeName: 'KASONGO Patrick',
       department: 'Exploitation',
       uploadDate: '2026-07-22',
@@ -142,7 +142,7 @@ export const DocumentGEDModule: React.FC = () => {
       id: 'DOC-2026-004',
       title: 'Procès-Verbal de Sanction Disciplinaire - TSHILOMBO Marc',
       category: 'Sanctions & Disciplinaire',
-      employeeMatricule: 'KP-2026-011',
+      employeeMatricule: 'NP-2026-011',
       employeeName: 'TSHILOMBO Marc',
       department: 'Finance & Comptabilité',
       uploadDate: '2026-06-10',
@@ -157,7 +157,7 @@ export const DocumentGEDModule: React.FC = () => {
       id: 'DOC-2026-005',
       title: 'Attestation de Réussite Licence Polytechnique - MUKENDI Jean-Luc',
       category: 'Diplômes & Certificats',
-      employeeMatricule: 'KP-2026-001',
+      employeeMatricule: 'NP-2026-001',
       employeeName: 'MUKENDI Jean-Luc',
       department: 'Ressources Humaines',
       uploadDate: '2024-03-01',
@@ -635,7 +635,7 @@ export const DocumentGEDModule: React.FC = () => {
                     value={newDocForm.employeeMatricule || ''}
                     onChange={(e) => setNewDocForm({ ...newDocForm, employeeMatricule: e.target.value })}
                     className="w-full p-2 border rounded-xl font-mono"
-                    placeholder="ex: KP-2026-089"
+                    placeholder="ex: NP-2026-089"
                   />
                 </div>
               </div>

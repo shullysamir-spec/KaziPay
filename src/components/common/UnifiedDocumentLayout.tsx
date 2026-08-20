@@ -8,8 +8,7 @@
 import React from 'react';
 import { getCompanyConfig, CompanyConfig } from '../../services/companyService';
 import { DocumentBarcode } from './DocumentBarcode';
-import { getEmbeddedCompanyLogoDataUrl } from '../../utils/documentTemplate';
-import { NovarisLogo } from './NovarisLogo';
+import { deriveCompanyPrefix, generateBarcodeIdentifier } from '../../services/barcodeService';
 
 interface UnifiedDocumentHeaderProps {
   title: string;
@@ -25,19 +24,27 @@ export const UnifiedDocumentHeader: React.FC<UnifiedDocumentHeaderProps> = ({
   title,
   subtitle,
   referenceNumber,
-  barcodeId = 'NVP-DOC-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+  barcodeId,
   date = new Date().toLocaleDateString('fr-FR'),
   companyOverride,
   hideBarcode = false,
 }) => {
   const company = { ...getCompanyConfig(), ...(companyOverride || {}) };
+  const effectiveBarcodeId = barcodeId || generateBarcodeIdentifier('DOC', undefined, company.name);
+
+  // Compute initials for company avatar badge fallback
+  const rawName = company.name || 'ENTREPRISE';
+  const words = rawName.trim().split(/\s+/).filter(Boolean);
+  const initials = words.length >= 2 
+    ? `${words[0][0]}${words[1][0]}`.toUpperCase()
+    : rawName.substring(0, 2).toUpperCase();
 
   return (
     <div className="border-b-2 border-[#1F3864] pb-4 mb-6 text-slate-800">
       {/* Top National Header Bar */}
       <div className="bg-[#1F3864] text-white text-[9px] font-bold px-3 py-1 flex items-center justify-between rounded-t-lg mb-3 print:rounded-none">
-        <span>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO — ERP RH NOVARISPAY</span>
-        <span>DOCUMENT OFFICIEL CONFORME AU CODE DU TRAVAIL</span>
+        <span>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO — DOCUMENT OFFICIEL RH</span>
+        <span>CONFORME AU CODE DU TRAVAIL & LÉGISLATION RDC</span>
       </div>
 
       <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
@@ -47,18 +54,24 @@ export const UnifiedDocumentHeader: React.FC<UnifiedDocumentHeaderProps> = ({
             {company.logoUrl ? (
               <img
                 src={company.logoUrl}
-                alt="Logo Société"
-                className="h-12 w-auto object-contain max-w-[120px]"
+                alt={company.name || 'Logo Entreprise'}
+                className="h-14 w-auto object-contain max-w-[130px] rounded"
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <NovarisLogo variant="full" size="md" />
+              <div 
+                className="h-12 w-14 rounded-lg flex flex-col items-center justify-center text-white font-black text-sm shadow-sm border border-slate-700/20"
+                style={{ backgroundColor: company.primaryColor || '#1F3864' }}
+              >
+                <span>{initials}</span>
+                <span className="text-[7px] font-bold tracking-widest text-[#BF9000] uppercase">RDC</span>
+              </div>
             )}
           </div>
 
           <div className="space-y-0.5 text-left">
             <h1 className="text-sm font-black text-[#1F3864] uppercase tracking-wide">
-              {company.name || 'NOVARISPAY CONGO SARL'}
+              {company.name || 'ENTREPRISE RDC'}
             </h1>
             <p className="text-[10px] text-slate-600 font-serif leading-tight">
               {company.address} — {company.cityProvince || 'Kinshasa, RDC'}
@@ -67,7 +80,7 @@ export const UnifiedDocumentHeader: React.FC<UnifiedDocumentHeaderProps> = ({
               RCCM : <strong>{company.rccm || 'CD/KIN/RCCM/22-B-01452'}</strong> | ID.NAT : <strong>{company.idNat || '01-93-N48120P'}</strong> | NIF : <strong>{company.nif || 'A2210892X'}</strong>
             </p>
             <p className="text-[9.5px] text-slate-500 font-serif leading-tight">
-              N° CNSS Employeur : <strong>{company.cnssEmployerNumber || '1004812001-C'}</strong> | Tél : {company.phone || '+243 810 000 000'} | Email : {company.email || 'contact@novarispay.cd'}
+              N° CNSS Employeur : <strong>{company.cnssEmployerNumber || '1004812001-C'}</strong> | Tél : {company.phone || '+243 810 000 000'} | Email : {company.email || 'contact@entreprise.cd'}
             </p>
           </div>
         </div>
@@ -92,7 +105,7 @@ export const UnifiedDocumentHeader: React.FC<UnifiedDocumentHeaderProps> = ({
           {!hideBarcode && (
             <div className="mt-1.5">
               <DocumentBarcode
-                value={barcodeId}
+                value={effectiveBarcodeId}
                 documentType={title}
                 compact={true}
                 height={24}
@@ -116,7 +129,7 @@ interface UnifiedDocumentFooterProps {
 export const UnifiedDocumentFooter: React.FC<UnifiedDocumentFooterProps> = ({
   barcodeId,
   referenceNumber,
-  legalNote = "Conformément au Code du Travail de la RDC et aux dispositions fiscales/sociales en vigueur, ce document est certifié authentique et immuable par NovarisPay ERP.",
+  legalNote = "Généré par NovarisPay • Document officiel certifié conforme au Code du Travail & aux normes fiscales et sociales RDC.",
   pageNumber = 1,
   totalPages = 1,
 }) => {

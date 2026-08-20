@@ -8,17 +8,17 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
 import { auth, db } from './lib/firebase';
 import { bootstrapSystemData } from './services/seedService';
-import { ensureSuperAdminExists, getUserProfile, logoutUser } from './services/authService';
+import { ensureDefaultAccountsExist, getUserProfile, logoutUser } from './services/authService';
 import { UserProfile, RolePermissionMapping } from './types/auth';
-import { Language, i18n } from './lib/i18n';
 import { NovarisLogo } from './components/common/NovarisLogo';
 import { Header } from './components/layout/Header';
-import { Sidebar, ModuleKey } from './components/layout/Sidebar';
+import { Sidebar, ModuleKey, isModuleAllowedForUser } from './components/layout/Sidebar';
 import { LoginForm } from './components/auth/LoginForm';
 import { FirstLoginModal } from './components/auth/FirstLoginModal';
 import { SuperAdminInstructionsModal } from './components/auth/SuperAdminInstructionsModal';
 import { TestModeBanner } from './components/common/TestModeBanner';
 import { ToastProvider } from './context/ToastContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { KeyboardShortcutsModal } from './components/common/KeyboardShortcutsModal';
 import { BarcodeScannerModal } from './components/common/BarcodeScannerModal';
 
@@ -41,14 +41,14 @@ import { AutomationModule } from './components/modules/AutomationModule';
 import { SecurityModule } from './components/modules/SecurityModule';
 import { SettingsModule } from './components/modules/SettingsModule';
 
-export function App() {
+function AppContent() {
+  const { lang, setLang, t } = useLanguage();
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [rolePermissions, setRolePermissions] = useState<RolePermissionMapping[]>([]);
   const [activeModule, setActiveModule] = useState<ModuleKey>('dashboard');
   const [selectedPayslipRunId, setSelectedPayslipRunId] = useState<string | undefined>(undefined);
-  const [lang, setLang] = useState<Language>('fr');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('novarispay_theme') as 'light' | 'dark') || (localStorage.getItem('novarispay_theme') as 'light' | 'dark') || 'light';
+    return (localStorage.getItem('novarispay_theme') as 'light' | 'dark') || 'light';
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSuperAdminModalOpen, setIsSuperAdminModalOpen] = useState<boolean>(false);
@@ -161,9 +161,9 @@ export function App() {
   useEffect(() => {
     async function initSystem() {
       try {
-        await ensureSuperAdminExists();
+        await ensureDefaultAccountsExist();
       } catch (err) {
-        console.warn('Super Admin init step:', err);
+        console.warn('Default accounts init step:', err);
       }
       try {
         await bootstrapSystemData();
@@ -189,6 +189,13 @@ export function App() {
     initSystem();
   }, []);
 
+  // Enforce RBAC on active module selection
+  useEffect(() => {
+    if (currentUser && !isModuleAllowedForUser(currentUser, activeModule)) {
+      setActiveModule('dashboard');
+    }
+  }, [currentUser, activeModule]);
+
   const handleLogout = async () => {
     await logoutUser(currentUser);
     setCurrentUser(null);
@@ -208,20 +215,21 @@ export function App() {
         <div className="w-48 h-1.5 bg-white/10 rounded-full overflow-hidden mb-4">
           <div className="w-2/3 h-full bg-[#287BFF] rounded-full animate-pulse"></div>
         </div>
-        <div className="text-xs text-slate-300 font-medium">Initialisation du système NovarisPay...</div>
+        <div className="text-xs text-slate-300 font-medium">
+          {lang === 'fr' ? 'Initialisation du système NovarisPay...' : 'Initializing NovarisPay system...'}
+        </div>
       </div>
     );
   }
 
   const getModuleTitle = (mod: ModuleKey): string => {
-    return i18n[lang]?.moduleTitles?.[mod] || 'NovarisPay ERP';
+    return t.moduleTitles?.[mod] || 'NovarisPay ERP';
   };
 
   return (
-    <ToastProvider>
-      <div className={`min-h-screen flex flex-col font-sans antialiased transition-colors ${
-        theme === 'dark' ? 'dark bg-slate-950 text-slate-100' : 'bg-[#F3F4F6] text-slate-900'
-      }`}>
+    <div className={`min-h-screen flex flex-col font-sans antialiased transition-colors ${
+      theme === 'dark' ? 'dark bg-slate-950 text-slate-100' : 'bg-[#F3F4F6] text-slate-900'
+    }`}>
       {!currentUser ? (
         <LoginForm
           onLoginSuccess={(user) => setCurrentUser(user)}
@@ -311,11 +319,11 @@ export function App() {
             <footer className="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between py-2 sm:py-0 sm:h-8 px-3 sm:px-8 text-[10px] text-gray-500 dark:text-slate-400 font-medium shrink-0 transition-colors gap-1 text-center sm:text-left">
               <div className="flex items-center gap-1.5 justify-center sm:justify-start flex-wrap">
                 <span className="w-2 h-2 rounded-full bg-[#2E7D32] animate-pulse shrink-0"></span>
-                <span>SYSTÈME CONFORME RDC 2026 - BASE FIRESTORE SYNCHRONISÉE</span>
+                <span>{t.footer.systemCompliant}</span>
               </div>
               <div className="flex items-center gap-3 justify-center sm:justify-end flex-wrap text-[9px] sm:text-[10px]">
-                <span>TAUX DU JOUR: 1 USD = 2850 CDF</span>
-                <span>VERSION 2.4.0-RDC</span>
+                <span>{t.footer.dailyRate}</span>
+                <span>{t.footer.version}</span>
               </div>
             </footer>
           </div>
@@ -354,9 +362,17 @@ export function App() {
         }}
       />
     </div>
-    </ToastProvider>
+  );
+}
+
+export function App() {
+  return (
+    <LanguageProvider>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </LanguageProvider>
   );
 }
 
 export default App;
-
