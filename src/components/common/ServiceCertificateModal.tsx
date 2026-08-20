@@ -27,6 +27,7 @@ import { logAuditEvent } from '../../services/auditService';
 import { CompanyDocument } from '../modules/DocumentGEDModule';
 import { generateBarcodeIdentifier, registerDocument, generateBarcodeDataUrl } from '../../services/barcodeService';
 import { DocumentBarcode } from './DocumentBarcode';
+import { renderOfficialPdfHeader, renderOfficialPdfFooter } from '../../utils/documentTemplate';
 
 interface ServiceCertificateModalProps {
   isOpen: boolean;
@@ -110,13 +111,13 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
 
       // Barcode generation
       const barcodeId = generateBarcodeIdentifier('CERT');
-      const barcodeDataUrl = await generateBarcodeDataUrl(barcodeId, 'CODE128', { height: 35, displayValue: true });
+      const docRef = `CERT-${Date.now().toString().slice(-6)}`;
 
       registerDocument({
         barcodeId,
         documentType: 'Certificat / Attestation',
         documentTypeCode: 'CERT',
-        documentNumber: `CERT-${Date.now().toString().slice(-6)}`,
+        documentNumber: docRef,
         title: `Attestation de Fin de Service - ${currentEmp.lastName} ${currentEmp.firstName}`,
         employeeName: `${currentEmp.lastName} ${currentEmp.firstName}`,
         employeeMatricule: currentEmp.matricule,
@@ -127,66 +128,32 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
         moduleRoute: 'ged',
       });
 
-      // En-tête officiel de l'entreprise
-      doc.setFillColor(31, 56, 100); // #1F3864 Navy
-      doc.rect(0, 0, pageWidth, 14, 'F');
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('times', 'bold');
-      doc.setFontSize(9);
-      doc.text('RÉPUBLIQUE DÉMOCRATIQUE DU CONGO — ERP RH NOVARISPAY', 15, 9);
-      doc.text('DOCUMENT OFFICIEL CONFORME CODE DU TRAVAIL', pageWidth - 15, 9, { align: 'right' });
-
-      // Information Entreprise Header with NovarisPay Emblem Logo
-      doc.setFillColor(31, 56, 100);
-      doc.roundedRect(15, 20, 10, 10, 1.5, 1.5, 'F');
-      doc.setFillColor(191, 144, 0);
-      doc.rect(21, 22, 2.5, 5, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('times', 'bold');
-      doc.setFontSize(7.5);
-      doc.text('N', 16.5, 27);
-
-      doc.setTextColor(31, 56, 100);
-      doc.setFontSize(15);
-      doc.setFont('times', 'bold');
-      doc.text(company.name.toUpperCase(), 29, 27);
-
-      // Add Barcode image top right
-      if (barcodeDataUrl) {
-        try {
-          doc.addImage(barcodeDataUrl, 'PNG', pageWidth - 70, 18, 55, 12);
-        } catch (err) {
-          console.warn('Barcode PDF insertion error:', err);
-        }
-      }
-
-      doc.setFontSize(8.5);
-      doc.setFont('times', 'normal');
-      doc.setTextColor(71, 85, 105);
-      doc.text(`${company.address} — N° RCCM: ${company.rccm || 'CD/KIN/RCCM/14-B-0123'} | N° ID.NAT: ${company.idNat || '01-93-N45100P'}`, 15, 34);
-      doc.text(`N° CNSS Employeur: ${company.cnssEmployerNumber || '1014850021'} | Tél: ${company.phone} | Email: ${company.email}`, 15, 39);
-
-      doc.setDrawColor(203, 213, 225);
-      doc.setLineWidth(0.5);
-      doc.line(15, 43, pageWidth - 15, 43);
+      // En-tête officiel unifié avec Logo Embarqué et Code-barres
+      await renderOfficialPdfHeader(doc, {
+        documentTitle: 'ATTESTATION DE FIN DE SERVICE',
+        documentSubtitle: 'Certificat de Travail (Art. 168 Code du Travail RDC)',
+        documentReference: docRef,
+        barcodeId,
+        docTypeCode: 'CERT',
+        companyOverride: company,
+      });
 
       // Titre du Document
       doc.setFillColor(248, 250, 252);
-      doc.roundedRect(20, 50, pageWidth - 40, 22, 3, 3, 'FD');
+      doc.roundedRect(15, 48, pageWidth - 30, 20, 2, 2, 'FD');
 
       doc.setTextColor(31, 56, 100);
-      doc.setFontSize(14);
+      doc.setFontSize(13);
       doc.setFont('times', 'bold');
-      doc.text('ATTESTATION DE FIN DE SERVICE', pageWidth / 2, 60, { align: 'center' });
+      doc.text('ATTESTATION DE FIN DE SERVICE', pageWidth / 2, 57, { align: 'center' });
 
-      doc.setFontSize(8.5);
+      doc.setFontSize(8);
       doc.setFont('times', 'bold');
       doc.setTextColor(191, 144, 0); // Gold
-      doc.text('(CERTIFICAT DE TRAVAIL CONFORME À L\'ARTICLE 168 DU CODE DU TRAVAIL RDC)', pageWidth / 2, 67, { align: 'center' });
+      doc.text('(CERTIFICAT DE TRAVAIL CONFORME À L\'ARTICLE 168 DU CODE DU TRAVAIL RDC)', pageWidth / 2, 63, { align: 'center' });
 
       // Corps du Texte
-      let y = 84;
+      let y = 78;
       doc.setTextColor(15, 23, 42);
       doc.setFontSize(10.5);
       doc.setFont('times', 'normal');
@@ -298,12 +265,11 @@ export const ServiceCertificateModal: React.FC<ServiceCertificateModalProps> = (
       doc.text(`ID Hash: KZ-CERT-${Date.now().toString(36).toUpperCase()}`, pageWidth - 80, sigY + 30);
 
       // Footer
-      doc.setFillColor(241, 245, 249);
-      doc.rect(0, 282, pageWidth, 15, 'F');
-      doc.setFontSize(7);
-      doc.setTextColor(100, 116, 139);
-      doc.text('Document généré conformément au Code du Travail RDC par NovarisPay ERP System.', 15, 290);
-      doc.text(`Page 1/1 — Certificat RH N° CERT-${Date.now().toString().slice(-6)}`, pageWidth - 15, 290, { align: 'right' });
+      renderOfficialPdfFooter(doc, {
+        barcodeId,
+        documentReference: docRef,
+        legalNote: "Attestation délivrée conformément à l'Article 168 du Code du Travail RDC (Loi n° 015/2002).",
+      });
 
       // Save PDF
       const filename = `Attestation_Fin_Service_${currentEmp.lastName}_${currentEmp.matricule}.pdf`;

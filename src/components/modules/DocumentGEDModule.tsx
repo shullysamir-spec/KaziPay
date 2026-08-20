@@ -535,18 +535,14 @@ export const DocumentGEDModule: React.FC = () => {
               </div>
 
               {/* Company Logo Header Stamp */}
-              <div className="p-3 border-2 border-slate-800 rounded-xl bg-slate-50 flex items-center justify-between">
+              <div className="p-3 border-2 border-[#1F3864] rounded-xl bg-slate-50 flex items-center justify-between">
                 <div>
                   <div className="text-xs font-black text-[#1F3864] uppercase">{company.name}</div>
-                  <div className="text-[9px] text-slate-500 font-mono">Archive Officielle GED</div>
+                  <div className="text-[9px] text-slate-500 font-mono">Archive Officielle GED • Certifiée</div>
                 </div>
-                {company.logoUrl ? (
-                  <img src={company.logoUrl} alt="Company Logo" className="w-8 h-8 object-contain" />
-                ) : (
-                  <div className="w-7 h-7 bg-[#1F3864] text-white rounded flex items-center justify-center font-bold text-[9px]">
-                    K
-                  </div>
-                )}
+                <div className="w-8 h-8 bg-[#1F3864] text-[#BF9000] rounded-lg flex items-center justify-center font-black text-xs shadow-sm">
+                  N
+                </div>
               </div>
 
               {/* Actions */}

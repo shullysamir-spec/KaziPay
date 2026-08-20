@@ -9,7 +9,10 @@ import { getPayrollRuns, getPayslipsForRun } from '../../services/payrollService
 import { PayrollRun, Payslip } from '../../types/payroll';
 import { getCompanyConfig, CompanyConfig } from '../../services/companyService';
 import { jsPDF } from 'jspdf';
-import { formatCDF, formatUSD, safeNumber } from '../../utils/documentFormatter';
+import { formatCDF, formatUSD, safeNumber, formatDateFR } from '../../utils/documentFormatter';
+import { renderOfficialPdfHeader, renderOfficialPdfFooter } from '../../utils/documentTemplate';
+import { generateBarcodeIdentifier } from '../../services/barcodeService';
+import { DocumentBarcode } from '../common/DocumentBarcode';
 import { FileCheck, Download, FileSpreadsheet, Building2, Printer, Send, History, CheckCircle2, Clock } from 'lucide-react';
 import { logAuditEvent } from '../../services/auditService';
 
@@ -156,49 +159,37 @@ export const DeclarationsModule: React.FC = () => {
     a.click();
   };
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     const doc = new jsPDF();
+    const barcodeId = generateBarcodeIdentifier('DECL');
 
-    // NovarisPay Brand Emblem / Logo in Header
-    doc.setFillColor(31, 56, 100);
-    doc.roundedRect(14, 12, 12, 12, 2, 2, 'F');
-    doc.setFillColor(191, 144, 0);
-    doc.rect(21, 15, 3, 6, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('times', 'bold');
-    doc.setFontSize(8.5);
-    doc.text('N', 16, 20.5);
-
-    doc.setFont('times', 'bold');
-    doc.setFontSize(13);
-    doc.setTextColor(31, 56, 100);
-    doc.text(company.name.toUpperCase(), 30, 18);
-
-    doc.setFontSize(9);
-    doc.setFont('times', 'normal');
-    doc.setTextColor(51, 65, 85);
-    doc.text(`RCCM : ${company.rccm} | ID.NAT : ${company.idNat} | NIF : ${company.nif}`, 30, 24);
-
-    doc.setFontSize(11);
-    doc.setFont('times', 'bold');
-    doc.setTextColor(31, 56, 100);
-    doc.text(`DÉCLARATION RÉCAPITULATIVE LÉGALE RDC : ${selectedDoc}`, 14, 34);
-    doc.setFont('times', 'normal');
-    doc.setFontSize(9.5);
-    doc.setTextColor(71, 85, 105);
-    doc.text(`Période : ${activeRun?.period || ''} | Échéance légale : 15 du mois suivant`, 14, 40);
+    await renderOfficialPdfHeader(doc, {
+      documentTitle: `DÉCLARATION ${selectedDoc}`,
+      documentSubtitle: `Bordereau Récapitulatif Mensuel (${activeRun?.period || ''})`,
+      documentReference: `DECL-${selectedDoc}-${activeRun?.period || ''}`,
+      barcodeId,
+      docTypeCode: 'DECL',
+      companyOverride: company,
+    });
 
     let y = 50;
-    doc.setFontSize(9.5);
     doc.setFont('times', 'bold');
+    doc.setFontSize(10);
     doc.setTextColor(30, 41, 59);
     doc.text('Matricule & Nom Salarié', 14, y);
-    doc.text('Brut (CDF)', 140, y, { align: 'right' });
-    doc.text('Montant Dû (CDF)', 192, y, { align: 'right' });
+    doc.text('Salaire Brut (CDF)', 140, y, { align: 'right' });
+    doc.text('Cotisation Due (CDF)', 192, y, { align: 'right' });
+    
+    doc.setDrawColor(31, 56, 100);
+    doc.setLineWidth(0.4);
     doc.line(14, y + 2, 196, y + 2);
     y += 8;
 
     doc.setFont('times', 'normal');
+    doc.setFontSize(9);
+    let totalGross = 0;
+    let totalDue = 0;
+
     payslips.forEach((p) => {
       const gross = safeNumber(p.grossSalaryCDF);
       const val =
@@ -210,10 +201,30 @@ export const DeclarationsModule: React.FC = () => {
           ? safeNumber(p.inppEmployerCDF, Math.round(gross * 0.02))
           : safeNumber(p.onemEmployerCDF, Math.round(gross * 0.002));
 
+      totalGross += gross;
+      totalDue += val;
+
       doc.text(`${p.employeeMatricule} - ${p.employeeName}`, 14, y);
       doc.text(formatCDF(gross), 140, y, { align: 'right' });
       doc.text(formatCDF(val), 192, y, { align: 'right' });
       y += 6;
+    });
+
+    // Total Row
+    y += 2;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(14, y, 196, y);
+    y += 5;
+    doc.setFont('times', 'bold');
+    doc.setTextColor(31, 56, 100);
+    doc.text('TOTAL GÉNÉRAL À PAYER :', 14, y);
+    doc.text(formatCDF(totalGross), 140, y, { align: 'right' });
+    doc.text(formatCDF(totalDue), 192, y, { align: 'right' });
+
+    renderOfficialPdfFooter(doc, {
+      barcodeId,
+      documentReference: `DECL-${selectedDoc}-${activeRun?.period || ''}`,
+      legalNote: `Déclaration officielle ${selectedDoc} conforme au Code du Travail & à la législation fiscale et sociale RDC.`,
     });
 
     doc.save(`Declaration_${selectedDoc}_${activeRun?.period || ''}.pdf`);
@@ -250,55 +261,44 @@ export const DeclarationsModule: React.FC = () => {
     );
   };
 
-  const exportLetterPDF = () => {
+  const exportLetterPDF = async () => {
     if (!selectedLetter) return;
 
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const barcodeId = selectedLetter.id || generateBarcodeIdentifier('TRM');
 
-    // NovarisPay Brand Emblem / Logo in Header
-    doc.setFillColor(31, 56, 100);
-    doc.roundedRect(20, 15, 12, 12, 2, 2, 'F');
-    doc.setFillColor(191, 144, 0);
-    doc.rect(27, 18, 3, 6, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('times', 'bold');
-    doc.setFontSize(8.5);
-    doc.text('N', 22, 23.5);
-
-    doc.setFont('times', 'bold');
-    doc.setFontSize(13);
-    doc.setTextColor(31, 56, 100);
-    doc.text(company.name.toUpperCase(), 36, 20);
-
-    doc.setFontSize(9);
-    doc.setFont('times', 'normal');
-    doc.setTextColor(51, 65, 85);
-    doc.text(`${company.address} — ${company.cityProvince}`, 36, 25);
-    doc.text(`RCCM: ${company.rccm} | ID.NAT: ${company.idNat} | NIF: ${company.nif}`, 36, 29);
+    await renderOfficialPdfHeader(doc, {
+      documentTitle: 'LETTRE DE TRANSMISSION',
+      documentSubtitle: `Organisme : ${selectedLetter.organism} • Période : ${selectedLetter.period}`,
+      documentReference: selectedLetter.id,
+      barcodeId,
+      docTypeCode: 'TRM',
+      companyOverride: company,
+    });
 
     // Date & Ref
     doc.setTextColor(30, 41, 59);
     doc.setFontSize(9.5);
     doc.setFont('times', 'bold');
-    doc.text(`Réf N° : ${selectedLetter.id}`, 20, 42);
+    doc.text(`Réf N° : ${selectedLetter.id}`, 20, 48);
     doc.setFont('times', 'normal');
-    doc.text(`Fait à ${company.cityProvince}, le ${selectedLetter.generatedDate}`, 120, 42);
+    doc.text(`Fait à ${company.cityProvince || 'Kinshasa'}, le ${selectedLetter.generatedDate}`, 120, 48);
 
     // Destinataire Box
-    doc.rect(110, 48, 85, 25);
+    doc.rect(110, 54, 85, 25);
     doc.setFont('times', 'bold');
     doc.setFontSize(9.5);
-    doc.text(selectedLetter.recipientTitle, 114, 55, { maxWidth: 78 });
+    doc.text(selectedLetter.recipientTitle, 114, 61, { maxWidth: 78 });
 
     // Objet
     doc.setFont('times', 'bold');
     doc.setFontSize(10.5);
     doc.setTextColor(31, 56, 100);
-    doc.text(`OBJET : TRANSMISSION DE LA DÉCLARATION LÉGALE - ${selectedLetter.organism}`, 20, 82);
-    doc.text(`PÉRIODE : ${selectedLetter.period.toUpperCase()}`, 20, 88);
+    doc.text(`OBJET : TRANSMISSION DE LA DÉCLARATION LÉGALE - ${selectedLetter.organism}`, 20, 88);
+    doc.text(`PÉRIODE : ${selectedLetter.period.toUpperCase()}`, 20, 94);
 
     doc.setDrawColor(200, 200, 200);
-    doc.line(20, 92, 195, 92);
+    doc.line(20, 98, 195, 98);
 
     // Body
     doc.setFont('times', 'normal');
@@ -310,28 +310,34 @@ export const DeclarationsModule: React.FC = () => {
     const body = selectedLetter.customBodyText || defaultBody;
 
     const splitBody = doc.splitTextToSize(body, 175);
-    doc.text(splitBody, 20, 102);
+    doc.text(splitBody, 20, 108);
 
     // Signature Area
     doc.setFont('times', 'bold');
     doc.setFontSize(10);
-    doc.text('POUR LA DIRECTION GÉNÉRALE', 20, 190);
-    doc.text(company.signerName, 20, 210);
+    doc.text('POUR LA DIRECTION GÉNÉRALE', 20, 195);
+    doc.text(company.signerName || 'La Direction Générale', 20, 215);
     doc.setFont('times', 'normal');
     doc.setFontSize(9);
-    doc.text(company.signerTitle, 20, 215);
+    doc.text(company.signerTitle || 'Directeur Général / DRH', 20, 220);
 
     // Accusé de réception box - padded & wrapped to fit completely inside box
-    doc.rect(120, 185, 75, 40);
+    doc.rect(120, 190, 75, 40);
     doc.setFont('times', 'bold');
     doc.setFontSize(8.5);
     doc.setTextColor(31, 56, 100);
-    doc.text("ACCUSÉ DE RÉCEPTION DE L'ORGANISME", 123, 192, { maxWidth: 68 });
+    doc.text("ACCUSÉ DE RÉCEPTION DE L'ORGANISME", 123, 197, { maxWidth: 68 });
     doc.setFont('times', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
-    doc.text('Sceau, Date & Cachet à la réception :', 123, 204);
-    doc.text('Signature de l\'Agent Récepteur :', 123, 214);
+    doc.text('Sceau, Date & Cachet à la réception :', 123, 209);
+    doc.text('Signature de l\'Agent Récepteur :', 123, 219);
+
+    renderOfficialPdfFooter(doc, {
+      barcodeId,
+      documentReference: selectedLetter.id,
+      legalNote: "Transmission officielle des déclarations fiscales et sociales conformément aux lois en vigueur en RDC.",
+    });
 
     doc.save(`Lettre_Transmission_${selectedLetter.id}.pdf`);
   };
@@ -607,15 +613,11 @@ export const DeclarationsModule: React.FC = () => {
                   className="p-8 border-2 border-slate-800 rounded-xl bg-white text-slate-900 space-y-6 font-serif"
                 >
                   {/* Header */}
-                  <div className="flex justify-between items-start border-b-2 border-slate-800 pb-4">
+                  <div className="flex justify-between items-start border-b-2 border-[#1F3864] pb-4">
                     <div className="flex items-center space-x-3">
-                      {company.logoUrl ? (
-                        <img src={company.logoUrl} alt="Company Logo" className="h-12 w-auto object-contain" />
-                      ) : (
-                        <div className="w-10 h-10 bg-[#1F3864] text-white rounded font-black flex items-center justify-center font-sans text-xs">
-                          KP
-                        </div>
-                      )}
+                      <div className="w-12 h-12 bg-[#1F3864] rounded-xl flex items-center justify-center text-[#BF9000] font-black text-xl shadow-sm">
+                        N
+                      </div>
                       <div>
                         <div className="font-black text-lg text-[#1F3864] uppercase">{company.name}</div>
                         <div className="text-xs text-slate-700 font-sans">{company.address} — {company.cityProvince}</div>
@@ -624,9 +626,15 @@ export const DeclarationsModule: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="text-right font-sans text-xs">
-                      <div className="font-bold">Réf N° : {selectedLetter.id}</div>
-                      <div className="text-slate-600">Date : {selectedLetter.generatedDate}</div>
+                    <div className="text-right font-sans text-xs flex flex-col items-end">
+                      <div className="bg-[#1F3864] text-white px-3 py-1 rounded text-[10px] font-bold tracking-wider uppercase mb-1">
+                        LETTRE OFFICIELLE
+                      </div>
+                      <div className="font-mono font-bold text-slate-900">Réf : {selectedLetter.id}</div>
+                      <div className="text-slate-500 text-[11px]">Date : {selectedLetter.generatedDate}</div>
+                      <div className="mt-1">
+                        <DocumentBarcode value={selectedLetter.id} documentType="LETTRE TRANSMISSION" />
+                      </div>
                     </div>
                   </div>
 

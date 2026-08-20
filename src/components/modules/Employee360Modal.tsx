@@ -24,6 +24,10 @@ import { getAuditLogs, AuditLogEntry, logAuditEvent } from '../../services/audit
 import { ServiceCertificateModal } from '../common/ServiceCertificateModal';
 import { EmployeePhotoModal } from '../common/EmployeePhotoModal';
 import { formatCDF, formatUSD, formatDateFR } from '../../utils/documentFormatter';
+import { jsPDF } from 'jspdf';
+import { renderOfficialPdfHeader, renderOfficialPdfFooter } from '../../utils/documentTemplate';
+import { generateBarcodeIdentifier } from '../../services/barcodeService';
+import { getCompanyConfig } from '../../services/companyService';
 import {
   User,
   X,
@@ -488,6 +492,164 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
     }
   };
 
+  // ---------------- DIRECT JSLIB PDF DOWNLOAD 360° ----------------
+  const handleDownload360PDF = async () => {
+    const doc = new jsPDF();
+    const company = getCompanyConfig();
+    const barcodeId = generateBarcodeIdentifier('EMP');
+    const docRef = `F360-${employee.matricule}`;
+
+    const contractCurrency = employee.currentContract?.currency || 'CDF';
+    const formatMoney = (amount: number) =>
+      contractCurrency === 'USD' ? formatUSD(amount) : formatCDF(amount);
+
+    const baseSalary = employee.currentContract?.baseSalary || 0;
+    const cnssPatronal = Math.round(baseSalary * 0.13);
+    const inppPatronal = Math.round(baseSalary * 0.03);
+    const onemPatronal = Math.round(baseSalary * 0.002);
+    const chargesPatronales = cnssPatronal + inppPatronal + onemPatronal;
+    const medicalCost = contractCurrency === 'USD' ? 45 : 128250;
+    const travelCost = contractCurrency === 'USD' ? 120 : 342000;
+    const totalEmployerCost = baseSalary + chargesPatronales + medicalCost + travelCost;
+
+    await renderOfficialPdfHeader(doc, {
+      documentTitle: 'FICHE SALARIÉ 360°',
+      documentSubtitle: `Dossier RH & Coût Employeur — ${employee.lastName.toUpperCase()} ${employee.firstName}`,
+      documentReference: docRef,
+      barcodeId,
+      docTypeCode: 'EMP',
+      companyOverride: company,
+    });
+
+    let y = 46;
+
+    // 1. Identité Box
+    doc.setFillColor(245, 247, 250);
+    doc.rect(14, y, 182, 34, 'F');
+    doc.setDrawColor(210, 215, 225);
+    doc.rect(14, y, 182, 34, 'S');
+
+    doc.setFont('times', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(31, 56, 100);
+    doc.text('1. IDENTITÉ & SITUATION ADMINISTRATIVE', 18, y + 6);
+
+    doc.setFont('times', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(40, 40, 40);
+    doc.text(`Nom complet : ${employee.lastName.toUpperCase()} ${employee.firstName}`, 18, y + 13);
+    doc.text(`Matricule RH : ${employee.matricule}`, 18, y + 19);
+    doc.text(`Département : ${employee.department}  |  Poste : ${employee.position}`, 18, y + 25);
+    doc.text(`Site d'affectation : ${employee.site || 'Kinshasa HQ'}  |  Statut : ${currentStatus}`, 18, y + 31);
+
+    doc.text(`Date d'embauche : ${employee.hireDate ? formatDateFR(employee.hireDate) : '—'} (${employee.seniorityYears} ans)`, 110, y + 13);
+    doc.text(`N° CNSS : ${employee.cnss || 'Non renseigné'}  |  NIF : ${employee.nif || 'Non renseigné'}`, 110, y + 19);
+    doc.text(`Téléphone : ${employee.phone || '—'}  |  Email : ${employee.email || '—'}`, 110, y + 25);
+    doc.text(`Genre : ${employee.gender === 'F' ? 'Féminin' : 'Masculin'}  |  Adresse : ${employee.address || '—'}`, 110, y + 31);
+
+    y += 40;
+
+    // 2. Contrat & Rémunération
+    doc.setFillColor(245, 247, 250);
+    doc.rect(14, y, 182, 22, 'F');
+    doc.setDrawColor(210, 215, 225);
+    doc.rect(14, y, 182, 22, 'S');
+
+    doc.setFont('times', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(31, 56, 100);
+    doc.text('2. CONTRAT DE TRAVAIL & RÉMUNÉRATION', 18, y + 6);
+
+    doc.setFont('times', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(40, 40, 40);
+    doc.text(`Type de contrat : ${employee.currentContract?.type || 'CDI'}`, 18, y + 13);
+    doc.text(`Devise contractuelle : ${contractCurrency}`, 18, y + 18);
+    doc.text(`Salaire de base : ${formatMoney(baseSalary)}`, 110, y + 13);
+    doc.text(`Banque : ${employee.bankName || 'N/A'} (${employee.bankAccount || 'Virement'})`, 110, y + 18);
+
+    y += 28;
+
+    // 3. Ventilation Coût Employeur
+    doc.setFont('times', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(31, 56, 100);
+    doc.text('3. VENTILATION DU COÛT EMPLOYEUR MENSUEL ESTIMÉ', 14, y);
+    y += 4;
+
+    doc.setFillColor(31, 56, 100);
+    doc.rect(14, y, 182, 6, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.text('Composante de Coût', 18, y + 4.5);
+    doc.text('Base / Taux Légaux RDC', 100, y + 4.5);
+    doc.text('Montant Estimé', 192, y + 4.5, { align: 'right' });
+
+    y += 6;
+    doc.setFont('times', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(40, 40, 40);
+
+    const costItems = [
+      { label: 'Salaire de Base Mensuel', base: `Contrat en vigueur (${contractCurrency})`, amount: formatMoney(baseSalary) },
+      { label: 'Cotisation CNSS Patronale (13%)', base: 'Brut Plafonné RDC', amount: formatMoney(cnssPatronal) },
+      { label: 'Cotisation INPP Patronale (3%)', base: 'Masse Salariale Brute', amount: formatMoney(inppPatronal) },
+      { label: 'Taxe ONEM Patronale (0.2%)', base: 'Masse Salariale Brute', amount: formatMoney(onemPatronal) },
+      { label: 'Prise en Charge Médicale (Est.)', base: 'Forfait Mutuelle', amount: formatMoney(medicalCost) },
+      { label: 'Transport / Frais Professionnels (Est.)', base: 'Forfait Mensuel', amount: formatMoney(travelCost) },
+    ];
+
+    costItems.forEach((ci) => {
+      doc.text(ci.label, 18, y + 4.5);
+      doc.text(ci.base, 100, y + 4.5);
+      doc.text(ci.amount, 192, y + 4.5, { align: 'right' });
+      y += 5.5;
+    });
+
+    // Total Line
+    doc.setFillColor(240, 244, 250);
+    doc.rect(14, y, 182, 7, 'F');
+    doc.setDrawColor(31, 56, 100);
+    doc.rect(14, y, 182, 7, 'S');
+    doc.setFont('times', 'bold');
+    doc.setTextColor(31, 56, 100);
+    doc.text('TOTAL COÛT EMPLOYEUR MENSUEL :', 18, y + 5);
+    doc.text(formatMoney(totalEmployerCost), 192, y + 5, { align: 'right' });
+
+    y += 13;
+
+    // 4. Ayants droit
+    doc.setFont('times', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(31, 56, 100);
+    doc.text(`4. AYANTS DROIT & PERSONNES À CHARGE (${employee.dependents?.length || 0})`, 14, y);
+    y += 4;
+
+    if (employee.dependents && employee.dependents.length > 0) {
+      doc.setFont('times', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(40, 40, 40);
+      employee.dependents.forEach((dep) => {
+        doc.text(`• ${dep.name} (${dep.relationship || 'Enfant'}) — Né(e) le : ${dep.birthDate ? formatDateFR(dep.birthDate) : '—'}`, 18, y + 4);
+        y += 5;
+      });
+    } else {
+      doc.setFont('times', 'italic');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Aucun ayant droit enregistré dans le dossier RH.', 18, y + 4);
+      y += 6;
+    }
+
+    renderOfficialPdfFooter(doc, {
+      barcodeId,
+      documentReference: docRef,
+      legalNote: 'Document RH confidentiel certifié conforme par NovarisPay ERP System.',
+    });
+
+    doc.save(`Fiche_360_${employee.matricule}_${employee.lastName}.pdf`);
+  };
+
   // ---------------- PRINT / EXPORT 360° PDF ----------------
   const handlePrint360PDF = () => {
     const printWindow = window.open('', '_blank');
@@ -837,12 +999,21 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-2 self-stretch md:self-auto justify-end">
             <button
-              onClick={handlePrint360PDF}
+              onClick={handleDownload360PDF}
               className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow flex items-center space-x-1.5 transition"
-              title="Générer et imprimer la fiche 360° en PDF"
+              title="Télécharger la fiche 360° en fichier PDF certifié"
+            >
+              <Download className="w-4 h-4 text-white" />
+              <span>Télécharger PDF</span>
+            </button>
+
+            <button
+              onClick={handlePrint360PDF}
+              className="bg-slate-700 hover:bg-slate-600 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow flex items-center space-x-1.5 transition"
+              title="Imprimer directement la fiche 360°"
             >
               <Printer className="w-4 h-4 text-white" />
-              <span>Imprimer / Exporter PDF</span>
+              <span>Imprimer</span>
             </button>
 
             {canEditEmployee && (

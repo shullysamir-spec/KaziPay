@@ -21,6 +21,7 @@ import { DocumentBarcode } from '../common/DocumentBarcode';
 import { generateBarcodeDataUrl } from '../../services/barcodeService';
 import { jsPDF } from 'jspdf';
 import { formatCDF, formatUSD, safeNumber } from '../../utils/documentFormatter';
+import { renderOfficialPdfHeader, renderOfficialPdfFooter, getEmbeddedCompanyLogoDataUrl } from '../../utils/documentTemplate';
 import {
   FileText,
   Printer,
@@ -113,61 +114,24 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     if (!isFirstPage) doc.addPage();
 
     const barcodeId = ps.barcodeId || 'NVP-PAY-2026-000245-9A73F2';
-    const barcodeDataUrl = await generateBarcodeDataUrl(barcodeId, 'CODE128', { height: 35, displayValue: true });
-
+    
     // Palette Couleurs Enterprise
-    const primaryColor = [31, 56, 100]; // #1F3864
-    const goldColor = [191, 144, 0];    // #BF9000
-    const textColor = [40, 40, 40];
-    const lightGray = [245, 247, 250];
+    const primaryColor: [number, number, number] = [31, 56, 100]; // #1F3864
+    const textColor: [number, number, number] = [40, 40, 40];
+    const lightGray: [number, number, number] = [245, 247, 250];
 
-    // 1. En-tête Employeur avec Logo NovarisPay (Times New Roman)
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.roundedRect(14, 11, 10, 10, 1.5, 1.5, 'F');
-    doc.setFillColor(goldColor[0], goldColor[1], goldColor[2]);
-    doc.rect(20, 13, 2.5, 5, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('times', 'bold');
-    doc.setFontSize(7.5);
-    doc.text('N', 15.5, 18);
-
-    doc.setFont('times', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text(company.name || DEFAULT_COMPANY_DETAILS.name, 28, 18);
-
-    doc.setFontSize(9);
-    doc.setFont('times', 'normal');
-    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-    doc.text(`${company.address || DEFAULT_COMPANY_DETAILS.address}`, 28, 23);
-    doc.text(`RCCM: ${company.rccm || DEFAULT_COMPANY_DETAILS.rccm}  |  ID.NAT: ${company.idNat || DEFAULT_COMPANY_DETAILS.idNat}  |  NIF: ${company.nif || DEFAULT_COMPANY_DETAILS.nif}`, 14, 28);
-    doc.text(`N° CNSS Employeur: ${company.cnssEmployerNumber || DEFAULT_COMPANY_DETAILS.cnssEmployerNumber}  |  Tél: ${company.phone || '+243 810 000 000'}`, 14, 33);
-
-    // Titre Bulletin
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(130, 10, 66, 12, 'F');
-    doc.setFont('times', 'bold');
-    doc.setFontSize(10);
-    doc.setTextColor(255, 255, 255);
-    doc.text('BULLETIN DE PAIE', 133, 16);
-    doc.setFontSize(8);
-    doc.text(`Période : ${formatPeriodLabel(ps.period)}`, 133, 20);
-
-    // Dessiner l'image du Code-Barres certifié
-    if (barcodeDataUrl) {
-      try {
-        doc.addImage(barcodeDataUrl, 'PNG', 130, 23, 66, 12);
-      } catch (err) {
-        console.warn('Erreur ajout image barcode PDF:', err);
-      }
-    }
-
-    doc.setLineWidth(0.5);
-    doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.line(14, 37, 196, 37);
+    // 1. En-tête Unifié avec Logo Embarqué et Code-barres
+    await renderOfficialPdfHeader(doc, {
+      documentTitle: 'BULLETIN DE PAIE',
+      documentSubtitle: `Période : ${formatPeriodLabel(ps.period)}`,
+      documentReference: ps.payslipRef || `BS-${ps.period}`,
+      barcodeId,
+      docTypeCode: 'PAY',
+      companyOverride: company,
+    });
 
     // 2. Informations Salarié & Période (Cadre)
-    let y = 42;
+    let y = 43;
     doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
     doc.rect(14, y, 182, 32, 'F');
     doc.setDrawColor(210, 215, 225);
@@ -300,10 +264,12 @@ export const PayslipsModule: React.FC<PayslipsModuleProps> = ({ initialRunId }) 
     doc.setFontSize(7.5);
     doc.text('Pour réception et accord le ____/____/2026', 115, y + 15);
 
-    y += 28;
-    doc.setFontSize(7);
-    doc.setTextColor(120, 120, 120);
-    doc.text(`Bulletin de paie édité le ${new Date().toLocaleDateString('fr-FR')} — Réf: ${ps.payslipRef || 'BS-' + ps.period}. Conformément à l'Art. 91 du Code du Travail RDC, ce bulletin est à conserver sans limitation de durée.`, 14, y);
+    y += 26;
+    renderOfficialPdfFooter(doc, {
+      barcodeId: ps.barcodeId || 'NVP-PAY-2026-000245-9A73F2',
+      documentReference: ps.payslipRef || `BS-${ps.period}`,
+      legalNote: "Conformément à l'Art. 91 du Code du Travail RDC, ce bulletin est certifié immuable et à conserver sans limitation de durée.",
+    });
   };
 
   const exportPDF = async (ps: Payslip) => {
